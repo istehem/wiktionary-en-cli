@@ -13,14 +13,14 @@ use self::Language::*;
 
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
 
+/// An English Dictionary
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {
-    // db file to use
+    /// Override dictionary db file to use
     #[clap(long, short)]
     path: Option<String>,
-    // a word to search for
-    #[clap(short, long)]
+    /// A word to search for; omitting it will yield a random entry
     search_term: Option<String>
 }
 
