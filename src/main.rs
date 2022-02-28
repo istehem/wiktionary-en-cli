@@ -11,6 +11,8 @@ use colored::Colorize;
 use std::env;
 use self::Language::*;
 
+static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
+
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {
@@ -119,7 +121,7 @@ fn empty_string() -> Option<String> {
 }
 
 
-fn format_translations(translations : &Vec<Translation>) -> String{
+fn format_translations(translations : &Vec<Translation>) -> String {
     match translations.as_slice() {
         [] => "Translations:".to_string(),
         _  => {
@@ -128,7 +130,7 @@ fn format_translations(translations : &Vec<Translation>) -> String{
 					.collect(); 
             let mut filtered_translations : Vec<Translation> = translations.clone()
                 .into_iter()
-                .filter(|translation| { langs.contains(&&translation.code) })
+                .filter(| translation | { langs.contains(&&translation.code) })
                 .collect();
             filtered_translations.sort_by(| t1, t2 | t1.lang.cmp(&t2.lang));	 
             return filtered_translations.into_iter()
@@ -141,12 +143,12 @@ fn format_translations(translations : &Vec<Translation>) -> String{
     }
 }
 
-fn print_entry(json : &Data){
+fn print_entry(json : &Data) {
     let senses : String = json.senses
         .clone()
         .into_iter()
         .enumerate()
-        .fold(String::new(), |res, (_i, sense)| {
+        .fold(String::new(), | res, (_i, sense) | {
                     res + &formatdoc!("
                                 {}
                                 {}
@@ -205,7 +207,7 @@ fn run(term : Option<String>, path : &Path) -> Result<()> {
 fn main() -> Result<()> {
     let args = Cli::parse();
     let mut default = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    default.push(r"files/wiktionary-en.json");
+    default.push(DEFAULT_DB_SUB_PATH);
     match args.path {
        Some(path) => return run(args.search_term, Path::new(&path)),
        None       => return run(args.search_term, default.as_path()) 
