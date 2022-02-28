@@ -80,7 +80,7 @@ impl Language {
             SV => "sv".to_string()
         }
     }
-	pub fn iterator() -> impl Iterator<Item = Language> {
+    pub fn iterator() -> impl Iterator<Item = Language> {
         [EN, DE, FR, ES, SV].iter().copied()
     }
 } 
