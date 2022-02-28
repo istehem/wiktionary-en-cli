@@ -125,14 +125,14 @@ fn format_translations(translations : &Vec<Translation>) -> String {
     match translations.as_slice() {
         [] => "Translations:".to_string(),
         _  => {
-	        let langs : Vec<Option<String>> = Language::iterator()
-					.map(| lang | { Some(lang.value()) })
-					.collect(); 
+            let langs : Vec<Option<String>> = Language::iterator()
+                .map(| lang | { Some(lang.value()) })
+                .collect(); 
             let mut filtered_translations : Vec<Translation> = translations.clone()
                 .into_iter()
                 .filter(| translation | { langs.contains(&&translation.code) })
                 .collect();
-            filtered_translations.sort_by(| t1, t2 | t1.lang.cmp(&t2.lang));	 
+            filtered_translations.sort_by(| t1, t2 | t1.lang.cmp(&t2.lang)); 
             return filtered_translations.into_iter()
                .fold("Translations:\n".to_string(), | res, translation | {
                     return res + &formatdoc!(" {}) {}\n", 
