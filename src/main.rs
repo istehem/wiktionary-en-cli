@@ -18,8 +18,8 @@ static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
 #[clap(author, version, about, long_about = None)]
 struct Cli {
     /// Override dictionary db file to use
-    #[clap(long, short)]
-    path: Option<String>,
+    #[clap(long)]
+    db_path: Option<String>,
     /// A word to search for; omitting it will yield a random entry
     search_term: Option<String>
 }
@@ -208,7 +208,7 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let mut default = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     default.push(DEFAULT_DB_SUB_PATH);
-    match args.path {
+    match args.db_path {
        Some(path) => return run(args.search_term, Path::new(&path)),
        None       => return run(args.search_term, default.as_path()) 
     };
