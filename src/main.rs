@@ -10,6 +10,7 @@ use indoc::{printdoc, formatdoc};
 use colored::Colorize;
 use std::env;
 use self::Language::*;
+use edit_distance::edit_distance;
 
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
 
@@ -186,13 +187,34 @@ fn random_entry(input_path : &Path) -> Result<()> {
 
 fn search_entry(input_path : &Path, term : String) -> Result<()> {
     let lines = get_file_reader(input_path).lines();
+    let mut result : Option<Data> = None;
+    let mut min_distance = usize::MAX;
     for line in lines {
         let json : Data = serde_json::from_str(&line.unwrap()).unwrap();
-        if json.word == term {
-            print_entry(&json);
-            break;
+        let distance = edit_distance(&json.word, &term);
+        if distance < min_distance {
+            min_distance = distance;
+            result = Some(json);
+            if distance == 0 {
+                break;
+            }
         }
     }
+    match result {
+        None        => println!("{}", "No results"),
+        Some(json)  => {
+            if min_distance != 0 {
+                printdoc!("
+                          ###########################################
+                          No result for {}.
+                          Did you mean  {}?
+                          ###########################################
+                          ",
+                          &term.red(), &json.word.yellow());
+            }
+            print_entry(&json);
+        }
+    };
     return Ok(());
 }
 
