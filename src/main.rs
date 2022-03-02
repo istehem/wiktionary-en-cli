@@ -22,10 +22,13 @@ struct Cli {
     #[clap(long)]
     db_path: Option<String>,
     /// A word to search for; omitting it will yield a random entry
-    search_term: Option<String>
+    search_term: Option<String>,
+    /// Maximal number of results
+    #[clap(short, long, default_value = "1")]
+    max_results : usize
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct Data {
     lang_code : String,
     #[serde(default)]
@@ -50,7 +53,7 @@ struct Example {
     #[serde(alias = "ref")]
     #[serde(default)]
     reference : Option<String>,
-    text : String 
+    text : String
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -84,7 +87,7 @@ impl Language {
     pub fn iterator() -> impl Iterator<Item = Language> {
         [EN, DE, FR, ES, SV].iter().copied()
     }
-} 
+}
 
 
 fn get_file_reader(path: &Path) -> BufReader<File> {
@@ -98,8 +101,8 @@ fn format_glosses(glosses : &Vec<String>) -> String{
            return xs.into_iter()
                .enumerate()
                .fold("Glossaries:\n".to_string(), | res, (i, gloss) | {
-                    return res + &formatdoc!(" {}) {}\n", i, gloss); 
-                }) 
+                    return res + &formatdoc!(" {}) {}\n", i, gloss);
+                })
         }
     }
 }
@@ -111,8 +114,8 @@ fn format_examples(examples : &Vec<Example>) -> String{
            return xs.into_iter()
                .enumerate()
                .fold("Examples:\n".to_string(), | res, (i, example) | {
-                    return res + &formatdoc!(" {}) {}\n", i, example.text); 
-                }) 
+                    return res + &formatdoc!(" {}) {}\n", i, example.text);
+                })
         }
     }
 }
@@ -128,18 +131,18 @@ fn format_translations(translations : &Vec<Translation>) -> String {
         _  => {
             let langs : Vec<Option<String>> = Language::iterator()
                 .map(| lang | { Some(lang.value()) })
-                .collect(); 
+                .collect();
             let mut filtered_translations : Vec<Translation> = translations.clone()
                 .into_iter()
                 .filter(| translation | { langs.contains(&&translation.code) })
                 .collect();
-            filtered_translations.sort_by(| t1, t2 | t1.lang.cmp(&t2.lang)); 
+            filtered_translations.sort_by(| t1, t2 | t1.lang.cmp(&t2.lang));
             return filtered_translations.into_iter()
                .fold("Translations:\n".to_string(), | res, translation | {
-                    return res + &formatdoc!(" {}) {}\n", 
-                         translation.lang, 
-                         translation.word.clone().or_else(empty_string).unwrap()); 
-                }) 
+                    return res + &formatdoc!(" {}) {}\n",
+                         translation.lang,
+                         translation.word.clone().or_else(empty_string).unwrap());
+                })
         }
     }
 }
@@ -154,8 +157,8 @@ fn print_entry(json : &Data) {
                                 {}
                                 {}
                                 -------------------------------------------
-                                ", 
-                                format_glosses(&sense.glosses), 
+                                ",
+                                format_glosses(&sense.glosses),
                                 format_examples(&sense.examples))
         });
 
@@ -166,13 +169,13 @@ fn print_entry(json : &Data) {
               {}
               {}
               -------------------------------------------
-              ", &json.word.clone().green(), 
+              ", &json.word.clone().green(),
                  json.pos, senses, format_translations(&json.translations));
 }
 
 fn random_entry(input_path : &Path) -> Result<()> {
     let lines = get_file_reader(input_path).lines();
-    let n_entries : usize = get_file_reader(input_path).lines().count(); 
+    let n_entries : usize = get_file_reader(input_path).lines().count();
     let mut rng = thread_rng();
     let random_entry_number: usize = rng.gen_range(0, n_entries - 1);
     
@@ -185,19 +188,23 @@ fn random_entry(input_path : &Path) -> Result<()> {
     return Ok(());
 }
 
-fn search_entry(input_path : &Path, term : String) -> Result<()> {
+fn search_entry(input_path : &Path, term : String, max_results : usize) -> Result<()> {
     let lines = get_file_reader(input_path).lines();
     let mut result : Option<Data> = None;
+    let mut full_matches : Vec<Data> = Vec::new();
     let mut min_distance = usize::MAX;
     for line in lines {
         let json : Data = serde_json::from_str(&line.unwrap()).unwrap();
         let distance = edit_distance(&json.word, &term);
         if distance < min_distance {
             min_distance = distance;
-            result = Some(json);
-            if distance == 0 {
-                break;
-            }
+            result = Some(json.clone());
+        }
+        if distance == 0 {
+            full_matches.push(json);
+        }
+        if full_matches.len() == max_results {
+            break;
         }
     }
     match result {
@@ -212,18 +219,20 @@ fn search_entry(input_path : &Path, term : String) -> Result<()> {
                           ",
                           &term.red(), &json.word.yellow());
             }
-            print_entry(&json);
+            for res in full_matches {
+                print_entry(&res);
+            }
         }
     };
     return Ok(());
 }
 
 
-fn run(term : Option<String>, path : &Path) -> Result<()> {
+fn run(term : Option<String>, max_results : usize, path : &Path) -> Result<()> {
     match term {
-       Some(s) => return search_entry(&path, s),
+       Some(s) => return search_entry(&path, s, max_results),
        None    => return random_entry(&path)
-    }; 
+    };
 }
 
 fn main() -> Result<()> {
@@ -231,7 +240,7 @@ fn main() -> Result<()> {
     let mut default = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     default.push(DEFAULT_DB_SUB_PATH);
     match args.db_path {
-       Some(path) => return run(args.search_term, Path::new(&path)),
-       None       => return run(args.search_term, default.as_path()) 
+       Some(path) => return run(args.search_term, args.max_results, Path::new(&path)),
+       None       => return run(args.search_term, args.max_results, default.as_path())
     };
 }
