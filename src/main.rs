@@ -11,6 +11,7 @@ use std::env;
 use edit_distance::edit_distance;
 
 mod wiktionary_data;
+mod language;
 use crate::wiktionary_data::*;
 
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
@@ -63,12 +64,11 @@ fn empty_string() -> Option<String> {
     return Some(String::new());
 }
 
-
 fn format_translations(translations : &Vec<Translation>) -> String {
     match translations.as_slice() {
         [] => "Translations:".to_string(),
         _  => {
-            let langs : Vec<Option<String>> = Language::iterator()
+            let langs : Vec<Option<String>> = language::Language::iterator()
                 .map(| lang | { Some(lang.value()) })
                 .collect();
             let mut filtered_translations : Vec<Translation> = translations.clone()
