@@ -156,6 +156,7 @@ fn search_entry(input_path : &Path, term : String, max_results : usize) -> Resul
                           ###########################################
                           ",
                           &term.red(), &json.word.yellow());
+                          print_entry(&json);
             }
             for res in full_matches {
                 print_entry(&res);
