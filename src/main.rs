@@ -2,15 +2,16 @@ use clap::Parser;
 use std::io::{prelude::*, BufReader};
 use std::fs::File;
 use anyhow::{Result};
-use serde::{Deserialize, Serialize};
 use rand::thread_rng;
 use rand::Rng;
 use std::path::Path;
 use indoc::{printdoc, formatdoc};
 use colored::Colorize;
 use std::env;
-use self::Language::*;
 use edit_distance::edit_distance;
+
+mod wiktionary_data;
+use crate::wiktionary_data::*;
 
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
 
@@ -27,68 +28,6 @@ struct Cli {
     #[clap(short, long, default_value = "1")]
     max_results : usize
 }
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Data {
-    lang_code : String,
-    #[serde(default)]
-    word : String,
-    senses : Vec<Sense>,
-    pos : String,
-    #[serde(default)]
-    translations : Vec<Translation>
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Sense {
-    #[serde(default)]
-    glosses : Vec<String>,
-    #[serde(default)]
-    examples : Vec<Example>
-}
-
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Example {
-    #[serde(alias = "ref")]
-    #[serde(default)]
-    reference : Option<String>,
-    text : String
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Translation {
-    lang : String,
-    #[serde(default)]
-    code : Option<String>,
-    #[serde(default)]
-    word : Option<String>,
-}
-
-#[derive(Copy, Clone)]
-enum Language {
-    EN,
-    DE,
-    FR,
-    ES,
-    SV
-}
-
-impl Language {
-    fn value(&self) -> String {
-        match self {
-            EN => "en".to_string(),
-            DE => "de".to_string(),
-            FR => "fr".to_string(),
-            ES => "es".to_string(),
-            SV => "sv".to_string()
-        }
-    }
-    pub fn iterator() -> impl Iterator<Item = Language> {
-        [EN, DE, FR, ES, SV].iter().copied()
-    }
-}
-
 
 fn get_file_reader(path: &Path) -> BufReader<File> {
     BufReader::new(File::open(path).unwrap())
@@ -147,7 +86,7 @@ fn format_translations(translations : &Vec<Translation>) -> String {
     }
 }
 
-fn print_entry(json : &Data) {
+fn print_entry(json : &DictionaryEntry) {
     let senses : String = json.senses
         .clone()
         .into_iter()
@@ -178,10 +117,9 @@ fn random_entry(input_path : &Path) -> Result<()> {
     let n_entries : usize = get_file_reader(input_path).lines().count();
     let mut rng = thread_rng();
     let random_entry_number: usize = rng.gen_range(0, n_entries - 1);
-    
     for (i, line) in lines.enumerate() {
         if i == random_entry_number {
-            let json : Data = serde_json::from_str(&line.unwrap()).unwrap();
+            let json : DictionaryEntry = wiktionary_data::parse(&line.unwrap()).unwrap();
             print_entry(&json);
         }
     }
@@ -190,11 +128,11 @@ fn random_entry(input_path : &Path) -> Result<()> {
 
 fn search_entry(input_path : &Path, term : String, max_results : usize) -> Result<()> {
     let lines = get_file_reader(input_path).lines();
-    let mut result : Option<Data> = None;
-    let mut full_matches : Vec<Data> = Vec::new();
+    let mut result : Option<DictionaryEntry> = None;
+    let mut full_matches : Vec<DictionaryEntry> = Vec::new();
     let mut min_distance = usize::MAX;
     for line in lines {
-        let json : Data = serde_json::from_str(&line.unwrap()).unwrap();
+        let json : DictionaryEntry = wiktionary_data::parse(&line.unwrap()).unwrap();
         let distance = edit_distance(&json.word, &term);
         if distance < min_distance {
             min_distance = distance;
