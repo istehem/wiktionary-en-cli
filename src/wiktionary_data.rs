@@ -19,7 +19,6 @@ pub struct Sense {
     pub examples : Vec<Example>
 }
 
-
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Example {
     #[serde(alias = "ref")]
@@ -36,7 +35,6 @@ pub struct Translation {
     #[serde(default)]
     pub word : Option<String>,
 }
-
 
 pub fn parse(line : &String) -> Result<DictionaryEntry, serde_json::Error> {
     return serde_json::from_str(line);
