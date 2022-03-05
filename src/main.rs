@@ -30,8 +30,8 @@ struct Cli {
     max_results : usize
 }
 
-fn get_file_reader(path: &Path) -> BufReader<File> {
-    BufReader::new(File::open(path).unwrap())
+fn get_file_reader(path: &Path) -> std::io::Result<BufReader<File>> {
+    return File::open(path).map(|f| BufReader::new(f));
 }
 
 fn format_glosses(glosses : &Vec<String>) -> String{
@@ -113,8 +113,8 @@ fn print_entry(json : &DictionaryEntry) {
 }
 
 fn random_entry(input_path : &Path) -> Result<()> {
-    let lines = get_file_reader(input_path).lines();
-    let n_entries : usize = get_file_reader(input_path).lines().count();
+    let lines = get_file_reader(input_path).unwrap().lines();
+    let n_entries : usize = get_file_reader(input_path).unwrap().lines().count();
     let mut rng = thread_rng();
     let random_entry_number: usize = rng.gen_range(0, n_entries - 1);
     for (i, line) in lines.enumerate() {
@@ -126,12 +126,12 @@ fn random_entry(input_path : &Path) -> Result<()> {
     return Ok(());
 }
 
-fn search_entry(input_path : &Path, term : String, max_results : usize) -> Result<()> {
-    let lines = get_file_reader(input_path).lines();
+fn do_search(file_reader : BufReader<File>, term : String, max_results : usize) 
+    -> Result<()> {
     let mut result : Option<DictionaryEntry> = None;
     let mut full_matches : Vec<DictionaryEntry> = Vec::new();
     let mut min_distance = usize::MAX;
-    for line in lines {
+    for line in file_reader.lines() {
         let json : DictionaryEntry = wiktionary_data::parse(&line.unwrap()).unwrap();
         let distance = edit_distance(&json.word, &term);
         if distance < min_distance {
@@ -164,12 +164,21 @@ fn search_entry(input_path : &Path, term : String, max_results : usize) -> Resul
         }
     };
     return Ok(());
+
+}
+
+fn search(input_path : &Path, term : String, max_results : usize) -> Result<()> {
+    match get_file_reader(input_path) {
+       Ok(br) => return do_search(br, term, max_results),
+       Err(_) => println!("No such DB file: '{}'", input_path.display().to_string())
+    }
+    return Ok(());
 }
 
 
 fn run(term : Option<String>, max_results : usize, path : &Path) -> Result<()> {
     match term {
-       Some(s) => return search_entry(&path, s, max_results),
+       Some(s) => return search(&path, s, max_results),
        None    => return random_entry(&path)
     };
 }
