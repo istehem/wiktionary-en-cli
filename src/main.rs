@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::io::{prelude::*, BufReader};
 use std::fs::File;
-use anyhow::{Result};
+use anyhow::{Result, bail};
 use rand::thread_rng;
 use rand::Rng;
 use std::path::Path;
@@ -15,6 +15,7 @@ mod language;
 use crate::wiktionary_data::*;
 
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
+static ERROR: &str = "fix the problems and try again";
 
 /// An English Dictionary
 #[derive(Parser)]
@@ -30,17 +31,13 @@ struct Cli {
     max_results : usize
 }
 
-fn get_file_reader(path: &Path) -> std::io::Result<BufReader<File>> {
-    return File::open(path).map(|f| BufReader::new(f));
-}
-
 fn format_glosses(glosses : &Vec<String>) -> String{
     match glosses.as_slice() {
         [] => "Glossaries".to_string(),
         xs => {
            return xs.into_iter()
                .enumerate()
-               .fold("Glossaries:\n".to_string(), | res, (i, gloss) | {
+               .fold("Glossaries:\n".to_string(), |res, (i, gloss)| {
                     return res + &formatdoc!(" {}) {}\n", i, gloss);
                 })
         }
@@ -53,7 +50,7 @@ fn format_examples(examples : &Vec<Example>) -> String{
         xs => {
            return xs.into_iter()
                .enumerate()
-               .fold("Examples:\n".to_string(), | res, (i, example) | {
+               .fold("Examples:\n".to_string(), |res, (i, example)| {
                     return res + &formatdoc!(" {}) {}\n", i, example.text);
                 })
         }
@@ -69,15 +66,15 @@ fn format_translations(translations : &Vec<Translation>) -> String {
         [] => "Translations:".to_string(),
         _  => {
             let langs : Vec<Option<String>> = language::Language::iterator()
-                .map(| lang | { Some(lang.value()) })
+                .map(|lang| { Some(lang.value()) })
                 .collect();
             let mut filtered_translations : Vec<Translation> = translations.clone()
                 .into_iter()
-                .filter(| translation | { langs.contains(&&translation.code) })
+                .filter(|translation| { langs.contains(&&translation.code) })
                 .collect();
-            filtered_translations.sort_by(| t1, t2 | t1.lang.cmp(&t2.lang));
+            filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
             return filtered_translations.into_iter()
-               .fold("Translations:\n".to_string(), | res, translation | {
+               .fold("Translations:\n".to_string(), |res, translation| {
                     return res + &formatdoc!(" {}) {}\n",
                          translation.lang,
                          translation.word.clone().or_else(empty_string).unwrap());
@@ -91,7 +88,7 @@ fn print_entry(json : &DictionaryEntry) {
         .clone()
         .into_iter()
         .enumerate()
-        .fold(String::new(), | res, (_i, sense) | {
+        .fold(String::new(), |res, (_i, sense)| {
                     res + &formatdoc!("
                                 {}
                                 {}
@@ -112,21 +109,45 @@ fn print_entry(json : &DictionaryEntry) {
                  json.pos, senses, format_translations(&json.translations));
 }
 
-fn random_entry(input_path : &Path) -> Result<()> {
-    let lines = get_file_reader(input_path).unwrap().lines();
-    let n_entries : usize = get_file_reader(input_path).unwrap().lines().count();
-    let mut rng = thread_rng();
-    let random_entry_number: usize = rng.gen_range(0, n_entries - 1);
-    for (i, line) in lines.enumerate() {
-        if i == random_entry_number {
+fn get_file_reader(path: &Path) -> Option<BufReader<File>> {
+    let file_buffer_result =  File::open(path).map(|f| BufReader::new(f));
+    match file_buffer_result {
+        Ok(buffer) => return Some(buffer),
+        _          => ()
+    }
+    println!("No such DB file: '{}'", path.display().to_string());
+    return None;
+}
+
+fn find_entry(file_reader : BufReader<File>, index : usize) -> Option<DictionaryEntry> {
+    for (i, line) in file_reader.lines().enumerate() {
+        if i == index {
             let json : DictionaryEntry = wiktionary_data::parse(&line.unwrap()).unwrap();
-            print_entry(&json);
+            return Some(json);
         }
+    }
+    return None;
+}
+
+fn random_entry(input_path : &Path) -> Result<()> {
+    let n_entries : Option<usize> = get_file_reader(input_path).map(|br| br.lines().count());
+    let mut rng = thread_rng();
+    let random_entry_number: Option<usize> =
+        n_entries.map(|n| rng.gen_range(0, n - 1));
+    if random_entry_number.is_none() {
+        bail!("{}", ERROR);
+    }
+    match get_file_reader(input_path)
+        .zip(random_entry_number)
+        .map(|(br, index)| find_entry(br, index))
+        .flatten() {
+        Some(json) => print_entry(&json),
+        _          => ()
     }
     return Ok(());
 }
 
-fn do_search(file_reader : BufReader<File>, term : String, max_results : usize) 
+fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
     -> Result<()> {
     let mut result : Option<DictionaryEntry> = None;
     let mut full_matches : Vec<DictionaryEntry> = Vec::new();
@@ -169,10 +190,9 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
 
 fn search(input_path : &Path, term : String, max_results : usize) -> Result<()> {
     match get_file_reader(input_path) {
-       Ok(br) => return do_search(br, term, max_results),
-       Err(_) => println!("No such DB file: '{}'", input_path.display().to_string())
+       Some(br) => return do_search(br, term, max_results),
+       _        => bail!("{}", ERROR)
     }
-    return Ok(());
 }
 
 
