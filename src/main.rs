@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::io::{prelude::*, BufReader};
 use std::fs::File;
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use rand::thread_rng;
 use rand::Rng;
 use std::path::Path;
@@ -15,7 +15,6 @@ mod language;
 use crate::wiktionary_data::*;
 
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
-static ERROR: &str = "fix the problems and try again";
 
 /// An English Dictionary
 #[derive(Parser)]
@@ -57,10 +56,6 @@ fn format_examples(examples : &Vec<Example>) -> String{
     }
 }
 
-fn empty_string() -> Option<String> {
-    return Some(String::new());
-}
-
 fn format_translations(translations : &Vec<Translation>) -> String {
     match translations.as_slice() {
         [] => "Translations:".to_string(),
@@ -77,7 +72,7 @@ fn format_translations(translations : &Vec<Translation>) -> String {
                .fold("Translations:\n".to_string(), |res, translation| {
                     return res + &formatdoc!(" {}) {}\n",
                          translation.lang,
-                         translation.word.clone().or_else(empty_string).unwrap());
+                         translation.word.clone().unwrap_or_else(String::new));
                 })
         }
     }
@@ -109,38 +104,35 @@ fn print_entry(json : &DictionaryEntry) {
                  json.pos, senses, format_translations(&json.translations));
 }
 
-fn get_file_reader(path: &Path) -> Option<BufReader<File>> {
+fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
     let file_buffer_result =  File::open(path).map(|f| BufReader::new(f));
     match file_buffer_result {
-        Ok(buffer) => return Some(buffer),
-        _          => ()
+        Ok(buffer) => return Ok(buffer),
+        _          => bail!("No such DB file: '{}'", path.display().to_string())
+
     }
-    println!("No such DB file: '{}'", path.display().to_string());
-    return None;
 }
 
 fn find_entry(file_reader : BufReader<File>, index : usize) -> Option<DictionaryEntry> {
     for (i, line) in file_reader.lines().enumerate() {
         if i == index {
-            let json : DictionaryEntry = wiktionary_data::parse(&line.unwrap()).unwrap();
-            return Some(json);
+            return line.ok().and_then(|l| wiktionary_data::parse(&l).ok());
         }
     }
     return None;
 }
 
 fn random_entry(input_path : &Path) -> Result<()> {
-    let n_entries : Option<usize> = get_file_reader(input_path).map(|br| br.lines().count());
+    let file_reader = get_file_reader(input_path);
+    ensure!(file_reader.is_ok(), file_reader.unwrap_err());
+    let n_entries : Option<usize> = file_reader.ok().map(|br| br.lines().count());
     let mut rng = thread_rng();
     let random_entry_number: Option<usize> =
         n_entries.map(|n| rng.gen_range(0, n - 1));
-    if random_entry_number.is_none() {
-        bail!("{}", ERROR);
-    }
     match get_file_reader(input_path)
+        .ok()
         .zip(random_entry_number)
-        .map(|(br, index)| find_entry(br, index))
-        .flatten() {
+        .and_then(|(br, index)| find_entry(br, index)) {
         Some(json) => print_entry(&json),
         _          => ()
     }
@@ -153,7 +145,7 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
     let mut full_matches : Vec<DictionaryEntry> = Vec::new();
     let mut min_distance = usize::MAX;
     for line in file_reader.lines() {
-        let json : DictionaryEntry = wiktionary_data::parse(&line.unwrap()).unwrap();
+        let json : DictionaryEntry = wiktionary_data::parse(&line?)?;
         let distance = edit_distance(&json.word, &term);
         if distance < min_distance {
             min_distance = distance;
@@ -190,8 +182,8 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
 
 fn search(input_path : &Path, term : String, max_results : usize) -> Result<()> {
     match get_file_reader(input_path) {
-       Some(br) => return do_search(br, term, max_results),
-       _        => bail!("{}", ERROR)
+       Ok(br) => return do_search(br, term, max_results),
+       Err(e) => bail!(e)
     }
 }
 
