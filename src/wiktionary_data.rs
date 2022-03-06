@@ -13,7 +13,9 @@ pub struct DictionaryEntry {
     senses : Vec<Sense>,
     pos : String,
     #[serde(default)]
-    translations : Vec<Translation>
+    translations : Vec<Translation>,
+    #[serde(default)]
+    sounds : Vec<Sound>
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -35,10 +37,16 @@ struct Example {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Translation {
     lang : String,
-    #[serde(default)]
     code : Option<String>,
-    #[serde(default)]
     word : Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Sound {
+    ipa : Option<String>,
+    enpr: Option<String>,
+    #[serde(default)]
+    tags: Vec<String>
 }
 
 impl DictionaryEntry {
@@ -62,16 +70,53 @@ impl DictionaryEntry {
               {} ({})
               -------------------------------------------
               {}
+              -------------------------------------------
+              {}
               {}
               -------------------------------------------
               ", &self.word.clone().green(),
-                 self.pos, senses, format_translations(&self.translations));
+                 self.pos, format_sounds(&self.sounds),
+                 senses, format_translations(&self.translations));
+    }
+}
+
+fn format_sounds(sounds : &Vec<Sound>) -> String{
+    match sounds_to_strings(sounds)
+        .as_slice() {
+        [] => "Pronunciation:".to_string(),
+        xs => {
+           return xs.into_iter()
+               .enumerate()
+               .fold("Pronunciation:\n".to_string(), |res, (i, sound)| {
+                    return res + &formatdoc!(" {}) {}\n", i, sound);
+                })
+        }
+    }
+}
+
+fn sounds_to_strings(sounds : &Vec<Sound>) -> Vec<String> {
+    let mut results : Vec<String> = Vec::new();
+    for sound in sounds {
+        sound.ipa
+            .clone()
+            .map(|s| results.push(format!("IPA:  {} {}", s, format_tags(&sound.tags))));
+        sound.enpr
+            .clone()
+            .map(|s| results.push(format!("enPr: {} {}", s, format_tags(&sound.tags))));
+    }
+    return results;
+}
+
+fn format_tags (tags : &Vec<String>) -> String {
+    match tags.as_slice() {
+        [] => return String::new(),
+        xs => return format!("({})", xs.join(", "))
     }
 }
 
 fn format_glosses(glosses : &Vec<String>) -> String{
     match glosses.as_slice() {
-        [] => "Glossaries".to_string(),
+        [] => "Glossaries:".to_string(),
         xs => {
            return xs.into_iter()
                .enumerate()
