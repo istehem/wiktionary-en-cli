@@ -1,17 +1,15 @@
 use clap::Parser;
-use std::io::{prelude::*, BufReader};
 use std::fs::File;
-use anyhow::{Result, bail, ensure};
-use rand::thread_rng;
-use rand::Rng;
+use std::io::{prelude::*, BufReader};
 use std::path::Path;
-use indoc::{printdoc, formatdoc};
+use anyhow::{Result, bail, ensure};
+use rand::{thread_rng, Rng};
+use indoc::{printdoc};
 use colored::Colorize;
 use std::env;
 use edit_distance::edit_distance;
 
 mod wiktionary_data;
-mod language;
 use crate::wiktionary_data::*;
 
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
@@ -30,78 +28,8 @@ struct Cli {
     max_results : usize
 }
 
-fn format_glosses(glosses : &Vec<String>) -> String{
-    match glosses.as_slice() {
-        [] => "Glossaries".to_string(),
-        xs => {
-           return xs.into_iter()
-               .enumerate()
-               .fold("Glossaries:\n".to_string(), |res, (i, gloss)| {
-                    return res + &formatdoc!(" {}) {}\n", i, gloss);
-                })
-        }
-    }
-}
-
-fn format_examples(examples : &Vec<Example>) -> String{
-    match examples.as_slice() {
-        [] => "Examples:".to_string(),
-        xs => {
-           return xs.into_iter()
-               .enumerate()
-               .fold("Examples:\n".to_string(), |res, (i, example)| {
-                    return res + &formatdoc!(" {}) {}\n", i, example.text);
-                })
-        }
-    }
-}
-
-fn format_translations(translations : &Vec<Translation>) -> String {
-    match translations.as_slice() {
-        [] => "Translations:".to_string(),
-        _  => {
-            let langs : Vec<Option<String>> = language::Language::iterator()
-                .map(|lang| { Some(lang.value()) })
-                .collect();
-            let mut filtered_translations : Vec<Translation> = translations.clone()
-                .into_iter()
-                .filter(|translation| { langs.contains(&&translation.code) })
-                .collect();
-            filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
-            return filtered_translations.into_iter()
-               .fold("Translations:\n".to_string(), |res, translation| {
-                    return res + &formatdoc!(" {}) {}\n",
-                         translation.lang,
-                         translation.word.clone().unwrap_or_else(String::new));
-                })
-        }
-    }
-}
-
 fn print_entry(json : &DictionaryEntry) {
-    let senses : String = json.senses
-        .clone()
-        .into_iter()
-        .enumerate()
-        .fold(String::new(), |res, (_i, sense)| {
-                    res + &formatdoc!("
-                                {}
-                                {}
-                                -------------------------------------------
-                                ",
-                                format_glosses(&sense.glosses),
-                                format_examples(&sense.examples))
-        });
-
-    printdoc!("
-              -------------------------------------------
-              {} ({})
-              -------------------------------------------
-              {}
-              {}
-              -------------------------------------------
-              ", &json.word.clone().green(),
-                 json.pos, senses, format_translations(&json.translations));
+    println!("{}", json.to_pretty_string());
 }
 
 fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
