@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use indoc::{formatdoc};
 use colored::Colorize;
+use anyhow::Result;
 
 pub mod language;
 
@@ -116,6 +117,6 @@ fn format_translations(translations : &Vec<Translation>) -> String {
     }
 }
 
-pub fn parse(line : &String) -> Result<DictionaryEntry, serde_json::Error> {
-    return serde_json::from_str(line);
+pub fn parse(line : &String) -> Result<DictionaryEntry> {
+    return serde_json::from_str(line).map_err(|err| anyhow::Error::new(err));
 }

@@ -33,10 +33,12 @@ fn print_entry(json : &DictionaryEntry) {
 }
 
 fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
-    let file_buffer_result =  File::open(path).map(|f| BufReader::new(f));
+    let file_buffer_result =  File::open(path)
+        .map(|f| BufReader::new(f))
+        .map_err(|err| anyhow::Error::new(err));
     match file_buffer_result {
-        Ok(buffer) => return Ok(buffer),
-        _          => bail!("No such DB file: '{}'", path.display().to_string())
+        ok@Ok(_) => return ok,
+        _        => bail!("No such DB file: '{}'", path.display().to_string())
 
     }
 }
@@ -72,8 +74,11 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
     let mut result : Option<DictionaryEntry> = None;
     let mut full_matches : Vec<DictionaryEntry> = Vec::new();
     let mut min_distance = usize::MAX;
-    for line in file_reader.lines() {
-        let json : DictionaryEntry = wiktionary_data::parse(&line?)?;
+    for (i, line) in file_reader.lines().enumerate() {
+        ensure!(line.is_ok(), format!("Couldn't read line {} in DB file.", i));
+        let parse_res : Result<DictionaryEntry> = wiktionary_data::parse(&line?);
+        ensure!(parse_res.is_ok(), format!("Couldn't parse line {} in DB file.", i));
+        let json : DictionaryEntry = parse_res?;
         let distance = edit_distance(&json.word, &term);
         if distance < min_distance {
             min_distance = distance;
