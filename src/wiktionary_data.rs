@@ -6,38 +6,38 @@ pub mod language;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DictionaryEntry {
-    pub lang_code : String,
+    lang_code : String,
     #[serde(default)]
     pub word : String,
-    pub senses : Vec<Sense>,
-    pub pos : String,
+    senses : Vec<Sense>,
+    pos : String,
     #[serde(default)]
-    pub translations : Vec<Translation>
+    translations : Vec<Translation>
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Sense {
+struct Sense {
     #[serde(default)]
-    pub glosses : Vec<String>,
+    glosses : Vec<String>,
     #[serde(default)]
-    pub examples : Vec<Example>
+    examples : Vec<Example>
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Example {
+struct Example {
     #[serde(alias = "ref")]
     #[serde(default)]
     reference : Option<String>,
-    pub text : String
+    text : String
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Translation {
-    pub lang : String,
+    lang : String,
     #[serde(default)]
-    pub code : Option<String>,
+    code : Option<String>,
     #[serde(default)]
-    pub word : Option<String>,
+    word : Option<String>,
 }
 
 impl DictionaryEntry {
