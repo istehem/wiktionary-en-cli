@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use indoc::{formatdoc};
 use colored::Colorize;
 use anyhow::Result;
+use colored::ColoredString;
 
 pub mod language;
 
@@ -15,7 +16,8 @@ pub struct DictionaryEntry {
     #[serde(default)]
     translations : Vec<Translation>,
     #[serde(default)]
-    sounds : Vec<Sound>
+    sounds : Vec<Sound>,
+    etymology_text : Option<String>
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -23,7 +25,9 @@ struct Sense {
     #[serde(default)]
     glosses : Vec<String>,
     #[serde(default)]
-    examples : Vec<Example>
+    examples : Vec<Example>,
+    #[serde(default)]
+    tags : Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -55,15 +59,20 @@ impl DictionaryEntry {
         .clone()
         .into_iter()
         .enumerate()
-        .fold(String::new(), |res, (_i, sense)| {
+        .fold(String::new(), |res, (i, sense)| {
                     res + &formatdoc!("
+                                {}. {} {}
                                 {}
-                                {}
-                                -------------------------------------------
                                 ",
+                                i.to_string().bold(), format_tags(&sense.tags).bold(),
                                 format_glosses(&sense.glosses),
                                 format_examples(&sense.examples))
         });
+    /*
+    if self.etymology_text.is_some(){
+        println!("{}\n", self.etymology_text.clone().unwrap());
+    }
+    */
 
     return formatdoc!("
               -------------------------------------------
@@ -72,24 +81,26 @@ impl DictionaryEntry {
               {}
               -------------------------------------------
               {}
+              -------------------------------------------
               {}
               -------------------------------------------
-              ", &self.word.clone().green(),
+              ", &self.word.clone().green().bold(),
                  self.pos, format_sounds(&self.sounds),
                  senses, format_translations(&self.translations));
     }
 }
 
-fn format_sounds(sounds : &Vec<Sound>) -> String{
+fn format_sounds(sounds : &Vec<Sound>) -> ColoredString {
     match sounds_to_strings(sounds)
         .as_slice() {
-        [] => "Pronunciation:".to_string(),
+        [] => "Pronunciation:".bold(),
         xs => {
            return xs.into_iter()
                .enumerate()
-               .fold("Pronunciation:\n".to_string(), |res, (i, sound)| {
-                    return res + &formatdoc!(" {}) {}\n", i, sound);
-                })
+               .fold("Pronunciation:\n".bold(), |res, (i, sound)| {
+                    return formatdoc!("{} {}. {}\n",
+                                      res, i.to_string().italic(), sound).normal();
+               })
         }
     }
 }
@@ -116,33 +127,29 @@ fn format_tags (tags : &Vec<String>) -> String {
 
 fn format_glosses(glosses : &Vec<String>) -> String{
     match glosses.as_slice() {
-        [] => "Glossaries:".to_string(),
-        xs => {
-           return xs.into_iter()
-               .enumerate()
-               .fold("Glossaries:\n".to_string(), |res, (i, gloss)| {
-                    return res + &formatdoc!(" {}) {}\n", i, gloss);
-                })
-        }
+        [gloss] => return gloss.to_string(),
+        _       => return String::new()
     }
 }
 
 fn format_examples(examples : &Vec<Example>) -> String{
     match examples.as_slice() {
-        [] => "Examples:".to_string(),
+        [] => String::new(),
         xs => {
            return xs.into_iter()
                .enumerate()
-               .fold("Examples:\n".to_string(), |res, (i, example)| {
-                    return res + &formatdoc!(" {}) {}\n", i, example.text);
+               .fold("\n".to_string(), |res, (i, example)| {
+                    return res + &formatdoc!(" {}. {}\n",
+                                             i.to_string().italic(),
+                                             example.text);
                 })
         }
     }
 }
 
-fn format_translations(translations : &Vec<Translation>) -> String {
+fn format_translations(translations : &Vec<Translation>) -> ColoredString {
     match translations.as_slice() {
-        [] => "Translations:".to_string(),
+        [] => "Translations:".bold(),
         _  => {
             let langs : Vec<Option<String>> = language::Language::iterator()
                 .map(|lang| { Some(lang.value()) })
@@ -153,10 +160,11 @@ fn format_translations(translations : &Vec<Translation>) -> String {
                 .collect();
             filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
             return filtered_translations.into_iter()
-               .fold("Translations:\n".to_string(), |res, translation| {
-                    return res + &formatdoc!(" {}) {}\n",
-                         translation.lang,
-                         translation.word.clone().unwrap_or_else(String::new));
+               .fold("Translations:\n".bold(), |res, translation| {
+                    return format!("{} {}) {}\n",
+                         res,
+                         translation.lang.italic(),
+                         translation.word.clone().unwrap_or_else(String::new)).normal();
                 })
         }
     }
