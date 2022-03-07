@@ -62,7 +62,8 @@ impl DictionaryEntry {
         .fold(String::new(), |res, (i, sense)| {
                     res + &formatdoc!("
                                 {}. {} {}
-                                {}",
+                                {}
+                                ",
                                 i.to_string().bold(), format_tags(&sense.tags).bold(),
                                 format_glosses(&sense.glosses),
                                 format_examples(&sense.examples))
@@ -137,7 +138,7 @@ fn format_examples(examples : &Vec<Example>) -> String{
         xs => {
            return xs.into_iter()
                .enumerate()
-               .fold("\n".to_string(), |res, (i, example)| {
+                .fold(String::new(), |res, (i, example)| {
                     return res + &formatdoc!(" {}. {}\n",
                                              i.to_string().italic(),
                                              example.text);
