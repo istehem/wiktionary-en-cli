@@ -139,7 +139,7 @@ fn format_examples(examples : &Vec<Example>) -> String{
            return xs.into_iter()
                .enumerate()
                 .fold(String::new(), |res, (i, example)| {
-                    return res + &formatdoc!(" {}. {}\n",
+                    return res + &formatdoc!("\n {}. {}",
                                              i.to_string().italic(),
                                              example.text);
                 })
