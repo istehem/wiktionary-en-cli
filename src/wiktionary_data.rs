@@ -62,8 +62,7 @@ impl DictionaryEntry {
         .fold(String::new(), |res, (i, sense)| {
                     res + &formatdoc!("
                                 {}. {} {}
-                                {}
-                                ",
+                                {}",
                                 i.to_string().bold(), format_tags(&sense.tags).bold(),
                                 format_glosses(&sense.glosses),
                                 format_examples(&sense.examples))
