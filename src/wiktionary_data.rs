@@ -6,6 +6,24 @@ use colored::ColoredString;
 
 pub mod language;
 
+trait Join {
+    fn join(&self, list : Vec<Self>) -> Self where Self: Sized;
+}
+
+impl Join for ColoredString {
+    fn join(&self, list : Vec<ColoredString>) -> ColoredString {
+        let mut res : ColoredString = "".normal();
+        let len : usize = list.len();
+        for (i, string) in list.iter().enumerate() {
+            res = format!("{}{}", res, string).normal();
+            if i < len - 1 {
+                res = format!("{}{}", res, self).normal();
+            }
+        }
+        return res.clone();
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DictionaryEntry {
     lang_code : String,
@@ -66,7 +84,7 @@ impl DictionaryEntry {
                                 ",
                                 i.to_string().bold(), format_tags(&sense.tags).bold(),
                                 format_glosses(&sense.glosses),
-                                format_examples(&sense.examples))
+                                "\n".normal().join(examples_to_strings(&sense.examples)))
         });
     /*
     if self.etymology_text.is_some(){
@@ -90,30 +108,27 @@ impl DictionaryEntry {
     }
 }
 
+
 fn format_sounds(sounds : &Vec<Sound>) -> ColoredString {
-    match sounds_to_strings(sounds)
-        .as_slice() {
-        [] => "Pronunciation:".bold(),
-        xs => {
-           return xs.into_iter()
-               .enumerate()
-               .fold("Pronunciation:\n".bold(), |res, (i, sound)| {
-                    return formatdoc!("{} {}. {}\n",
-                                      res, i.to_string().italic(), sound).normal();
-               })
-        }
-    }
+    return formatdoc!("{}
+                       {}",
+                      "Pronunciation".bold(),
+                      "\n".normal().join(sounds_to_strings(sounds))).normal();
 }
 
-fn sounds_to_strings(sounds : &Vec<Sound>) -> Vec<String> {
-    let mut results : Vec<String> = Vec::new();
-    for sound in sounds {
+fn sounds_to_strings(sounds : &Vec<Sound>) -> Vec<ColoredString> {
+    let mut results : Vec<ColoredString> = Vec::new();
+    for (i, sound) in sounds.into_iter().enumerate() {
         sound.ipa
             .clone()
-            .map(|s| results.push(format!("IPA:  {} {}", s, format_tags(&sound.tags))));
+            .map(|s| results.push(format!(" {}. IPA:  {} {}",
+                                    i.to_string().italic(), s,
+                                    format_tags(&sound.tags)).normal()));
         sound.enpr
             .clone()
-            .map(|s| results.push(format!("enPr: {} {}", s, format_tags(&sound.tags))));
+            .map(|s| results.push(format!(" {}. enPr: {} {}",
+                                     i.to_string().italic(), s,
+                                     format_tags(&sound.tags)).normal()));
     }
     return results;
 }
@@ -132,19 +147,13 @@ fn format_glosses(glosses : &Vec<String>) -> String{
     }
 }
 
-fn format_examples(examples : &Vec<Example>) -> String{
-    match examples.as_slice() {
-        [] => String::new(),
-        xs => {
-           return xs.into_iter()
-               .enumerate()
-                .fold(String::new(), |res, (i, example)| {
-                    return res + &formatdoc!("\n {}. {}",
-                                             i.to_string().italic(),
-                                             example.text);
-                })
-        }
-    }
+fn examples_to_strings(examples : &Vec<Example>) -> Vec<ColoredString>{
+    return examples.into_iter()
+              .enumerate()
+              .map(|(i, example)| formatdoc!(" {}. {}",
+                                            i.to_string().italic(),
+                                            example.text).normal())
+              .collect();
 }
 
 fn format_translations(translations : &Vec<Translation>) -> ColoredString {
