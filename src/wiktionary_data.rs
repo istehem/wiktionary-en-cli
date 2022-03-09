@@ -147,7 +147,7 @@ fn sounds_to_strings(sounds : &Vec<Sound>) -> Vec<ColoredString> {
     return results;
 }
 
-fn format_tags (tags : &Vec<String>) -> String {
+fn format_tags(tags : &Vec<String>) -> String {
     match tags.as_slice() {
         [] => return String::new(),
         xs => return format!("({})", xs.join(", "))
@@ -191,7 +191,9 @@ fn translations_to_strings(translations : &Vec<Translation>) -> Vec<ColoredStrin
 fn format_translations(translations : &Vec<Translation>) -> ColoredString {
     let mut res : Vec<ColoredString> = Vec::new();
     res.push("Translations".bold());
-    res.push("\n".normal().join(translations_to_strings(translations)));
+    if !translations.is_empty() {
+        res.push("\n".normal().join(translations_to_strings(translations)));
+    }
     return "\n".normal().join(res);
 }
 
