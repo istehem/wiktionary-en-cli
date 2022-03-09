@@ -156,27 +156,29 @@ fn examples_to_strings(examples : &Vec<Example>) -> Vec<ColoredString>{
               .collect();
 }
 
-fn format_translations(translations : &Vec<Translation>) -> ColoredString {
-    match translations.as_slice() {
-        [] => "Translations:".bold(),
-        _  => {
-            let langs : Vec<Option<String>> = language::Language::iterator()
+fn translations_to_strings(translations : &Vec<Translation>) -> Vec<ColoredString> {
+    let langs : Vec<Option<String>> = language::Language::iterator()
                 .map(|lang| { Some(lang.value()) })
                 .collect();
-            let mut filtered_translations : Vec<Translation> = translations.clone()
-                .into_iter()
-                .filter(|translation| { langs.contains(&&translation.code) })
-                .collect();
-            filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
-            return filtered_translations.into_iter()
-               .fold("Translations:\n".bold(), |res, translation| {
-                    return format!("{} {}) {}\n",
-                         res,
-                         translation.lang.italic(),
-                         translation.word.clone().unwrap_or_else(String::new)).normal();
-                })
-        }
-    }
+    let mut filtered_translations : Vec<Translation> = translations
+        .clone()
+        .into_iter()
+        .filter(|translation| { langs.contains(&&translation.code) })
+        .collect();
+    filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
+    return filtered_translations
+        .into_iter()
+        .map(|translation| format!(" {}) {}",
+                            translation.lang.italic(),
+                            translation.word.clone().unwrap_or_else(String::new)).normal())
+        .collect();
+}
+
+fn format_translations(translations : &Vec<Translation>) -> ColoredString {
+    let mut res : Vec<ColoredString> = Vec::new();
+    res.push("Translations".bold());
+    res.push("\n".normal().join(translations_to_strings(translations)));
+    return "\n".normal().join(res);
 }
 
 pub fn parse(line : &String) -> Result<DictionaryEntry> {
