@@ -73,25 +73,11 @@ struct Sound {
 
 impl DictionaryEntry {
     pub fn to_pretty_string(&self) -> String {
-    let senses : String = self.senses
-        .clone()
-        .into_iter()
-        .enumerate()
-        .fold(String::new(), |res, (i, sense)| {
-                    res + &formatdoc!("
-                                {}. {} {}
-                                {}
-                                ",
-                                i.to_string().bold(), format_tags(&sense.tags).bold(),
-                                format_glosses(&sense.glosses),
-                                "\n".normal().join(examples_to_strings(&sense.examples)))
-        });
     /*
     if self.etymology_text.is_some(){
         println!("{}\n", self.etymology_text.clone().unwrap());
     }
     */
-
     return formatdoc!("
               -------------------------------------------
               {} ({})
@@ -102,18 +88,46 @@ impl DictionaryEntry {
               -------------------------------------------
               {}
               -------------------------------------------
-              ", &self.word.clone().green().bold(),
-                 self.pos, format_sounds(&self.sounds),
-                 senses, format_translations(&self.translations));
+              ", &self.word.clone().green().bold(), self.pos,
+                 format_sounds(&self.sounds),
+                 format_senses(&self.senses),
+                 format_translations(&self.translations));
     }
 }
 
+fn senses_to_strings(senses : &Vec<Sense>) -> Vec<ColoredString> {
+    return senses
+        .clone()
+        .into_iter()
+        .enumerate()
+        .map(|(i, sense)| format_sense(&sense, i))
+        .collect();
+}
+
+fn format_senses(senses : &Vec<Sense>) -> ColoredString {
+    return "\n\n".normal().join(senses_to_strings(senses));
+}
+
+fn format_sense(sense : &Sense, index : usize) -> ColoredString {
+    let mut res : Vec<ColoredString> = Vec::new();
+    let fst =  format!("{}. {} {}",
+                            index.to_string().bold(),
+                            format_tags(&sense.tags).bold(),
+                            format_glosses(&sense.glosses)).normal();
+    res.push(fst);
+    if !sense.examples.is_empty() {
+        res.push("\n".normal().join(examples_to_strings(&sense.examples)));
+    }
+    return "\n".normal().join(res);
+}
 
 fn format_sounds(sounds : &Vec<Sound>) -> ColoredString {
-    return formatdoc!("{}
-                       {}",
-                      "Pronunciation".bold(),
-                      "\n".normal().join(sounds_to_strings(sounds))).normal();
+    let mut res : Vec<ColoredString> = Vec::new();
+    res.push("Pronunciation".bold());
+    if !sounds.is_empty() {
+        res.push("\n".normal().join(sounds_to_strings(sounds)));
+    }
+    return "\n".normal().join(res);
 }
 
 fn sounds_to_strings(sounds : &Vec<Sound>) -> Vec<ColoredString> {
@@ -150,7 +164,7 @@ fn format_glosses(glosses : &Vec<String>) -> String{
 fn examples_to_strings(examples : &Vec<Example>) -> Vec<ColoredString>{
     return examples.into_iter()
               .enumerate()
-              .map(|(i, example)| formatdoc!(" {}. {}",
+              .map(|(i, example)| format!(" {}. {}",
                                             i.to_string().italic(),
                                             example.text).normal())
               .collect();
