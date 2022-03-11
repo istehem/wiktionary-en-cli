@@ -3,11 +3,15 @@ use indoc::{formatdoc};
 use colored::Colorize;
 use anyhow::Result;
 use colored::ColoredString;
+use textwrap::{fill, indent};
 
 pub mod language;
 
+static LINE_WRAP_AT: usize = 80;
+
 trait Join {
     fn join(&self, list : Vec<Self>) -> Self where Self: Sized;
+    fn joinwrap(&self, list : Vec<Self>, width : usize) -> Self where Self: Sized;
 }
 
 impl Join for ColoredString {
@@ -21,6 +25,11 @@ impl Join for ColoredString {
             }
         }
         return res.clone();
+    }
+
+    fn joinwrap(&self, list : Vec<ColoredString>, width : usize) -> ColoredString {
+        let text = self.join(list);
+        return fill(&text, width).normal();
     }
 }
 
@@ -110,15 +119,22 @@ fn format_senses(senses : &Vec<Sense>) -> ColoredString {
 
 fn format_sense(sense : &Sense, index : usize) -> ColoredString {
     let mut res : Vec<ColoredString> = Vec::new();
-    let fst =  format!("{}. {} {}",
+    let title = format!("{}. {}",
                             index.to_string().bold(),
-                            format_tags(&sense.tags).bold(),
-                            format_glosses(&sense.glosses)).normal();
-    res.push(fst);
+                            format_tags(&sense.tags).bold()).normal();
+    res.push(title);
+    res.push(fill(&format_glosses(&sense.glosses), LINE_WRAP_AT).normal());
     if !sense.examples.is_empty() {
-        res.push("\n".normal().join(examples_to_strings(&sense.examples)));
+        res.push(format_examples(&sense.examples));
     }
     return "\n".normal().join(res);
+}
+
+fn format_examples(examples : &Vec<Example>) -> ColoredString {
+    return indent(&"\n"
+                  .normal()
+                  .joinwrap(examples_to_strings(&examples), LINE_WRAP_AT - 1), " ")
+           .normal();
 }
 
 fn format_sounds(sounds : &Vec<Sound>) -> ColoredString {
@@ -164,7 +180,7 @@ fn format_glosses(glosses : &Vec<String>) -> String{
 fn examples_to_strings(examples : &Vec<Example>) -> Vec<ColoredString>{
     return examples.into_iter()
               .enumerate()
-              .map(|(i, example)| format!(" {}. {}",
+              .map(|(i, example)| format!("{}. {}",
                                             i.to_string().italic(),
                                             example.text).normal())
               .collect();
