@@ -43,13 +43,20 @@ fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
     }
 }
 
-fn find_entry(file_reader : BufReader<File>, index : usize) -> Option<DictionaryEntry> {
+fn find_entry(file_reader : BufReader<File>, index : usize) -> Result<DictionaryEntry> {
     for (i, line) in file_reader.lines().enumerate() {
         if i == index {
-            return line.ok().and_then(|l| wiktionary_data::parse(&l).ok());
+            return parse_line(line, i);
         }
     }
-    return None;
+    bail!("No entry found.");
+}
+
+fn parse_line(line : Result<String, std::io::Error>, i : usize) -> Result<DictionaryEntry> {
+    ensure!(line.is_ok(), format!("Couldn't read line {} in DB file.", i));
+    let parse_res : Result<DictionaryEntry> = wiktionary_data::parse(&line?);
+    ensure!(parse_res.is_ok(), format!("Couldn't parse line {} in DB file.", i));
+    return parse_res;
 }
 
 fn random_entry(input_path : &Path) -> Result<()> {
@@ -62,9 +69,11 @@ fn random_entry(input_path : &Path) -> Result<()> {
     match get_file_reader(input_path)
         .ok()
         .zip(random_entry_number)
-        .and_then(|(br, index)| find_entry(br, index)) {
-        Some(json) => print_entry(&json),
-        _          => ()
+        .map(|(br, index)| find_entry(br, index))
+        .transpose() {
+        Ok(Some(json)) => print_entry(&json),
+        Ok(None)       => bail!("Couldn't generate random entry number."),
+        err            => return err.map(|_| ())
     }
     return Ok(());
 }
@@ -75,9 +84,8 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
     let mut full_matches : Vec<DictionaryEntry> = Vec::new();
     let mut min_distance = usize::MAX;
     for (i, line) in file_reader.lines().enumerate() {
-        ensure!(line.is_ok(), format!("Couldn't read line {} in DB file.", i));
-        let parse_res : Result<DictionaryEntry> = wiktionary_data::parse(&line?);
-        ensure!(parse_res.is_ok(), format!("Couldn't parse line {} in DB file.", i));
+        let parse_res : Result<DictionaryEntry> = parse_line(line, i);
+        ensure!(parse_res.is_ok(), parse_res.unwrap_err());
         let json : DictionaryEntry = parse_res?;
         let distance = edit_distance(&json.word, &term);
         if distance < min_distance {
@@ -110,7 +118,6 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
         }
     };
     return Ok(());
-
 }
 
 fn search(input_path : &Path, term : String, max_results : usize) -> Result<()> {

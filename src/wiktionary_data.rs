@@ -11,7 +11,7 @@ use crate::colored_string_utils::Join;
 
 static LINE_WRAP_AT: usize = 80;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
     lang_code : String,
     #[serde(default)]
@@ -25,7 +25,7 @@ pub struct DictionaryEntry {
     etymology_text : Option<String>
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 struct Sense {
     #[serde(default)]
     glosses : Vec<String>,
@@ -35,7 +35,7 @@ struct Sense {
     tags : Vec<String>
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 struct Example {
     #[serde(alias = "ref")]
     #[serde(default)]
@@ -43,14 +43,14 @@ struct Example {
     text : String
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Translation {
     lang : String,
     code : Option<String>,
     word : Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 struct Sound {
     ipa : Option<String>,
     enpr: Option<String>,
