@@ -9,7 +9,8 @@ pub mod language;
 pub mod colored_string_utils;
 use crate::colored_string_utils::Join;
 
-static LINE_WRAP_AT: usize = 80;
+const LINE_WRAP_AT: usize = 80;
+const SEP: &str = "\n";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
@@ -92,7 +93,7 @@ fn senses_to_strings(senses : &Vec<Sense>) -> Vec<ColoredString> {
 }
 
 fn format_senses(senses : &Vec<Sense>) -> ColoredString {
-    return "\n\n".normal().join(senses_to_strings(senses));
+    return SEP.normal().join(senses_to_strings(senses));
 }
 
 fn format_sense(sense : &Sense, index : usize) -> ColoredString {
@@ -105,11 +106,11 @@ fn format_sense(sense : &Sense, index : usize) -> ColoredString {
     if !sense.examples.is_empty() {
         res.push(format_examples(&sense.examples));
     }
-    return "\n".normal().join(res);
+    return SEP.normal().join(res);
 }
 
 fn format_examples(examples : &Vec<Example>) -> ColoredString {
-    return indent(&"\n"
+    return indent(&SEP
                   .normal()
                   .joinwrap(examples_to_strings(&examples), LINE_WRAP_AT - 1), " ")
            .normal();
@@ -119,9 +120,9 @@ fn format_sounds(sounds : &Vec<Sound>) -> ColoredString {
     let mut res : Vec<ColoredString> = Vec::new();
     res.push("Pronunciation".bold());
     if !sounds.is_empty() {
-        res.push("\n".normal().join(sounds_to_strings(sounds)));
+        res.push(SEP.normal().join(sounds_to_strings(sounds)));
     }
-    return "\n".normal().join(res);
+    return SEP.normal().join(res);
 }
 
 fn sounds_to_strings(sounds : &Vec<Sound>) -> Vec<ColoredString> {
@@ -186,9 +187,9 @@ fn format_translations(translations : &Vec<Translation>) -> ColoredString {
     let mut res : Vec<ColoredString> = Vec::new();
     res.push("Translations".bold());
     if !translations.is_empty() {
-        res.push("\n".normal().join(translations_to_strings(translations)));
+        res.push(SEP.normal().join(translations_to_strings(translations)));
     }
-    return "\n".normal().join(res);
+    return SEP.normal().join(res);
 }
 
 pub fn parse(line : &String) -> Result<DictionaryEntry> {
