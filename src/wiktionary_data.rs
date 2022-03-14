@@ -61,12 +61,7 @@ struct Sound {
 
 impl DictionaryEntry {
     pub fn to_pretty_string(&self) -> String {
-    /*
-    if self.etymology_text.is_some(){
-        println!("{}\n", self.etymology_text.clone().unwrap());
-    }
-    */
-    return formatdoc!("
+        return formatdoc!("
               -------------------------------------------
               {} ({})
               -------------------------------------------
@@ -76,11 +71,23 @@ impl DictionaryEntry {
               -------------------------------------------
               {}
               -------------------------------------------
+              {}
+              -------------------------------------------
               ", &self.word.clone().green().bold(), self.pos,
+                 format_etymology(&self.etymology_text),
                  format_sounds(&self.sounds),
                  format_senses(&self.senses),
                  format_translations(&self.translations));
     }
+}
+
+fn format_etymology(etymology : &Option<String>) -> ColoredString {
+    let mut res : Vec<ColoredString> = Vec::new();
+    res.push("Etymology:".bold());
+    if etymology.is_some(){
+        res.push(etymology.clone().unwrap().normal());
+    }
+    return SEP.normal().joinwrap(res, LINE_WRAP_AT - 1);
 }
 
 fn senses_to_strings(senses : &Vec<Sense>) -> Vec<ColoredString> {
