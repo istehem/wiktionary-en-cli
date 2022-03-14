@@ -88,7 +88,7 @@ fn format_etymology(etymology : &Option<String>) -> ColoredString {
     if etymology.is_some(){
         res.push(etymology.clone().unwrap().normal());
     }
-    return SEP.normal().joinwrap(res, LINE_WRAP_AT - 1);
+    return SEP.normal().joinwrap(res, LINE_WRAP_AT);
 }
 
 fn senses_to_strings(senses : &Vec<Sense>) -> Vec<ColoredString> {
