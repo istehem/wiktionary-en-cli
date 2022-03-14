@@ -4,6 +4,7 @@ use colored::Colorize;
 use anyhow::Result;
 use colored::ColoredString;
 use textwrap::{fill, indent};
+use std::collections::HashSet;
 
 pub mod language;
 pub mod colored_string_utils;
@@ -44,7 +45,7 @@ struct Example {
     text : String
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Translation {
     lang : String,
     code : Option<String>,
@@ -176,11 +177,12 @@ fn translations_to_strings(translations : &Vec<Translation>) -> Vec<ColoredStrin
     let langs : Vec<Option<String>> = language::Language::iterator()
                 .map(|lang| { Some(lang.value()) })
                 .collect();
-    let mut filtered_translations : Vec<Translation> = translations
+    let translations_as_set : HashSet<Translation> = translations
         .clone()
         .into_iter()
         .filter(|translation| { langs.contains(&&translation.code) })
         .collect();
+    let mut filtered_translations = Vec::from_iter(translations_as_set);
     filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
     return filtered_translations
         .into_iter()
