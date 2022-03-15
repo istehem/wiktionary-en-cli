@@ -25,7 +25,10 @@ struct Cli {
     search_term: Option<String>,
     /// Maximal number of results
     #[clap(short, long, default_value = "1")]
-    max_results : usize
+    max_results : usize,
+    /// Use case insensitive search
+    #[clap(short = 'i', long)]
+    case_insensitive : bool
 }
 
 fn print_entry(json : &DictionaryEntry) {
@@ -78,8 +81,19 @@ fn random_entry(input_path : &Path) -> Result<()> {
     return Ok(());
 }
 
-fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
-    -> Result<()> {
+fn levenshtein_distance(search_term : &String, word : &String, case_insensitive : bool)
+    -> usize {
+    if case_insensitive {
+        return edit_distance(&search_term.as_str().to_uppercase(),
+                             &word.as_str().to_uppercase());
+    }
+    else {
+        return edit_distance(search_term, word);
+    }
+}
+
+fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
+    case_insensitive : bool) -> Result<()> {
     let mut result : Option<DictionaryEntry> = None;
     let mut full_matches : Vec<DictionaryEntry> = Vec::new();
     let mut min_distance = usize::MAX;
@@ -87,7 +101,7 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
         let parse_res : Result<DictionaryEntry> = parse_line(line, i);
         ensure!(parse_res.is_ok(), parse_res.unwrap_err());
         let json : DictionaryEntry = parse_res?;
-        let distance = edit_distance(&json.word, &term);
+        let distance = levenshtein_distance(&json.word, &term, case_insensitive);
         if distance < min_distance {
             min_distance = distance;
             result = Some(json.clone());
@@ -120,17 +134,19 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize)
     return Ok(());
 }
 
-fn search(input_path : &Path, term : String, max_results : usize) -> Result<()> {
+fn search(input_path : &Path, term : String, max_results : usize, case_insensitive : bool)
+    -> Result<()> {
     match get_file_reader(input_path) {
-       Ok(br) => return do_search(br, term, max_results),
+       Ok(br) => return do_search(br, term, max_results, case_insensitive),
        Err(e) => bail!(e)
     }
 }
 
 
-fn run(term : Option<String>, max_results : usize, path : &Path) -> Result<()> {
+fn run(term : Option<String>, max_results : usize, case_insensitive : bool, path : &Path)
+    -> Result<()> {
     match term {
-       Some(s) => return search(&path, s, max_results),
+       Some(s) => return search(&path, s, max_results, case_insensitive),
        None    => return random_entry(&path)
     };
 }
@@ -140,7 +156,9 @@ fn main() -> Result<()> {
     let mut default = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     default.push(DEFAULT_DB_SUB_PATH);
     match args.db_path {
-       Some(path) => return run(args.search_term, args.max_results, Path::new(&path)),
-       None       => return run(args.search_term, args.max_results, default.as_path())
+       Some(path) => return run(args.search_term, args.max_results,
+                                args.case_insensitive, Path::new(&path)),
+       None       => return run(args.search_term, args.max_results,
+                                args.case_insensitive, default.as_path())
     };
 }
