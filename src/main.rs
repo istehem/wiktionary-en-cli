@@ -76,7 +76,7 @@ fn random_entry(input_path : &Path) -> Result<()> {
         .transpose() {
         Ok(Some(json)) => print_entry(&json),
         Ok(None)       => bail!("Couldn't generate random entry number."),
-        err            => return err.map(|_| ())
+        Err(err)       => bail!(err)
     }
     return Ok(());
 }
