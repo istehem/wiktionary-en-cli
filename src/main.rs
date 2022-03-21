@@ -8,6 +8,10 @@ use indoc::{printdoc};
 use colored::Colorize;
 use std::env;
 use edit_distance::edit_distance;
+use std::fs;
+//use std::sync::mpsc::{Sender, Receiver};
+//use std::sync::mpsc;
+use std::thread;
 
 mod wiktionary_data;
 use crate::wiktionary_data::*;
@@ -28,7 +32,9 @@ struct Cli {
     max_results : usize,
     /// Use case insensitive search
     #[clap(short = 'i', long)]
-    case_insensitive : bool
+    case_insensitive : bool,
+    #[clap(short, long)]
+    partitioned : bool
 }
 
 fn print_entry(json : &DictionaryEntry) {
@@ -134,19 +140,46 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
     return Ok(());
 }
 
-fn search(input_path : &Path, term : String, max_results : usize, case_insensitive : bool)
-    -> Result<()> {
-    match get_file_reader(input_path) {
-       Ok(br) => return do_search(br, term, max_results, case_insensitive),
-       Err(e) => bail!(e)
+fn search_partitioned(input_path : &Path, term : String, max_results : usize,
+    case_insensitive : bool) -> Result<()> {
+    let paths = fs::read_dir("files/partitioned").unwrap();
+    let mut children = vec![];
+    for path in paths {
+        let term_c = term.clone();
+        let max_results_c = max_results.clone();
+        let case_insensitive_c = case_insensitive.clone();
+        children.push(thread::spawn(move || {
+            match get_file_reader(path.unwrap().path().as_path()) {
+                Ok(br) => return do_search(br, term_c, max_results_c, case_insensitive_c),
+                Err(e) => bail!(e)
+            }
+        }));
+    }
+    for child in children {
+        // Wait for the thread to finish. Returns a result.
+        let _ = child.join();
+    }
+    return Ok(());
+}
+
+fn search(input_path : &Path, term : String, max_results : usize, case_insensitive : bool,
+          partitioned : bool) -> Result<()> {
+    if partitioned {
+        return search_partitioned(input_path, term, max_results, case_insensitive);
+    }
+    else {
+        match get_file_reader(input_path) {
+            Ok(br) => return do_search(br, term, max_results, case_insensitive),
+            Err(e) => bail!(e)
+        }
     }
 }
 
-
-fn run(term : Option<String>, max_results : usize, case_insensitive : bool, path : &Path)
+fn run(term : Option<String>, max_results : usize, case_insensitive : bool,
+       partitioned : bool, path : &Path)
     -> Result<()> {
     match term {
-       Some(s) => return search(&path, s, max_results, case_insensitive),
+       Some(s) => return search(&path, s, max_results, case_insensitive, partitioned),
        None    => return random_entry(&path)
     };
 }
@@ -157,8 +190,8 @@ fn main() -> Result<()> {
     default.push(DEFAULT_DB_SUB_PATH);
     match args.db_path {
        Some(path) => return run(args.search_term, args.max_results,
-                                args.case_insensitive, Path::new(&path)),
+                                args.case_insensitive, args.partitioned, Path::new(&path)),
        None       => return run(args.search_term, args.max_results,
-                                args.case_insensitive, default.as_path())
+                                args.case_insensitive, args.partitioned, default.as_path())
     };
 }
