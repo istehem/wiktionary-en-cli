@@ -176,7 +176,9 @@ fn search_quiet(file_reader : BufReader<File>, term : String, max_results : usiz
 
 fn search_partitioned(input_path : &Path, term : String, max_results : usize,
     case_insensitive : bool) -> Result<()> {
-    let paths = fs::read_dir("files/partitioned").unwrap();
+    let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    dir.push("files/partitioned");
+    let paths = fs::read_dir(dir).unwrap();
     let mut children = vec![];
     for path in paths {
         let term_c = term.clone();
