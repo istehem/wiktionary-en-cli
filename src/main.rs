@@ -37,6 +37,12 @@ struct Cli {
     partitioned : bool
 }
 
+struct SearchResult {
+   full_matches : Vec<DictionaryEntry>,
+   did_you_mean : Option<DictionaryEntry>,
+   distance     : usize
+}
+
 fn print_entry(json : &DictionaryEntry) {
     println!("{}", json.to_pretty_string());
 }
@@ -140,6 +146,34 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
     return Ok(());
 }
 
+fn search_quiet(file_reader : BufReader<File>, term : String, max_results : usize,
+    case_insensitive : bool) -> Result<SearchResult> {
+    let mut search_result = SearchResult {
+        full_matches : Vec::new(),
+        did_you_mean : None,
+        distance     : usize::MAX
+    };
+    let mut min_distance = usize::MAX;
+    for (i, line) in file_reader.lines().enumerate() {
+        let parse_res : Result<DictionaryEntry> = parse_line(line, i);
+        ensure!(parse_res.is_ok(), parse_res.unwrap_err());
+        let json : DictionaryEntry = parse_res?;
+        let distance = levenshtein_distance(&json.word, &term, case_insensitive);
+        if distance < min_distance {
+            min_distance = distance;
+            search_result.did_you_mean = Some(json.clone());
+            search_result.distance = distance;
+        }
+        if distance == 0 {
+            search_result.full_matches.push(json);
+        }
+        if search_result.full_matches.len() == max_results {
+            break;
+        }
+    }
+    return Ok(search_result);
+}
+
 fn search_partitioned(input_path : &Path, term : String, max_results : usize,
     case_insensitive : bool) -> Result<()> {
     let paths = fs::read_dir("files/partitioned").unwrap();
@@ -150,14 +184,48 @@ fn search_partitioned(input_path : &Path, term : String, max_results : usize,
         let case_insensitive_c = case_insensitive.clone();
         children.push(thread::spawn(move || {
             match get_file_reader(path.unwrap().path().as_path()) {
-                Ok(br) => return do_search(br, term_c, max_results_c, case_insensitive_c),
+                Ok(br) => return search_quiet(br, term_c, max_results_c, case_insensitive_c),
                 Err(e) => bail!(e)
             }
         }));
     }
+
+    let mut search_results : Vec<SearchResult> = Vec::new();
+    let mut did_you_mean : Option<DictionaryEntry> = None;
+    let mut min_distance = usize::MAX;
+
     for child in children {
-        // Wait for the thread to finish. Returns a result.
-        let _ = child.join();
+        let result = child.join().unwrap().unwrap();
+        if result.distance < min_distance {
+            min_distance = result.distance.clone();
+            did_you_mean = result.did_you_mean.clone();
+        }
+        search_results.push(result);
+    }
+
+    let full_matches : Vec<DictionaryEntry> = search_results.into_iter()
+                                                            .map(|r| r.full_matches)
+                                                            .flatten()
+                                                            .collect();
+    if !full_matches.is_empty() {
+        for full_match in full_matches {
+             print_entry(&full_match);
+         }
+    }
+    else {
+        match did_you_mean {
+            Some(result) => {
+                printdoc!("
+                          ###########################################
+                          No result for {}.
+                          Did you mean  {}?
+                          ###########################################
+                          ",
+                          &term.red(), &result.word.yellow());
+                          print_entry(&result);
+            },
+            None         => println!("{}", "No results")
+        }
     }
     return Ok(());
 }
