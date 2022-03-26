@@ -47,6 +47,27 @@ fn print_entry(json : &DictionaryEntry) {
     println!("{}", json.to_pretty_string());
 }
 
+fn print_search_result(term : String, search_result : SearchResult) {
+    if search_result.full_matches.is_empty() {
+        match search_result.did_you_mean {
+            Some(result) => {
+                printdoc!("
+                          ###########################################
+                          No result for {}.
+                          Did you mean  {}?
+                          ###########################################
+                          ",
+                          term.red(), &result.word.yellow());
+                          print_entry(&result);
+            },
+            None         => println!("{}", "No results")
+        }
+    }
+    for full_match in search_result.full_matches {
+        print_entry(&full_match);
+    }
+}
+
 fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
     let file_buffer_result =  File::open(path)
         .map(|f| BufReader::new(f))
@@ -104,48 +125,6 @@ fn levenshtein_distance(search_term : &String, word : &String, case_insensitive 
     }
 }
 
-fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
-    case_insensitive : bool) -> Result<()> {
-    let mut result : Option<DictionaryEntry> = None;
-    let mut full_matches : Vec<DictionaryEntry> = Vec::new();
-    let mut min_distance = usize::MAX;
-    for (i, line) in file_reader.lines().enumerate() {
-        let parse_res : Result<DictionaryEntry> = parse_line(line, i);
-        ensure!(parse_res.is_ok(), parse_res.unwrap_err());
-        let json : DictionaryEntry = parse_res?;
-        let distance = levenshtein_distance(&json.word, &term, case_insensitive);
-        if distance < min_distance {
-            min_distance = distance;
-            result = Some(json.clone());
-        }
-        if distance == 0 {
-            full_matches.push(json);
-        }
-        if full_matches.len() == max_results {
-            break;
-        }
-    }
-    match result {
-        None        => println!("{}", "No results"),
-        Some(json)  => {
-            if min_distance != 0 {
-                printdoc!("
-                          ###########################################
-                          No result for {}.
-                          Did you mean  {}?
-                          ###########################################
-                          ",
-                          &term.red(), &json.word.yellow());
-                          print_entry(&json);
-            }
-            for res in full_matches {
-                print_entry(&res);
-            }
-        }
-    };
-    return Ok(());
-}
-
 fn search_quiet(file_reader : BufReader<File>, term : String, max_results : usize,
     case_insensitive : bool) -> Result<SearchResult> {
     let mut search_result = SearchResult {
@@ -172,6 +151,16 @@ fn search_quiet(file_reader : BufReader<File>, term : String, max_results : usiz
         }
     }
     return Ok(search_result);
+}
+
+fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
+    case_insensitive : bool) -> Result<()> {
+    let search_result = search_quiet(file_reader, term.clone(), max_results, case_insensitive);
+    match search_result {
+        Ok(result) => print_search_result(term, result),
+        Err(err)   => bail!(err)
+    }
+    return Ok(());
 }
 
 fn search_partitioned(input_path : &Path, term : String, max_results : usize,
@@ -209,26 +198,11 @@ fn search_partitioned(input_path : &Path, term : String, max_results : usize,
                                                             .map(|r| r.full_matches)
                                                             .flatten()
                                                             .collect();
-    if !full_matches.is_empty() {
-        for full_match in full_matches {
-             print_entry(&full_match);
-         }
-    }
-    else {
-        match did_you_mean {
-            Some(result) => {
-                printdoc!("
-                          ###########################################
-                          No result for {}.
-                          Did you mean  {}?
-                          ###########################################
-                          ",
-                          &term.red(), &result.word.yellow());
-                          print_entry(&result);
-            },
-            None         => println!("{}", "No results")
-        }
-    }
+    print_search_result(term, SearchResult{
+        full_matches : full_matches,
+        did_you_mean : did_you_mean,
+        distance     : min_distance
+    });
     return Ok(());
 }
 
