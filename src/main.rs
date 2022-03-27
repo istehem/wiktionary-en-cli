@@ -9,17 +9,19 @@ use colored::Colorize;
 use std::env;
 use edit_distance::edit_distance;
 use std::fs;
-//use std::sync::mpsc::{Sender, Receiver};
-//use std::sync::mpsc;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::thread;
+use std::sync::atomic::Ordering;
 
 mod wiktionary_data;
 use crate::wiktionary_data::*;
 
 macro_rules! PROJECT_DIR {() => { env!("CARGO_MANIFEST_DIR")}; }
 
-static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
-static DEFAULT_DB_PARTITIONED_DIR: &str = "files/partitioned";
+const DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
+const DEFAULT_DB_PARTITIONED_DIR: &str = "files/partitioned";
+const CHECK_FOR_SOLUTION_FOUND_EVERY : usize = 100;
 
 /// An English Dictionary
 #[derive(Parser)]
@@ -128,8 +130,20 @@ fn levenshtein_distance(search_term : &String, word : &String, case_insensitive 
     }
 }
 
-fn search_quiet(file_reader : BufReader<File>, term : String, max_results : usize,
-    case_insensitive : bool) -> Result<SearchResult> {
+fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
+    case_insensitive : bool) -> Result<()> {
+    let search_result = search_worker(file_reader, term.clone(),
+                            max_results, case_insensitive, Arc::new(AtomicBool::new(false)));
+    match search_result {
+        Ok(result) => print_search_result(term, result),
+        Err(err)   => bail!(err)
+    }
+    return Ok(());
+}
+
+fn search_worker(file_reader : BufReader<File>, term : String, max_results : usize,
+    case_insensitive : bool, is_solution_found: Arc<AtomicBool>)
+    -> Result<SearchResult> {
     let mut search_result = SearchResult {
         full_matches : Vec::new(),
         did_you_mean : None,
@@ -150,33 +164,32 @@ fn search_quiet(file_reader : BufReader<File>, term : String, max_results : usiz
             search_result.full_matches.push(json);
         }
         if search_result.full_matches.len() == max_results {
+            is_solution_found.store(true, Ordering::Relaxed);
+            break;
+        }
+        if i % CHECK_FOR_SOLUTION_FOUND_EVERY == 0
+            && is_solution_found.load(Ordering::Relaxed) {
             break;
         }
     }
     return Ok(search_result);
 }
 
-fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
-    case_insensitive : bool) -> Result<()> {
-    let search_result = search_quiet(file_reader, term.clone(), max_results, case_insensitive);
-    match search_result {
-        Ok(result) => print_search_result(term, result),
-        Err(err)   => bail!(err)
-    }
-    return Ok(());
-}
-
 fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
     case_insensitive : bool) -> Result<()> {
+    let is_solution_found = Arc::new(AtomicBool::new(false));
+
     let paths = fs::read_dir(input_path).unwrap();
     let mut children = vec![];
     for path in paths {
-        let term_c = term.clone();
-        let max_results_c = max_results.clone();
+        let term = term.clone();
+        let max_results = max_results.clone();
         let case_insensitive_c = case_insensitive.clone();
+        let is_solution_found = is_solution_found.clone();
         children.push(thread::spawn(move || {
             match get_file_reader(path.unwrap().path().as_path()) {
-                Ok(br) => return search_quiet(br, term_c, max_results_c, case_insensitive_c),
+                Ok(br) => return search_worker(br, term, max_results,
+                                               case_insensitive_c, is_solution_found),
                 Err(e) => bail!(e)
             }
         }));
