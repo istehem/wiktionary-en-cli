@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use anyhow::{Result, bail, ensure};
 use rand::{thread_rng, Rng};
 use indoc::{printdoc};
@@ -16,7 +16,10 @@ use std::thread;
 mod wiktionary_data;
 use crate::wiktionary_data::*;
 
+macro_rules! PROJECT_DIR {() => { env!("CARGO_MANIFEST_DIR")}; }
+
 static DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
+static DEFAULT_DB_PARTITIONED_DIR: &str = "files/partitioned";
 
 /// An English Dictionary
 #[derive(Parser)]
@@ -163,11 +166,9 @@ fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
     return Ok(());
 }
 
-fn search_partitioned(input_path : &Path, term : String, max_results : usize,
+fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
     case_insensitive : bool) -> Result<()> {
-    let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    dir.push("files/partitioned");
-    let paths = fs::read_dir(dir).unwrap();
+    let paths = fs::read_dir(input_path).unwrap();
     let mut children = vec![];
     for path in paths {
         let term_c = term.clone();
@@ -206,13 +207,13 @@ fn search_partitioned(input_path : &Path, term : String, max_results : usize,
     return Ok(());
 }
 
-fn search(input_path : &Path, term : String, max_results : usize, case_insensitive : bool,
+fn search(input_path : &PathBuf, term : String, max_results : usize, case_insensitive : bool,
           partitioned : bool) -> Result<()> {
     if partitioned {
         return search_partitioned(input_path, term, max_results, case_insensitive);
     }
     else {
-        match get_file_reader(input_path) {
+        match get_file_reader(input_path.as_path()) {
             Ok(br) => return do_search(br, term, max_results, case_insensitive),
             Err(e) => bail!(e)
         }
@@ -220,22 +221,32 @@ fn search(input_path : &Path, term : String, max_results : usize, case_insensiti
 }
 
 fn run(term : Option<String>, max_results : usize, case_insensitive : bool,
-       partitioned : bool, path : &Path)
+       partitioned : bool, path : PathBuf)
     -> Result<()> {
     match term {
        Some(s) => return search(&path, s, max_results, case_insensitive, partitioned),
-       None    => return random_entry(&path)
+       None    => return random_entry(&path.as_path())
     };
+}
+
+fn get_default_db_path(partitioned : bool) -> PathBuf {
+    let mut path = PathBuf::from(PROJECT_DIR!());
+    if partitioned {
+        path.push(DEFAULT_DB_PARTITIONED_DIR);
+    }
+    else {
+        path.push(DEFAULT_DB_SUB_PATH);
+    }
+    return path;
 }
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let mut default = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    default.push(DEFAULT_DB_SUB_PATH);
     match args.db_path {
        Some(path) => return run(args.search_term, args.max_results,
-                                args.case_insensitive, args.partitioned, Path::new(&path)),
+                                args.case_insensitive, args.partitioned, PathBuf::from(path)),
        None       => return run(args.search_term, args.max_results,
-                                args.case_insensitive, args.partitioned, default.as_path())
+                                args.case_insensitive, args.partitioned,
+                                    get_default_db_path(args.partitioned))
     };
 }
