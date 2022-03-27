@@ -242,9 +242,9 @@ fn run(term : Option<String>, max_results : usize, case_insensitive : bool,
     };
 }
 
-fn get_default_db_path(partitioned : bool) -> PathBuf {
+fn get_default_db_path(partitioned : bool, term : Option<String>) -> PathBuf {
     let mut path = PathBuf::from(PROJECT_DIR!());
-    if partitioned {
+    if partitioned && term.is_some() {
         path.push(DEFAULT_DB_PARTITIONED_DIR);
     }
     else {
@@ -258,8 +258,8 @@ fn main() -> Result<()> {
     match args.db_path {
        Some(path) => return run(args.search_term, args.max_results,
                                 args.case_insensitive, args.partitioned, PathBuf::from(path)),
-       None       => return run(args.search_term, args.max_results,
+       None       => return run(args.search_term.clone(), args.max_results,
                                 args.case_insensitive, args.partitioned,
-                                    get_default_db_path(args.partitioned))
+                                    get_default_db_path(args.partitioned, args.search_term))
     };
 }
