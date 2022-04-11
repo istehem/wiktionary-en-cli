@@ -79,7 +79,7 @@ fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
         .map_err(|err| anyhow::Error::new(err));
     match file_buffer_result {
         ok@Ok(_) => return ok,
-        _        => bail!("No such DB file: '{}'", path.display().to_string())
+        _        => bail!("No such DB file: '{}'", path.display())
 
     }
 }
@@ -179,19 +179,23 @@ fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
     case_insensitive : bool) -> Result<()> {
     let is_solution_found = Arc::new(AtomicBool::new(false));
 
-    let paths = fs::read_dir(input_path).unwrap();
     let mut children = vec![];
-    for path in paths {
+    let paths = fs::read_dir(input_path);
+    ensure!(paths.is_ok(), format!("Couldn't find db dir: '{}'", input_path.display()));
+    for path in paths.unwrap() {
         let term = term.clone();
         let max_results = max_results.clone();
         let case_insensitive_c = case_insensitive.clone();
         let is_solution_found = is_solution_found.clone();
         children.push(thread::spawn(move || {
-            match get_file_reader(path.unwrap().path().as_path()) {
-                Ok(br) => return search_worker(br, term, max_results,
+            if let Ok(path) = path {
+                match get_file_reader(path.path().as_path()) {
+                    Ok(br) => return search_worker(br, term, max_results,
                                                case_insensitive_c, is_solution_found),
-                Err(e) => bail!(e)
+                    Err(e) => bail!(e)
+                }
             }
+            bail!("db file path contains an invalid partition entry");
         }));
     }
 
@@ -200,12 +204,17 @@ fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
     let mut min_distance = usize::MAX;
 
     for child in children {
-        let result = child.join().unwrap().unwrap();
-        if result.distance < min_distance {
-            min_distance = result.distance.clone();
-            did_you_mean = result.did_you_mean.clone();
+        let worker_result = child.join().unwrap();
+        if let Ok(result) = worker_result {
+            if result.distance < min_distance {
+                min_distance = result.distance.clone();
+                did_you_mean = result.did_you_mean.clone();
+            }
+            search_results.push(result);
         }
-        search_results.push(result);
+        else if let Err(err) = worker_result {
+            bail!(err);
+        }
     }
 
     let full_matches : Vec<DictionaryEntry> = search_results.into_iter()
