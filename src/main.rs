@@ -204,14 +204,14 @@ fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
     let mut min_distance = usize::MAX;
 
     for child in children {
-        let worker_result = child.join().unwrap();
-        match child.join.unwrap() {
-            Ok(result) =>
+        match child.join().unwrap() {
+            Ok(result) => {
                 if result.distance < min_distance {
                     min_distance = result.distance.clone();
                     did_you_mean = result.did_you_mean.clone();
                 }
-                search_results.push(result);
+                search_results.push(result)
+            },
             Err(err) => bail!(err)
         }
     }
