@@ -270,7 +270,7 @@ fn get_default_db_path(partitioned : bool, term : Option<String>) -> PathBuf {
     return path;
 }
 
-fn get_db_path_by_launguage(language : &str) -> PathBuf {
+fn get_db_path_by_language(language : &str) -> PathBuf {
     let mut path = PathBuf::from(PROJECT_DIR!());
     let language_sub_path = match language {
         l@"en" => DICTIONARY_DB_SUB_PATH!(l),
@@ -292,7 +292,7 @@ fn main() -> Result<()> {
                                 args.case_insensitive, args.partitioned, PathBuf::from(path)),
        (_, Some(language)) => return run(args.search_term, args.max_results,
                                 args.case_insensitive, args.partitioned,
-                                    get_db_path_by_launguage(&language)),
+                                    get_db_path_by_language(&language)),
        (_, _)              => return run(args.search_term.clone(), args.max_results,
                                 args.case_insensitive, args.partitioned,
                                     get_default_db_path(args.partitioned, args.search_term))
