@@ -23,12 +23,12 @@ const DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
 const DEFAULT_DB_PARTITIONED_DIR: &str = "files/partitioned";
 const CHECK_FOR_SOLUTION_FOUND_EVERY : usize = 100;
 
-/// An English Dictionary
+/// A To English Dictionary
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {
     /// Override dictionary db file to use
-    #[clap(long)]
+    #[clap(long, short = 'd')]
     db_path: Option<String>,
     /// A word to search for; omitting it will yield a random entry
     search_term: Option<String>,
@@ -38,8 +38,11 @@ struct Cli {
     /// Use case insensitive search
     #[clap(short = 'i', long)]
     case_insensitive : bool,
+    /// set search term language
+    #[clap(long, short = 'l')]
+    language: Option<String>,
     #[clap(short, long)]
-    partitioned : bool
+    partitioned : bool,
 }
 
 struct SearchResult {
