@@ -17,9 +17,10 @@ use std::sync::atomic::Ordering;
 mod wiktionary_data;
 use crate::wiktionary_data::*;
 
-macro_rules! PROJECT_DIR {() => { env!("CARGO_MANIFEST_DIR")}; }
+macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
+macro_rules! DICTIONARY_DB_SUB_PATH { ($language:tt) => { format!("files/wiktionary-{}.json", $language)}; }
+macro_rules! DEFAULT_DB_SUB_PATH { () => { DICTIONARY_DB_SUB_PATH!("en")}; }
 
-const DEFAULT_DB_SUB_PATH: &str = "files/wiktionary-en.json";
 const DEFAULT_DB_PARTITIONED_DIR: &str = "files/partitioned";
 const CHECK_FOR_SOLUTION_FOUND_EVERY : usize = 100;
 
@@ -38,7 +39,7 @@ struct Cli {
     /// Use case insensitive search
     #[clap(short = 'i', long)]
     case_insensitive : bool,
-    /// set search term language
+    /// set search term language (ignored when used with --db-path)
     #[clap(long, short = 'l')]
     language: Option<String>,
     #[clap(short, long)]
@@ -264,17 +265,35 @@ fn get_default_db_path(partitioned : bool, term : Option<String>) -> PathBuf {
         path.push(DEFAULT_DB_PARTITIONED_DIR);
     }
     else {
-        path.push(DEFAULT_DB_SUB_PATH);
+        path.push(DEFAULT_DB_SUB_PATH!());
     }
     return path;
 }
 
+fn get_db_path_by_launguage(language : &str) -> PathBuf {
+    let mut path = PathBuf::from(PROJECT_DIR!());
+    let language_sub_path = match language {
+        l@"en" => DICTIONARY_DB_SUB_PATH!(l),
+        l@"fr" => DICTIONARY_DB_SUB_PATH!(l),
+        l@"de" => DICTIONARY_DB_SUB_PATH!(l),
+        l@"sv" => DICTIONARY_DB_SUB_PATH!(l),
+        _      => DEFAULT_DB_SUB_PATH!()
+    };
+
+    path.push(language_sub_path);
+    return path;
+}
+
+
 fn main() -> Result<()> {
     let args = Cli::parse();
-    match args.db_path {
-       Some(path) => return run(args.search_term, args.max_results,
+    match (args.db_path, args.language) {
+       (Some(path), _)     => return run(args.search_term, args.max_results,
                                 args.case_insensitive, args.partitioned, PathBuf::from(path)),
-       None       => return run(args.search_term.clone(), args.max_results,
+       (_, Some(language)) => return run(args.search_term, args.max_results,
+                                args.case_insensitive, args.partitioned,
+                                    get_db_path_by_launguage(&language)),
+       (_, _)              => return run(args.search_term.clone(), args.max_results,
                                 args.case_insensitive, args.partitioned,
                                     get_default_db_path(args.partitioned, args.search_term))
     };
