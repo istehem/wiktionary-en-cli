@@ -63,23 +63,34 @@ struct Sound {
 impl DictionaryEntry {
     pub fn to_pretty_string(&self) -> String {
         return formatdoc!("
-              -------------------------------------------
+              {}
               {} ({})
-              -------------------------------------------
               {}
-              -------------------------------------------
               {}
-              -------------------------------------------
               {}
-              -------------------------------------------
               {}
-              -------------------------------------------
-              ", &self.word.clone().green().bold(), self.pos,
+              {}
+              {}
+              {}
+              {}
+              {}
+              ",
+                 horizontal_line(),
+                 &self.word.clone().green().bold(), self.pos,
+                 horizontal_line(),
                  format_etymology(&self.etymology_text),
+                 horizontal_line(),
                  format_sounds(&self.sounds),
+                 horizontal_line(),
                  format_senses(&self.senses),
-                 format_translations(&self.translations));
+                 horizontal_line(),
+                 format_translations(&self.translations),
+                 horizontal_line());
     }
+}
+
+fn horizontal_line() -> ColoredString {
+    return " ".repeat(80).strikethrough();
 }
 
 fn format_etymology(etymology : &Option<String>) -> ColoredString {

@@ -61,10 +61,8 @@ fn print_search_result(term : String, search_result : SearchResult) {
         match search_result.did_you_mean {
             Some(result) => {
                 printdoc!("
-                          ###########################################
                           No result for {}.
                           Did you mean  {}?
-                          ###########################################
                           ",
                           term.red(), &result.word.yellow());
                           print_entry(&result);
