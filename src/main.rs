@@ -39,11 +39,14 @@ struct Cli {
     /// Use case insensitive search
     #[clap(short = 'i', long)]
     case_insensitive : bool,
-    /// set search term language (ignored when used with --db-path)
+    /// Set search term language (ignored when used with --db-path)
     #[clap(long, short = 'l')]
     language: Option<String>,
     #[clap(short, long)]
     partitioned : bool,
+    /// Show dictionary information
+    #[clap(short, long)]
+    stats : bool,
 }
 
 struct SearchResult {
@@ -100,6 +103,28 @@ fn parse_line(line : Result<String, std::io::Error>, i : usize) -> Result<Dictio
     let parse_res : Result<DictionaryEntry> = wiktionary_data::parse(&line?);
     ensure!(parse_res.is_ok(), format!("Couldn't parse line {} in DB file.", i));
     return parse_res;
+}
+
+fn number_of_words(input_path_buf : PathBuf) -> Result<()> {
+    let input_path = &input_path_buf.as_path();
+    if input_path.is_dir(){
+        bail!("Sorry, cannot calculate stats for partitioned search yet");
+    }
+    let file_reader = get_file_reader(input_path);
+    ensure!(file_reader.is_ok(), file_reader.unwrap_err());
+    let n_entries : Option<usize> = file_reader.ok().map(|br| br.lines().count());
+    match n_entries {
+        Some(n)   => println!("number of dictionary entries: {}", n.to_string()
+                                    .as_bytes()
+                                    .rchunks(3)
+                                    .rev()
+                                    .map(std::str::from_utf8)
+                                    .collect::<Result<Vec<&str>, _>>()
+                                    .unwrap()
+                                    .join(",")),
+        None      => bail!("something went wrong")
+    }
+    return Ok(());
 }
 
 fn random_entry(input_path : &Path) -> Result<()> {
@@ -257,42 +282,45 @@ fn run(term : Option<String>, max_results : usize, case_insensitive : bool,
     };
 }
 
-fn get_default_db_path(partitioned : bool, term : Option<String>) -> PathBuf {
+fn get_db_path(language: Option<String>, partitioned: bool, has_search_term: bool) -> PathBuf {
     let mut path = PathBuf::from(PROJECT_DIR!());
-    if partitioned && term.is_some() {
+
+    if partitioned && has_search_term {
         path.push(DEFAULT_DB_PARTITIONED_DIR);
+    }
+    else if let Some(language) = language {
+        let language_str: &str = &language;
+        let language_sub_path = match language_str {
+            l@"en" => DICTIONARY_DB_SUB_PATH!(l),
+            l@"fr" => DICTIONARY_DB_SUB_PATH!(l),
+            l@"de" => DICTIONARY_DB_SUB_PATH!(l),
+            l@"sv" => DICTIONARY_DB_SUB_PATH!(l),
+            _      => DEFAULT_DB_SUB_PATH!()
+        };
+        path.push(language_sub_path);
     }
     else {
         path.push(DEFAULT_DB_SUB_PATH!());
+
     }
-    return path;
-}
-
-fn get_db_path_by_language(language : &str) -> PathBuf {
-    let mut path = PathBuf::from(PROJECT_DIR!());
-    let language_sub_path = match language {
-        l@"en" => DICTIONARY_DB_SUB_PATH!(l),
-        l@"fr" => DICTIONARY_DB_SUB_PATH!(l),
-        l@"de" => DICTIONARY_DB_SUB_PATH!(l),
-        l@"sv" => DICTIONARY_DB_SUB_PATH!(l),
-        _      => DEFAULT_DB_SUB_PATH!()
-    };
-
-    path.push(language_sub_path);
     return path;
 }
 
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    match (args.db_path, args.language) {
-       (Some(path), _)     => return run(args.search_term, args.max_results,
-                                args.case_insensitive, args.partitioned, PathBuf::from(path)),
-       (_, Some(language)) => return run(args.search_term, args.max_results,
-                                args.case_insensitive, args.partitioned,
-                                    get_db_path_by_language(&language)),
-       (_, _)              => return run(args.search_term.clone(), args.max_results,
-                                args.case_insensitive, args.partitioned,
-                                    get_default_db_path(args.partitioned, args.search_term))
+    let has_search_term = args.search_term.clone().is_some();
+    match (args.db_path, args.language, args.stats) {
+       (None, language, true) =>
+           return number_of_words(get_db_path(language, args.partitioned, has_search_term)),
+       (Some(path), _, true)  =>
+           return number_of_words(path.into()),
+       (Some(path), _, _)     =>
+           return run(args.search_term, args.max_results,
+                      args.case_insensitive, args.partitioned, PathBuf::from(path)),
+       (_, language, false)   =>
+           return run(args.search_term, args.max_results,
+                      args.case_insensitive, args.partitioned,
+                      get_db_path(language, args.partitioned, has_search_term)),
     };
 }
