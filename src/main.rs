@@ -18,6 +18,7 @@ mod wiktionary_data;
 use crate::wiktionary_data::*;
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
+use crate::wiktionary_stats::file_reader::*;
 
 macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
 macro_rules! DICTIONARY_DB_SUB_PATH { ($language:tt) => { format!("files/wiktionary-{}.json", $language)}; }
@@ -77,17 +78,6 @@ fn print_search_result(term : String, search_result : SearchResult) {
     }
     for full_match in search_result.full_matches {
         print_entry(&full_match);
-    }
-}
-
-fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
-    let file_buffer_result =  File::open(path)
-        .map(|f| BufReader::new(f))
-        .map_err(|err| anyhow::Error::new(err));
-    match file_buffer_result {
-        ok@Ok(_) => return ok,
-        _        => bail!("No such DB file: '{}'", path.display())
-
     }
 }
 

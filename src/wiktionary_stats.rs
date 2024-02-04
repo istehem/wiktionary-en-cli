@@ -3,7 +3,7 @@ use std::io::BufRead;
 use colored::Colorize;
 use colored::ColoredString;
 
-mod file_reader;
+pub mod file_reader;
 use crate::wiktionary_stats::file_reader::*;
 
 const SEP: &str = "\n";
