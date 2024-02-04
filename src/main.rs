@@ -298,19 +298,25 @@ fn search(input_path : &PathBuf, term : String, max_results : usize, case_insens
     }
 }
 
-fn run(term : Option<String>, max_results : usize, case_insensitive : bool,
+fn run(term : &Option<String>, max_results : usize, case_insensitive : bool,
        partitioned : bool, path : PathBuf)
     -> Result<()> {
     match term {
-       Some(s) => return search(&path, s, max_results, case_insensitive, partitioned),
+       Some(s) => return search(&path, s.clone(), max_results, case_insensitive, partitioned),
        None    => return random_entry(&path.as_path())
     };
 }
 
-fn get_db_path(language: Option<String>, partitioned: bool, has_search_term: bool) -> PathBuf {
+fn get_db_path(path_buf: Option<String>, language: Option<String>,
+    partitioned: bool, search_term: &Option<String>) -> PathBuf {
+
+    if let Some(path_buf) = path_buf {
+        return PathBuf::from(path_buf);
+    }
+
     let mut path = PathBuf::from(PROJECT_DIR!());
 
-    if partitioned && has_search_term {
+    if partitioned && search_term.is_some() {
         path.push(DEFAULT_DB_PARTITIONED_DIR);
     }
     else if let Some(language) = language {
@@ -334,18 +340,14 @@ fn get_db_path(language: Option<String>, partitioned: bool, has_search_term: boo
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let has_search_term = args.search_term.clone().is_some();
-    match (args.db_path, args.language, args.stats) {
-       (None, language, true) =>
-           return show_stats(get_db_path(language, args.partitioned, has_search_term)),
-       (Some(path), _, true)  =>
-           return show_stats(path.into()),
-       (Some(path), _, _)     =>
-           return run(args.search_term, args.max_results,
-                      args.case_insensitive, args.partitioned, PathBuf::from(path)),
-       (_, language, false)   =>
-           return run(args.search_term, args.max_results,
+    match args.stats {
+        true =>
+           return show_stats(get_db_path(args.db_path, args.language, args.partitioned,
+                                         &args.search_term)),
+        _   =>
+           return run(&args.search_term, args.max_results,
                       args.case_insensitive, args.partitioned,
-                      get_db_path(language, args.partitioned, has_search_term)),
+                      get_db_path(args.db_path, args.language, args.partitioned,
+                                  &args.search_term))
     };
 }
