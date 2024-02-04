@@ -16,6 +16,8 @@ use std::sync::atomic::Ordering;
 
 mod wiktionary_data;
 use crate::wiktionary_data::*;
+mod wiktionary_stats;
+use crate::wiktionary_stats::*;
 
 macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
 macro_rules! DICTIONARY_DB_SUB_PATH { ($language:tt) => { format!("files/wiktionary-{}.json", $language)}; }
@@ -105,56 +107,15 @@ fn parse_line(line : Result<String, std::io::Error>, i : usize) -> Result<Dictio
     return parse_res;
 }
 
-fn show_stats(input_path_buf : PathBuf) -> Result<()> {
+fn print_stats(input_path_buf : PathBuf) -> Result<()> {
     let input_path = input_path_buf.as_path();
     if input_path.is_dir(){
         bail!("Sorry, cannot calculate stats for partitioned search yet");
     }
 
-    println!("{:<19}: {}","dbfile", input_path.display().to_string());
+    println!("{}", calculate_stats(input_path).to_pretty_string());
 
-    match number_of_words(input_path) {
-        Some(n)   => println!("{:<19}: {}", "dictionary entries", format_integer(n)),
-        None      => bail!("something went wrong")
-    }
-    match file_size_in_megabytes(input_path) {
-        Some(n)   => println!("{:<19}: {} {}", "size",
-                            format_integer(n.try_into().unwrap()),
-                            "MB"),
-        None      => bail!("something went wrong")
-    }
     return Ok(());
-}
-
-fn file_size_in_megabytes(input_path : &Path) -> Option<u64> {
-    if input_path.is_dir() {
-        return None;
-    }
-    if let Ok(metadata) = input_path.metadata() {
-        return Some(metadata.len() / 1024);
-    }
-    return None;
-}
-
-fn number_of_words(input_path : &Path) -> Option<usize> {
-    if input_path.is_dir(){
-        return None;
-    }
-    if let Ok(br) = get_file_reader(input_path) {
-        return Some(br.lines().count());
-    }
-    return None;
-}
-
-fn format_integer(number: usize) -> String {
-    return number.to_string()
-                 .as_bytes()
-                 .rchunks(3)
-                 .rev()
-                 .map(std::str::from_utf8)
-                 .collect::<Result<Vec<&str>, _>>()
-                 .unwrap()
-                 .join(",");
 }
 
 fn random_entry(input_path : &Path) -> Result<()> {
@@ -347,7 +308,7 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     match args.stats {
         true =>
-           return show_stats(get_db_path(args.db_path, args.language, args.partitioned,
+           return print_stats(get_db_path(args.db_path, args.language, args.partitioned,
                                          &args.search_term)),
         _   =>
            return run(&args.search_term, args.max_results,
