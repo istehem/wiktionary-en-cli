@@ -1,9 +1,12 @@
 use std::path::{Path};
 use std::io::BufRead;
+use colored::Colorize;
 use colored::ColoredString;
 
 mod file_reader;
-use crate::get_file_reader;
+use crate::wiktionary_stats::file_reader::*;
+
+const SEP: &str = "\n";
 
 pub struct Stats {
     path: String,
@@ -15,14 +18,14 @@ pub trait Join {
     fn join(&self, list : Vec<Self>) -> Self where Self: Sized;
 }
 
-impl Join for String {
-    fn join(&self, list : Vec<String>) -> String {
-        let mut res : String = String::new();
+impl Join for ColoredString {
+    fn join(&self, list : Vec<ColoredString>) -> ColoredString {
+        let mut res : ColoredString = "".normal();
         let len : usize = list.len();
         for (i, string) in list.iter().enumerate() {
-            res = format!("{}{}", res, string);
+            res = format!("{}{}", res, string).normal();
             if i < len - 1 {
-                res = format!("{}{}", res, self);
+                res = format!("{}{}", res, self).normal();
             }
         }
         return res.clone();
@@ -30,20 +33,22 @@ impl Join for String {
 }
 
 impl Stats {
-    pub fn to_pretty_string(&self) -> String {
-        let mut res : Vec<String> = Vec::new();
-        res.push(format!("{:<19}: {}","dbfile", self.path));
+    pub fn to_pretty_string(&self) -> ColoredString {
+        let mut res : Vec<ColoredString> = Vec::new();
+        res.push(format!("{:<19}: {}","dictionary file".green(), self.path).normal());
 
         if let Some(n) = self.number_of_entries {
-            res.push(format!("{:<19}: {}", "dictionary entries", format_integer(n)));
+            res.push(format!("{:<19}: {}", "dictionary entries".green(), format_integer(n))
+                .normal());
         }
         if let Some(s) = self.file_size {
             res.push(
-                format!("{:<19}: {} {}", "size",
-                    format_integer(s.try_into().unwrap()), "MB"));
+                format!("{:<19}: {} {}", "dictionary size".green(),
+                    format_integer(s.try_into().unwrap()), "MB")
+                    .normal());
 
         }
-        return "\n".to_string().join(res);
+        return SEP.normal().join(res);
     }
 }
 
@@ -75,7 +80,7 @@ fn number_of_entries(input_path : &Path) -> Option<usize> {
     return None;
 }
 
-fn format_integer(number: usize) -> String {
+fn format_integer(number: usize) -> ColoredString {
     return number.to_string()
                  .as_bytes()
                  .rchunks(3)
@@ -83,7 +88,7 @@ fn format_integer(number: usize) -> String {
                  .map(std::str::from_utf8)
                  .collect::<Result<Vec<&str>, _>>()
                  .unwrap()
-                 .join(",");
+                 .join(",").yellow();
 }
 
 
