@@ -7,8 +7,7 @@ use textwrap::{fill, indent};
 use std::collections::HashSet;
 
 use utilities::colored_string_utils::*;
-
-mod language;
+use utilities::language::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
@@ -178,7 +177,7 @@ fn examples_to_strings(examples : &Vec<Example>) -> Vec<ColoredString>{
 }
 
 fn translations_to_strings(translations : &Vec<Translation>) -> Vec<ColoredString> {
-    let langs : Vec<Option<String>> = language::Language::iterator()
+    let langs : Vec<Option<String>> = Language::iterator()
                 .map(|lang| { Some(lang.value()) })
                 .collect();
     let translations_as_set : HashSet<Translation> = translations

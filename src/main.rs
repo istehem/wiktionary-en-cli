@@ -15,6 +15,7 @@ use std::thread;
 use std::sync::atomic::Ordering;
 
 use utilities::file_utils::*;
+use utilities::language::*;
 
 mod wiktionary_data;
 use crate::wiktionary_data::*;
@@ -277,15 +278,12 @@ fn get_db_path(path_buf: Option<String>, language: Option<String>,
         path.push(DEFAULT_DB_PARTITIONED_DIR);
     }
     else if let Some(language) = language {
-        let language_str: &str = &language;
-        let language_sub_path = match language_str {
-            l@"en" => DICTIONARY_DB_SUB_PATH!(l),
-            l@"fr" => DICTIONARY_DB_SUB_PATH!(l),
-            l@"de" => DICTIONARY_DB_SUB_PATH!(l),
-            l@"sv" => DICTIONARY_DB_SUB_PATH!(l),
-            _      => DEFAULT_DB_SUB_PATH!()
-        };
-        path.push(language_sub_path);
+        if let Some(l) = Language::as_strings().iter().find(|l| l == &&language) {
+            path.push(DICTIONARY_DB_SUB_PATH!(l));
+        }
+        else {
+            path.push(DEFAULT_DB_SUB_PATH!());
+        }
     }
     else {
         path.push(DEFAULT_DB_SUB_PATH!());
