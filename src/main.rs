@@ -111,14 +111,14 @@ fn show_stats(input_path_buf : PathBuf) -> Result<()> {
         bail!("Sorry, cannot calculate stats for partitioned search yet");
     }
 
-    println!("{:<21}: {}","dbfile", input_path.display().to_string());
+    println!("{:<19}: {}","dbfile", input_path.display().to_string());
 
     match number_of_words(input_path) {
-        Some(n)   => println!("{:<21}: {}", "dictionary entries", format_integer(n)),
+        Some(n)   => println!("{:<19}: {}", "dictionary entries", format_integer(n)),
         None      => bail!("something went wrong")
     }
     match file_size_in_megabytes(input_path) {
-        Some(n)   => println!("{:<21}: {} {}", "size",
+        Some(n)   => println!("{:<19}: {} {}", "size",
                             format_integer(n.try_into().unwrap()),
                             "MB"),
         None      => bail!("something went wrong")
