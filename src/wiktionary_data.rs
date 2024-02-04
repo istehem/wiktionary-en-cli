@@ -6,12 +6,9 @@ use colored::ColoredString;
 use textwrap::{fill, indent};
 use std::collections::HashSet;
 
-pub mod language;
-pub mod colored_string_utils;
-use crate::colored_string_utils::Join;
+use utilities::colored_string_utils::*;
 
-const LINE_WRAP_AT: usize = 80;
-const SEP: &str = "\n";
+mod language;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
@@ -89,17 +86,13 @@ impl DictionaryEntry {
     }
 }
 
-fn horizontal_line() -> ColoredString {
-    return " ".repeat(80).strikethrough();
-}
-
 fn format_etymology(etymology : &Option<String>) -> ColoredString {
     let mut res : Vec<ColoredString> = Vec::new();
     res.push("Etymology:".bold());
     if etymology.is_some(){
         res.push(etymology.clone().unwrap().normal());
     }
-    return SEP.normal().joinwrap(res, LINE_WRAP_AT);
+    return NEWLINE.normal().joinwrap(res, LINE_WRAP_AT);
 }
 
 fn senses_to_strings(senses : &Vec<Sense>) -> Vec<ColoredString> {
@@ -112,7 +105,7 @@ fn senses_to_strings(senses : &Vec<Sense>) -> Vec<ColoredString> {
 }
 
 fn format_senses(senses : &Vec<Sense>) -> ColoredString {
-    return SEP.normal().join(senses_to_strings(senses));
+    return NEWLINE.normal().join(senses_to_strings(senses));
 }
 
 fn format_sense(sense : &Sense, index : usize) -> ColoredString {
@@ -125,11 +118,11 @@ fn format_sense(sense : &Sense, index : usize) -> ColoredString {
     if !sense.examples.is_empty() {
         res.push(format_examples(&sense.examples));
     }
-    return SEP.normal().join(res);
+    return NEWLINE.normal().join(res);
 }
 
 fn format_examples(examples : &Vec<Example>) -> ColoredString {
-    return indent(&SEP
+    return indent(&NEWLINE
                   .normal()
                   .joinwrap(examples_to_strings(&examples), LINE_WRAP_AT - 1), " ")
            .normal();
@@ -139,9 +132,9 @@ fn format_sounds(sounds : &Vec<Sound>) -> ColoredString {
     let mut res : Vec<ColoredString> = Vec::new();
     res.push("Pronunciation".bold());
     if !sounds.is_empty() {
-        res.push(SEP.normal().join(sounds_to_strings(sounds)));
+        res.push(NEWLINE.normal().join(sounds_to_strings(sounds)));
     }
-    return SEP.normal().join(res);
+    return NEWLINE.normal().join(res);
 }
 
 fn sounds_to_strings(sounds : &Vec<Sound>) -> Vec<ColoredString> {
@@ -207,9 +200,9 @@ fn format_translations(translations : &Vec<Translation>) -> ColoredString {
     let mut res : Vec<ColoredString> = Vec::new();
     res.push("Translations".bold());
     if !translations.is_empty() {
-        res.push(SEP.normal().join(translations_to_strings(translations)));
+        res.push(NEWLINE.normal().join(translations_to_strings(translations)));
     }
-    return SEP.normal().join(res);
+    return NEWLINE.normal().join(res);
 }
 
 pub fn parse(line : &String) -> Result<DictionaryEntry> {

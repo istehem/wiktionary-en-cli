@@ -3,33 +3,13 @@ use std::io::BufRead;
 use colored::Colorize;
 use colored::ColoredString;
 
-pub mod file_reader;
-use crate::wiktionary_stats::file_reader::*;
-
-const SEP: &str = "\n";
+use utilities::file_utils::*;
+use utilities::colored_string_utils::*;
 
 pub struct Stats {
     path: String,
     number_of_entries: Option<usize>,
     file_size: Option<u64>
-}
-
-pub trait Join {
-    fn join(&self, list : Vec<Self>) -> Self where Self: Sized;
-}
-
-impl Join for ColoredString {
-    fn join(&self, list : Vec<ColoredString>) -> ColoredString {
-        let mut res : ColoredString = "".normal();
-        let len : usize = list.len();
-        for (i, string) in list.iter().enumerate() {
-            res = format!("{}{}", res, string).normal();
-            if i < len - 1 {
-                res = format!("{}{}", res, self).normal();
-            }
-        }
-        return res.clone();
-    }
 }
 
 impl Stats {
@@ -48,7 +28,7 @@ impl Stats {
                     .normal());
 
         }
-        return SEP.normal().join(res);
+        return NEWLINE.normal().join(res);
     }
 }
 
@@ -79,16 +59,3 @@ fn number_of_entries(input_path : &Path) -> Option<usize> {
     }
     return None;
 }
-
-fn format_integer(number: usize) -> ColoredString {
-    return number.to_string()
-                 .as_bytes()
-                 .rchunks(3)
-                 .rev()
-                 .map(std::str::from_utf8)
-                 .collect::<Result<Vec<&str>, _>>()
-                 .unwrap()
-                 .join(",").yellow();
-}
-
-

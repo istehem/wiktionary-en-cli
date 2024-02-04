@@ -14,11 +14,12 @@ use std::sync::atomic::AtomicBool;
 use std::thread;
 use std::sync::atomic::Ordering;
 
+use utilities::file_utils::*;
+
 mod wiktionary_data;
 use crate::wiktionary_data::*;
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
-use crate::wiktionary_stats::file_reader::*;
 
 macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
 macro_rules! DICTIONARY_DB_SUB_PATH { ($language:tt) => { format!("files/wiktionary-{}.json", $language)}; }
