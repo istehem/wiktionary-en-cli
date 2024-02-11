@@ -64,9 +64,9 @@ fn print_entry(json : &DictionaryEntry) {
     println!("{}", json.to_pretty_string());
 }
 
-fn print_search_result(term : String, search_result : SearchResult) {
+fn print_search_result(term : &String, search_result : &SearchResult) {
     if search_result.full_matches.is_empty() {
-        match search_result.did_you_mean {
+        match &search_result.did_you_mean {
             Some(result) => {
                 printdoc!("
                           No result for {}.
@@ -78,7 +78,7 @@ fn print_search_result(term : String, search_result : SearchResult) {
             None         => println!("{}", "No results")
         }
     }
-    for full_match in search_result.full_matches {
+    for full_match in &search_result.full_matches {
         print_entry(&full_match);
     }
 }
@@ -141,14 +141,10 @@ fn levenshtein_distance(search_term : &String, word : &String, case_insensitive 
 }
 
 fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
-    case_insensitive : bool) -> Result<()> {
+    case_insensitive : bool) -> Result<SearchResult> {
     let search_result = search_worker(file_reader, term.clone(),
                             max_results, case_insensitive, Arc::new(AtomicBool::new(false)));
-    match search_result {
-        Ok(result) => print_search_result(term, result),
-        Err(err)   => bail!(err)
-    }
-    return Ok(());
+    return search_result;
 }
 
 fn search_worker(file_reader : BufReader<File>, term : String, max_results : usize,
@@ -186,7 +182,7 @@ fn search_worker(file_reader : BufReader<File>, term : String, max_results : usi
 }
 
 fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
-    case_insensitive : bool) -> Result<()> {
+    case_insensitive : bool) -> Result<SearchResult> {
     let is_solution_found = Arc::new(AtomicBool::new(false));
 
     let mut children = vec![];
@@ -235,16 +231,17 @@ fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
                                                             .map(|r| r.full_matches)
                                                             .flatten()
                                                             .collect();
-    print_search_result(term, SearchResult{
-        full_matches : full_matches,
-        did_you_mean : did_you_mean,
-        distance     : min_distance
-    });
-    return Ok(());
+    let search_result =
+        SearchResult {
+            full_matches : full_matches,
+            did_you_mean : did_you_mean,
+            distance     : min_distance
+        };
+    return Ok(search_result);
 }
 
 fn search(input_path : &PathBuf, term : String, max_results : usize, case_insensitive : bool,
-          partitioned : bool) -> Result<()> {
+          partitioned : bool) -> Result<SearchResult> {
     if partitioned {
         return search_partitioned(input_path, term, max_results, case_insensitive);
     }
@@ -260,7 +257,25 @@ fn run(term : &Option<String>, max_results : usize, case_insensitive : bool,
        partitioned : bool, path : PathBuf)
     -> Result<()> {
     match term {
-       Some(s) => return search(&path, s.clone(), max_results, case_insensitive, partitioned),
+       Some(s) => {
+            match get_cached_entry(s) {
+                Ok(csr) => {
+                    print_entry(&csr);
+                    return Ok(());
+                }
+                _       => match search(&path, s.clone(), max_results, case_insensitive,
+                             partitioned) {
+                                Ok(sr) => {
+                                 print_search_result(s, &sr);
+                                if let Some(f) = sr.full_matches.first() {
+                                    return write_entry_to_cache(&s, &f.to_json().unwrap());
+                                }
+                                return Ok(());
+                            },
+                            Err(e) => bail!(e)
+                            }
+            }
+       },
        None    => return random_entry(&path.as_path())
     };
 }
@@ -290,6 +305,43 @@ fn get_db_path(path_buf: Option<String>, language: Option<String>,
 
     }
     return path;
+}
+
+fn write_entry_to_cache(term: &String, json_value: &String) -> Result<()> {
+    // this directory will be created if it does not exist
+    let path = "caching_db";
+
+    // works like std::fs::open
+    let db = sled::open(path)?;
+
+    // key and value types can be `Vec<u8>`, `[u8]`, or `str`.
+    let key = term;
+
+    // `generate_id`
+    // let value = db.generate_id()?.to_be_bytes();
+
+    //dbg!(
+    db.insert(key, json_value.as_bytes()); // as in BTreeMap::insert
+    db.get(key)?;                // as in BTreeMap::get
+    //db.remove(key)?,             // as in BTreeMap::remove
+    //);
+
+    Ok(())
+
+}
+
+fn get_cached_entry(term: &String) -> Result<DictionaryEntry> {
+    let path = "caching_db";
+
+    let db = sled::open(path)?;
+
+    match db.get(term){
+        Ok(Some(b)) => return String::from_utf8((&b).to_vec())
+            .map_err(|err| anyhow::Error::new(err))
+            .and_then(|s| wiktionary_data::parse(&s)),
+        ok@Ok(_) => bail!("entry not found"),
+        Err(err) => bail!(err)
+    };
 }
 
 

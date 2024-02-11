@@ -83,6 +83,10 @@ impl DictionaryEntry {
                  format_translations(&self.translations),
                  horizontal_line());
     }
+
+    pub fn to_json(&self) -> Result<String> {
+        return serde_json::to_string(self).map_err(|err| anyhow::Error::new(err));
+    }
 }
 
 fn format_etymology(etymology : &Option<String>) -> ColoredString {
