@@ -1,4 +1,5 @@
 use clap::Parser;
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
@@ -51,13 +52,23 @@ struct Cli {
     partitioned : bool,
     /// Show dictionary information
     #[clap(short, long)]
-    stats : bool,
+    stats : bool
 }
 
 struct SearchResult {
    full_matches : Vec<DictionaryEntry>,
    did_you_mean : Option<DictionaryEntry>,
    distance     : usize
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CachedDbEntry {
+   entries  : Vec<DictionaryEntry>
+}
+impl CachedDbEntry {
+    pub fn to_json(&self) -> Result<String> {
+        return serde_json::to_string(self).map_err(|err| anyhow::Error::new(err));
+    }
 }
 
 fn print_entry(json : &DictionaryEntry) {
@@ -80,6 +91,12 @@ fn print_search_result(term : &String, search_result : &SearchResult) {
     }
     for full_match in &search_result.full_matches {
         print_entry(&full_match);
+    }
+}
+
+fn print_entries(entries: &Vec<DictionaryEntry>) {
+    for entry in entries {
+        print_entry(&entry);
     }
 }
 
@@ -258,19 +275,16 @@ fn run(term : &Option<String>, max_results : usize, case_insensitive : bool,
     -> Result<()> {
     match term {
        Some(s) => {
-            match get_cached_entry(s) {
+            match get_cached_db_entry(s) {
                 Ok(csr) => {
-                    print_entry(&csr);
+                    print_entries(&csr);
                     return Ok(());
                 }
                 _       => match search(&path, s.clone(), max_results, case_insensitive,
                              partitioned) {
                                 Ok(sr) => {
                                  print_search_result(s, &sr);
-                                if let Some(f) = sr.full_matches.first() {
-                                    return write_entry_to_cache(&s, &f.to_json().unwrap());
-                                }
-                                return Ok(());
+                                 return write_db_entry_to_cache(s, &sr.full_matches)
                             },
                             Err(e) => bail!(e)
                             }
@@ -307,7 +321,10 @@ fn get_db_path(path_buf: Option<String>, language: Option<String>,
     return path;
 }
 
-fn write_entry_to_cache(term: &String, json_value: &String) -> Result<()> {
+fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>) -> Result<()> {
+    let value_as_json: String =
+        CachedDbEntry {entries: value.clone()}.to_json().unwrap();
+
     // this directory will be created if it does not exist
     let path = "caching_db";
 
@@ -321,16 +338,15 @@ fn write_entry_to_cache(term: &String, json_value: &String) -> Result<()> {
     // let value = db.generate_id()?.to_be_bytes();
 
     //dbg!(
-    db.insert(key, json_value.as_bytes()); // as in BTreeMap::insert
+    db.insert(key, value_as_json.as_bytes()); // as in BTreeMap::insert
     db.get(key)?;                // as in BTreeMap::get
     //db.remove(key)?,             // as in BTreeMap::remove
     //);
 
     Ok(())
-
 }
 
-fn get_cached_entry(term: &String) -> Result<DictionaryEntry> {
+fn get_cached_db_entry(term: &String) -> Result<Vec<DictionaryEntry>> {
     let path = "caching_db";
 
     let db = sled::open(path)?;
@@ -338,12 +354,16 @@ fn get_cached_entry(term: &String) -> Result<DictionaryEntry> {
     match db.get(term){
         Ok(Some(b)) => return String::from_utf8((&b).to_vec())
             .map_err(|err| anyhow::Error::new(err))
-            .and_then(|s| wiktionary_data::parse(&s)),
-        ok@Ok(_) => bail!("entry not found"),
-        Err(err) => bail!(err)
+            .and_then(|s| parse(&s))
+            .map(|cde| cde.entries),
+        Ok(_)       => bail!("entry not found"),
+        Err(err)    => bail!(err)
     };
 }
 
+pub fn parse(line : &String) -> Result<CachedDbEntry> {
+    return serde_json::from_str(line).map_err(|err| anyhow::Error::new(err));
+}
 
 fn main() -> Result<()> {
     let args = Cli::parse();
