@@ -25,7 +25,7 @@ use crate::wiktionary_stats::*;
 
 macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
 macro_rules! DICTIONARY_DB_SUB_PATH { ($language:tt) => { format!("files/wiktionary-{}.json", $language)}; }
-macro_rules! DICTIONARY_CACHING_PATH { ($language:tt) => { format!("{}/cache/wiktionary-cache-{}", PROJECT_DIR!(), $language)}; }
+macro_rules! DICTIONARY_CACHING_PATH { ($language:expr) => { format!("{}/cache/wiktionary-cache-{}", PROJECT_DIR!(), $language)}; }
 macro_rules! DEFAULT_DB_SUB_PATH { () => { DICTIONARY_DB_SUB_PATH!("en")}; }
 
 const DEFAULT_DB_PARTITIONED_DIR: &str = "files/partitioned";
@@ -326,7 +326,7 @@ fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>, language
         CachedDbEntry {entries: value.clone()}.to_json().unwrap();
 
     // this directory will be created if it does not exist
-    let path = DICTIONARY_CACHING_PATH!((language.value()));
+    let path = DICTIONARY_CACHING_PATH!(language.value());
 
     // works like std::fs::open
     let db = sled::open(path)?;
@@ -347,7 +347,7 @@ fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>, language
 }
 
 fn get_cached_db_entry(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
-    let path = DICTIONARY_CACHING_PATH!((language.value()));
+    let path = DICTIONARY_CACHING_PATH!(language.value());
 
     let db = sled::open(path)?;
 
