@@ -93,5 +93,8 @@ pub mod language {
         pub fn as_strings() -> Vec<String> {
             return Language::iterator().map(|lang| lang.value()).collect();
         }
+        pub fn from_string(language :&String) -> Option<Language> {
+            return Language::iterator().find(|l| &l.value() == language);
+        }
     }
 }

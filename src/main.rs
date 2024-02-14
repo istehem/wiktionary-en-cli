@@ -270,12 +270,12 @@ fn search(input_path : &PathBuf, term : String, max_results : usize, case_insens
     }
 }
 
-fn run(term : &Option<String>, max_results : usize, case_insensitive : bool,
-       partitioned : bool, path : PathBuf)
+fn run(term : &Option<String>, language : &Language, max_results : usize,
+    case_insensitive : bool, partitioned : bool, path : PathBuf)
     -> Result<()> {
     match term {
        Some(s) => {
-            match get_cached_db_entry(s) {
+            match get_cached_db_entry(s, language) {
                 Ok(csr) => {
                     print_entries(&csr);
                     return Ok(());
@@ -284,7 +284,7 @@ fn run(term : &Option<String>, max_results : usize, case_insensitive : bool,
                              partitioned) {
                                 Ok(sr) => {
                                  print_search_result(s, &sr);
-                                 return write_db_entry_to_cache(s, &sr.full_matches)
+                                 return write_db_entry_to_cache(s, &sr.full_matches, language)
                             },
                             Err(e) => bail!(e)
                             }
@@ -294,7 +294,14 @@ fn run(term : &Option<String>, max_results : usize, case_insensitive : bool,
     };
 }
 
-fn get_db_path(path_buf: Option<String>, language: Option<String>,
+fn get_language(language : &Option<String>) -> Language {
+    if let Some(language) = language {
+       return Language::from_string(&language).unwrap_or(Language::EN);
+    }
+    return Language::EN;
+}
+
+fn get_db_path(path_buf: Option<String>, language: &Option<String>,
     partitioned: bool, search_term: &Option<String>) -> PathBuf {
 
     if let Some(path_buf) = path_buf {
@@ -306,27 +313,19 @@ fn get_db_path(path_buf: Option<String>, language: Option<String>,
     if partitioned && search_term.is_some() {
         path.push(DEFAULT_DB_PARTITIONED_DIR);
     }
-    else if let Some(language) = language {
-        if let Some(l) = Language::as_strings().iter().find(|l| l == &&language) {
-            path.push(DICTIONARY_DB_SUB_PATH!(l));
-        }
-        else {
-            path.push(DEFAULT_DB_SUB_PATH!());
-        }
-    }
     else {
-        path.push(DEFAULT_DB_SUB_PATH!());
-
+        path.push(DICTIONARY_DB_SUB_PATH!((get_language(language).value())));
     }
     return path;
 }
 
-fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>) -> Result<()> {
+fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language)
+    -> Result<()> {
     let value_as_json: String =
         CachedDbEntry {entries: value.clone()}.to_json().unwrap();
 
     // this directory will be created if it does not exist
-    let path = "caching_db";
+    let path = format!("caching_db_{}", language.value());
 
     // works like std::fs::open
     let db = sled::open(path)?;
@@ -346,8 +345,8 @@ fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>) -> Resul
     Ok(())
 }
 
-fn get_cached_db_entry(term: &String) -> Result<Vec<DictionaryEntry>> {
-    let path = "caching_db";
+fn get_cached_db_entry(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
+    let path = format!("caching_db_{}", language.value());
 
     let db = sled::open(path)?;
 
@@ -369,12 +368,12 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     match args.stats {
         true =>
-           return print_stats(get_db_path(args.db_path, args.language, args.partitioned,
+           return print_stats(get_db_path(args.db_path, &args.language, args.partitioned,
                                          &args.search_term)),
         _   =>
-           return run(&args.search_term, args.max_results,
+           return run(&args.search_term, &get_language(&args.language), args.max_results,
                       args.case_insensitive, args.partitioned,
-                      get_db_path(args.db_path, args.language, args.partitioned,
+                      get_db_path(args.db_path, &args.language, args.partitioned,
                                   &args.search_term))
     };
 }
