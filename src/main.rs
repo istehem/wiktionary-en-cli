@@ -24,11 +24,21 @@ mod wiktionary_stats;
 use crate::wiktionary_stats::*;
 
 macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
-macro_rules! DICTIONARY_DB_SUB_PATH { ($language:tt) => { format!("files/wiktionary-{}.json", $language)}; }
-macro_rules! DICTIONARY_CACHING_PATH { ($language:expr) => { format!("{}/cache/wiktionary-cache-{}", PROJECT_DIR!(), $language)}; }
-macro_rules! DEFAULT_DB_SUB_PATH { () => { DICTIONARY_DB_SUB_PATH!("en")}; }
 
-const DEFAULT_DB_PARTITIONED_DIR: &str = "files/partitioned";
+macro_rules! DICTIONARY_DB_PATH { ($language:expr) => {
+        format!("{}/files/wiktionary-{}.json", PROJECT_DIR!(), $language)
+    };
+}
+macro_rules! DEFAULT_DB_PARTITIONED_DIR { () => {
+        format!("{}/files/partitioned", PROJECT_DIR!())
+    };
+}
+macro_rules! DICTIONARY_CACHING_PATH { ($language:expr) => {
+        format!("{}/cache/wiktionary-cache-{}", PROJECT_DIR!(), $language)
+    };
+}
+macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
+
 const CHECK_FOR_SOLUTION_FOUND_EVERY : usize = 100;
 
 /// A To English Dictionary
@@ -285,7 +295,10 @@ fn run(term : &Option<String>, language : &Language, max_results : usize,
                              partitioned) {
                                 Ok(sr) => {
                                  print_search_result(s, &sr);
-                                 return write_db_entry_to_cache(s, &sr.full_matches, language)
+                                 if !sr.full_matches.is_empty() {
+                                    return write_db_entry_to_cache(s, &sr.full_matches, language)
+                                 }
+                                 return Ok(());
                             },
                             Err(e) => bail!(e)
                             }
@@ -309,15 +322,10 @@ fn get_db_path(path_buf: Option<String>, language: &Option<String>,
         return PathBuf::from(path_buf);
     }
 
-    let mut path = PathBuf::from(PROJECT_DIR!());
-
     if partitioned && search_term.is_some() {
-        path.push(DEFAULT_DB_PARTITIONED_DIR);
+        return PathBuf::from(DEFAULT_DB_PARTITIONED_DIR!());
     }
-    else {
-        path.push(DICTIONARY_DB_SUB_PATH!((get_language(language).value())));
-    }
-    return path;
+    return PathBuf::from(DICTIONARY_DB_PATH!(get_language(language).value()));
 }
 
 fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language)
