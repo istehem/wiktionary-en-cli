@@ -37,7 +37,6 @@ macro_rules! DICTIONARY_CACHING_PATH { ($language:expr) => {
         format!("{}/cache/wiktionary-cache-{}", PROJECT_DIR!(), $language)
     };
 }
-macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
 
 const CHECK_FOR_SOLUTION_FOUND_EVERY : usize = 100;
 
