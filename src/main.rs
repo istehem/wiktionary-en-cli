@@ -280,13 +280,26 @@ fn search(input_path : &PathBuf, term : String, max_results : usize, case_insens
     }
 }
 
+fn evaluate_cache(term: &String, max_results: usize, language: &Language)
+    -> Option<Vec<DictionaryEntry>> {
+    match get_cached_db_entry(term, language) {
+        Ok(result) => if result.len() < max_results {
+                        return None;
+                      }
+                      else {
+                        return Some(result);
+                      },
+        _          => None
+        }
+}
+
 fn run(term : &Option<String>, language : &Language, max_results : usize,
     case_insensitive : bool, partitioned : bool, path : PathBuf)
     -> Result<()> {
     match term {
        Some(s) => {
-            match get_cached_db_entry(s, language) {
-                Ok(csr) => {
+            match evaluate_cache(s, max_results, language) {
+                Some(csr) => {
                     print_entries(&csr);
                     return Ok(());
                 }
@@ -314,16 +327,17 @@ fn get_language(language : &Option<String>) -> Language {
     return Language::EN;
 }
 
-fn get_db_path(path_buf: Option<String>, language: &Option<String>,
+fn get_db_path(path: Option<String>, language: &Option<String>,
     partitioned: bool, search_term: &Option<String>) -> PathBuf {
 
-    if let Some(path_buf) = path_buf {
-        return PathBuf::from(path_buf);
+    if let Some(path) = path {
+        return PathBuf::from(path);
     }
 
     if partitioned && search_term.is_some() {
         return PathBuf::from(DEFAULT_DB_PARTITIONED_DIR!());
     }
+
     return PathBuf::from(DICTIONARY_DB_PATH!(get_language(language).value()));
 }
 
