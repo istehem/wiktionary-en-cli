@@ -1,19 +1,19 @@
+use anyhow::{bail, ensure, Result};
 use clap::Parser;
+use colored::Colorize;
+use edit_distance::edit_distance;
+use indoc::printdoc;
+use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
+use std::env;
+use std::fs;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
-use anyhow::{Result, bail, ensure};
-use rand::{thread_rng, Rng};
-use indoc::{printdoc};
-use colored::Colorize;
-use std::env;
-use edit_distance::edit_distance;
-use std::fs;
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-use std::thread;
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
+use std::thread;
 
 use utilities::file_utils::*;
 use utilities::language::*;
@@ -23,22 +23,29 @@ use crate::wiktionary_data::*;
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
 
-macro_rules! PROJECT_DIR{ () => { env!("CARGO_MANIFEST_DIR")}; }
+macro_rules! PROJECT_DIR {
+    () => {
+        env!("CARGO_MANIFEST_DIR")
+    };
+}
 
-macro_rules! DICTIONARY_DB_PATH { ($language:expr) => {
+macro_rules! DICTIONARY_DB_PATH {
+    ($language:expr) => {
         format!("{}/files/wiktionary-{}.json", PROJECT_DIR!(), $language)
     };
 }
-macro_rules! DEFAULT_DB_PARTITIONED_DIR { () => {
+macro_rules! DEFAULT_DB_PARTITIONED_DIR {
+    () => {
         format!("{}/files/partitioned", PROJECT_DIR!())
     };
 }
-macro_rules! DICTIONARY_CACHING_PATH { ($language:expr) => {
+macro_rules! DICTIONARY_CACHING_PATH {
+    ($language:expr) => {
         format!("{}/cache/wiktionary-cache-{}", PROJECT_DIR!(), $language)
     };
 }
 
-const CHECK_FOR_SOLUTION_FOUND_EVERY : usize = 100;
+const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 
 /// A To English Dictionary
 #[derive(Parser)]
@@ -51,29 +58,29 @@ struct Cli {
     search_term: Option<String>,
     /// Maximal number of results
     #[clap(short, long, default_value = "1")]
-    max_results : usize,
+    max_results: usize,
     /// Use case insensitive search
     #[clap(short = 'i', long)]
-    case_insensitive : bool,
+    case_insensitive: bool,
     /// Set search term language (ignored when used with --db-path)
     #[clap(long, short = 'l')]
     language: Option<String>,
     #[clap(short, long)]
-    partitioned : bool,
+    partitioned: bool,
     /// Show dictionary information
     #[clap(short, long)]
-    stats : bool
+    stats: bool,
 }
 
 struct SearchResult {
-   full_matches : Vec<DictionaryEntry>,
-   did_you_mean : Option<DictionaryEntry>,
-   distance     : usize
+    full_matches: Vec<DictionaryEntry>,
+    did_you_mean: Option<DictionaryEntry>,
+    distance: usize,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CachedDbEntry {
-   entries  : Vec<DictionaryEntry>
+    entries: Vec<DictionaryEntry>,
 }
 impl CachedDbEntry {
     pub fn to_json(&self) -> Result<String> {
@@ -81,22 +88,25 @@ impl CachedDbEntry {
     }
 }
 
-fn print_entry(json : &DictionaryEntry) {
+fn print_entry(json: &DictionaryEntry) {
     println!("{}", json.to_pretty_string());
 }
 
-fn print_search_result(term : &String, search_result : &SearchResult) {
+fn print_search_result(term: &String, search_result: &SearchResult) {
     if search_result.full_matches.is_empty() {
         match &search_result.did_you_mean {
             Some(result) => {
-                printdoc!("
+                printdoc!(
+                    "
                           No result for {}.
                           Did you mean  {}?
                           ",
-                          term.red(), &result.word.yellow());
-                          print_entry(&result);
-            },
-            None         => println!("{}", "No results")
+                    term.red(),
+                    &result.word.yellow()
+                );
+                print_entry(&result);
+            }
+            None => println!("{}", "No results"),
         }
     }
     for full_match in &search_result.full_matches {
@@ -110,7 +120,7 @@ fn print_entries(entries: &Vec<DictionaryEntry>) {
     }
 }
 
-fn find_entry(file_reader : BufReader<File>, index : usize) -> Result<DictionaryEntry> {
+fn find_entry(file_reader: BufReader<File>, index: usize) -> Result<DictionaryEntry> {
     for (i, line) in file_reader.lines().enumerate() {
         if i == index {
             return parse_line(line, i);
@@ -119,16 +129,22 @@ fn find_entry(file_reader : BufReader<File>, index : usize) -> Result<Dictionary
     bail!("No entry found.");
 }
 
-fn parse_line(line : Result<String, std::io::Error>, i : usize) -> Result<DictionaryEntry> {
-    ensure!(line.is_ok(), format!("Couldn't read line {} in DB file.", i));
-    let parse_res : Result<DictionaryEntry> = wiktionary_data::parse(&line?);
-    ensure!(parse_res.is_ok(), format!("Couldn't parse line {} in DB file.", i));
+fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
+    ensure!(
+        line.is_ok(),
+        format!("Couldn't read line {} in DB file.", i)
+    );
+    let parse_res: Result<DictionaryEntry> = wiktionary_data::parse(&line?);
+    ensure!(
+        parse_res.is_ok(),
+        format!("Couldn't parse line {} in DB file.", i)
+    );
     return parse_res;
 }
 
-fn print_stats(input_path_buf : PathBuf) -> Result<()> {
+fn print_stats(input_path_buf: PathBuf) -> Result<()> {
     let input_path = input_path_buf.as_path();
-    if input_path.is_dir(){
+    if input_path.is_dir() {
         bail!("Sorry, cannot calculate stats for partitioned search yet");
     }
 
@@ -137,56 +153,69 @@ fn print_stats(input_path_buf : PathBuf) -> Result<()> {
     return Ok(());
 }
 
-fn random_entry(input_path : &Path) -> Result<()> {
+fn random_entry(input_path: &Path) -> Result<()> {
     let file_reader = get_file_reader(input_path);
     ensure!(file_reader.is_ok(), file_reader.unwrap_err());
-    let n_entries : Option<usize> = file_reader.ok().map(|br| br.lines().count());
+    let n_entries: Option<usize> = file_reader.ok().map(|br| br.lines().count());
     let mut rng = thread_rng();
-    let random_entry_number: Option<usize> =
-        n_entries.map(|n| rng.gen_range(0, n - 1));
+    let random_entry_number: Option<usize> = n_entries.map(|n| rng.gen_range(0, n - 1));
     match get_file_reader(input_path)
         .ok()
         .zip(random_entry_number)
         .map(|(br, index)| find_entry(br, index))
-        .transpose() {
+        .transpose()
+    {
         Ok(Some(json)) => print_entry(&json),
-        Ok(None)       => bail!("Couldn't generate random entry number."),
-        Err(err)       => bail!(err)
+        Ok(None) => bail!("Couldn't generate random entry number."),
+        Err(err) => bail!(err),
     }
     return Ok(());
 }
 
-fn levenshtein_distance(search_term : &String, word : &String, case_insensitive : bool)
-    -> usize {
+fn levenshtein_distance(search_term: &String, word: &String, case_insensitive: bool) -> usize {
     if case_insensitive {
-        return edit_distance(&search_term.as_str().to_uppercase(),
-                             &word.as_str().to_uppercase());
-    }
-    else {
+        return edit_distance(
+            &search_term.as_str().to_uppercase(),
+            &word.as_str().to_uppercase(),
+        );
+    } else {
         return edit_distance(search_term, word);
     }
 }
 
-fn do_search(file_reader : BufReader<File>, term : String, max_results : usize,
-    case_insensitive : bool) -> Result<SearchResult> {
-    let search_result = search_worker(file_reader, term.clone(),
-                            max_results, case_insensitive, Arc::new(AtomicBool::new(false)));
+fn do_search(
+    file_reader: BufReader<File>,
+    term: String,
+    max_results: usize,
+    case_insensitive: bool,
+) -> Result<SearchResult> {
+    let search_result = search_worker(
+        file_reader,
+        term.clone(),
+        max_results,
+        case_insensitive,
+        Arc::new(AtomicBool::new(false)),
+    );
     return search_result;
 }
 
-fn search_worker(file_reader : BufReader<File>, term : String, max_results : usize,
-    case_insensitive : bool, is_solution_found: Arc<AtomicBool>)
-    -> Result<SearchResult> {
+fn search_worker(
+    file_reader: BufReader<File>,
+    term: String,
+    max_results: usize,
+    case_insensitive: bool,
+    is_solution_found: Arc<AtomicBool>,
+) -> Result<SearchResult> {
     let mut search_result = SearchResult {
-        full_matches : Vec::new(),
-        did_you_mean : None,
-        distance     : usize::MAX
+        full_matches: Vec::new(),
+        did_you_mean: None,
+        distance: usize::MAX,
     };
     let mut min_distance = usize::MAX;
     for (i, line) in file_reader.lines().enumerate() {
-        let parse_res : Result<DictionaryEntry> = parse_line(line, i);
+        let parse_res: Result<DictionaryEntry> = parse_line(line, i);
         ensure!(parse_res.is_ok(), parse_res.unwrap_err());
-        let json : DictionaryEntry = parse_res?;
+        let json: DictionaryEntry = parse_res?;
         let distance = levenshtein_distance(&json.word, &term, case_insensitive);
         if distance < min_distance {
             min_distance = distance;
@@ -200,21 +229,27 @@ fn search_worker(file_reader : BufReader<File>, term : String, max_results : usi
             is_solution_found.store(true, Ordering::Relaxed);
             break;
         }
-        if i % CHECK_FOR_SOLUTION_FOUND_EVERY == 0
-            && is_solution_found.load(Ordering::Relaxed) {
+        if i % CHECK_FOR_SOLUTION_FOUND_EVERY == 0 && is_solution_found.load(Ordering::Relaxed) {
             break;
         }
     }
     return Ok(search_result);
 }
 
-fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
-    case_insensitive : bool) -> Result<SearchResult> {
+fn search_partitioned(
+    input_path: &PathBuf,
+    term: String,
+    max_results: usize,
+    case_insensitive: bool,
+) -> Result<SearchResult> {
     let is_solution_found = Arc::new(AtomicBool::new(false));
 
     let mut children = vec![];
     let paths = fs::read_dir(input_path);
-    ensure!(paths.is_ok(), format!("Couldn't find db dir: '{}'", input_path.display()));
+    ensure!(
+        paths.is_ok(),
+        format!("Couldn't find db dir: '{}'", input_path.display())
+    );
     for path in paths.unwrap() {
         let term = term.clone();
         let max_results = max_results.clone();
@@ -223,17 +258,24 @@ fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
         children.push(thread::spawn(move || {
             if let Ok(path) = path {
                 match get_file_reader(path.path().as_path()) {
-                    Ok(br) => return search_worker(br, term, max_results,
-                                               case_insensitive_c, is_solution_found),
-                    Err(e) => bail!(e)
+                    Ok(br) => {
+                        return search_worker(
+                            br,
+                            term,
+                            max_results,
+                            case_insensitive_c,
+                            is_solution_found,
+                        )
+                    }
+                    Err(e) => bail!(e),
                 }
             }
             bail!("db file path contains an invalid partition entry");
         }));
     }
 
-    let mut search_results : Vec<SearchResult> = Vec::new();
-    let mut did_you_mean : Option<DictionaryEntry> = None;
+    let mut search_results: Vec<SearchResult> = Vec::new();
+    let mut did_you_mean: Option<DictionaryEntry> = None;
     let mut min_distance = usize::MAX;
 
     for child in children {
@@ -245,91 +287,103 @@ fn search_partitioned(input_path : &PathBuf, term : String, max_results : usize,
                         did_you_mean = result.did_you_mean.clone();
                     }
                     search_results.push(result)
-                },
-            Err(err) => bail!(err)
+                }
+                Err(err) => bail!(err),
             }
-        }
-        else {
+        } else {
             bail!("thread panicked!");
         }
     }
 
-    let full_matches : Vec<DictionaryEntry> = search_results.into_iter()
-                                                            .map(|r| r.full_matches)
-                                                            .flatten()
-                                                            .collect();
-    let search_result =
-        SearchResult {
-            full_matches : full_matches,
-            did_you_mean : did_you_mean,
-            distance     : min_distance
-        };
+    let full_matches: Vec<DictionaryEntry> = search_results
+        .into_iter()
+        .map(|r| r.full_matches)
+        .flatten()
+        .collect();
+    let search_result = SearchResult {
+        full_matches: full_matches,
+        did_you_mean: did_you_mean,
+        distance: min_distance,
+    };
     return Ok(search_result);
 }
 
-fn search(input_path : &PathBuf, term : String, max_results : usize, case_insensitive : bool,
-          partitioned : bool) -> Result<SearchResult> {
+fn search(
+    input_path: &PathBuf,
+    term: String,
+    max_results: usize,
+    case_insensitive: bool,
+    partitioned: bool,
+) -> Result<SearchResult> {
     if partitioned {
         return search_partitioned(input_path, term, max_results, case_insensitive);
-    }
-    else {
+    } else {
         match get_file_reader(input_path.as_path()) {
             Ok(br) => return do_search(br, term, max_results, case_insensitive),
-            Err(e) => bail!(e)
+            Err(e) => bail!(e),
         }
     }
 }
 
-fn evaluate_cache(term: &String, max_results: usize, language: &Language)
-    -> Option<Vec<DictionaryEntry>> {
+fn evaluate_cache(
+    term: &String,
+    max_results: usize,
+    language: &Language,
+) -> Option<Vec<DictionaryEntry>> {
     match get_cached_db_entry(term, language) {
-        Ok(result) => if result.len() < max_results {
-                        return None;
-                      }
-                      else {
-                        return Some(result);
-                      },
-        _          => None
+        Ok(result) => {
+            if result.len() < max_results {
+                return None;
+            } else {
+                return Some(result);
+            }
         }
+        _ => None,
+    }
 }
 
-fn run(term : &Option<String>, language : &Language, max_results : usize,
-    case_insensitive : bool, partitioned : bool, path : PathBuf)
-    -> Result<()> {
+fn run(
+    term: &Option<String>,
+    language: &Language,
+    max_results: usize,
+    case_insensitive: bool,
+    partitioned: bool,
+    path: PathBuf,
+) -> Result<()> {
     match term {
-       Some(s) => {
-            match evaluate_cache(s, max_results, language) {
-                Some(csr) => {
-                    print_entries(&csr);
+        Some(s) => match evaluate_cache(s, max_results, language) {
+            Some(csr) => {
+                print_entries(&csr);
+                return Ok(());
+            }
+            _ => match search(&path, s.clone(), max_results, case_insensitive, partitioned) {
+                Ok(sr) => {
+                    print_search_result(s, &sr);
+                    if !sr.full_matches.is_empty() {
+                        return write_db_entry_to_cache(s, &sr.full_matches, language);
+                    }
                     return Ok(());
                 }
-                _       => match search(&path, s.clone(), max_results, case_insensitive,
-                             partitioned) {
-                                Ok(sr) => {
-                                 print_search_result(s, &sr);
-                                 if !sr.full_matches.is_empty() {
-                                    return write_db_entry_to_cache(s, &sr.full_matches, language)
-                                 }
-                                 return Ok(());
-                            },
-                            Err(e) => bail!(e)
-                            }
-            }
-       },
-       None    => return random_entry(&path.as_path())
+                Err(e) => bail!(e),
+            },
+        },
+        None => return random_entry(&path.as_path()),
     };
 }
 
-fn get_language(language : &Option<String>) -> Language {
+fn get_language(language: &Option<String>) -> Language {
     if let Some(language) = language {
-       return Language::from_string(&language).unwrap_or(Language::EN);
+        return Language::from_string(&language).unwrap_or(Language::EN);
     }
     return Language::EN;
 }
 
-fn get_db_path(path: Option<String>, language: &Option<String>,
-    partitioned: bool, search_term: &Option<String>) -> PathBuf {
-
+fn get_db_path(
+    path: Option<String>,
+    language: &Option<String>,
+    partitioned: bool,
+    search_term: &Option<String>,
+) -> PathBuf {
     if let Some(path) = path {
         return PathBuf::from(path);
     }
@@ -341,10 +395,16 @@ fn get_db_path(path: Option<String>, language: &Option<String>,
     return PathBuf::from(DICTIONARY_DB_PATH!(get_language(language).value()));
 }
 
-fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language)
-    -> Result<()> {
-    let value_as_json: String =
-        CachedDbEntry {entries: value.clone()}.to_json().unwrap();
+fn write_db_entry_to_cache(
+    term: &String,
+    value: &Vec<DictionaryEntry>,
+    language: &Language,
+) -> Result<()> {
+    let value_as_json: String = CachedDbEntry {
+        entries: value.clone(),
+    }
+    .to_json()
+    .unwrap();
 
     // this directory will be created if it does not exist
     let path = DICTIONARY_CACHING_PATH!(language.value());
@@ -360,9 +420,9 @@ fn write_db_entry_to_cache(term: &String, value: &Vec<DictionaryEntry>, language
 
     //dbg!(
     db.insert(key, value_as_json.as_bytes()); // as in BTreeMap::insert
-    db.get(key)?;                // as in BTreeMap::get
-    //db.remove(key)?,             // as in BTreeMap::remove
-    //);
+    db.get(key)?; // as in BTreeMap::get
+                  //db.remove(key)?,             // as in BTreeMap::remove
+                  //);
 
     Ok(())
 }
@@ -372,30 +432,47 @@ fn get_cached_db_entry(term: &String, language: &Language) -> Result<Vec<Diction
 
     let db = sled::open(path)?;
 
-    match db.get(term){
-        Ok(Some(b)) => return String::from_utf8((&b).to_vec())
-            .map_err(|err| anyhow::Error::new(err))
-            .and_then(|s| parse(&s))
-            .map(|cde| cde.entries),
-        Ok(_)       => bail!("entry not found"),
-        Err(err)    => bail!(err)
+    match db.get(term) {
+        Ok(Some(b)) => {
+            return String::from_utf8((&b).to_vec())
+                .map_err(|err| anyhow::Error::new(err))
+                .and_then(|s| parse(&s))
+                .map(|cde| cde.entries)
+        }
+        Ok(_) => bail!("entry not found"),
+        Err(err) => bail!(err),
     };
 }
 
-pub fn parse(line : &String) -> Result<CachedDbEntry> {
+pub fn parse(line: &String) -> Result<CachedDbEntry> {
     return serde_json::from_str(line).map_err(|err| anyhow::Error::new(err));
 }
 
 fn main() -> Result<()> {
     let args = Cli::parse();
     match args.stats {
-        true =>
-           return print_stats(get_db_path(args.db_path, &args.language, args.partitioned,
-                                         &args.search_term)),
-        _   =>
-           return run(&args.search_term, &get_language(&args.language), args.max_results,
-                      args.case_insensitive, args.partitioned,
-                      get_db_path(args.db_path, &args.language, args.partitioned,
-                                  &args.search_term))
+        true => {
+            return print_stats(get_db_path(
+                args.db_path,
+                &args.language,
+                args.partitioned,
+                &args.search_term,
+            ))
+        }
+        _ => {
+            return run(
+                &args.search_term,
+                &get_language(&args.language),
+                args.max_results,
+                args.case_insensitive,
+                args.partitioned,
+                get_db_path(
+                    args.db_path,
+                    &args.language,
+                    args.partitioned,
+                    &args.search_term,
+                ),
+            )
+        }
     };
 }
