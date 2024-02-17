@@ -98,3 +98,9 @@ pub mod language {
         }
     }
 }
+
+pub mod paths {
+    pub fn project_dir() -> String {
+        return format!("{}/..", env!("CARGO_MANIFEST_DIR"));
+    }
+}

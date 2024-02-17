@@ -5,7 +5,6 @@ use edit_distance::edit_distance;
 use indoc::printdoc;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
-use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
@@ -17,31 +16,23 @@ use std::thread;
 
 use utilities::file_utils::*;
 use utilities::language::*;
+use utilities::paths::*;
 
 mod wiktionary_data;
 use crate::wiktionary_data::*;
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
-
-macro_rules! PROJECT_DIR {
-    () => {
-        env!("CARGO_MANIFEST_DIR")
-    };
-}
+mod wiktionary_cache;
+use crate::wiktionary_cache::*;
 
 macro_rules! DICTIONARY_DB_PATH {
     ($language:expr) => {
-        format!("{}/files/wiktionary-{}.json", PROJECT_DIR!(), $language)
+        format!("{}/files/wiktionary-{}.json", project_dir(), $language)
     };
 }
 macro_rules! DEFAULT_DB_PARTITIONED_DIR {
     () => {
-        format!("{}/files/partitioned", PROJECT_DIR!())
-    };
-}
-macro_rules! DICTIONARY_CACHING_PATH {
-    ($language:expr) => {
-        format!("{}/cache/wiktionary-cache-{}", PROJECT_DIR!(), $language)
+        format!("{}/files/partitioned", project_dir())
     };
 }
 
@@ -330,7 +321,7 @@ fn evaluate_cache(
     max_results: usize,
     language: &Language,
 ) -> Option<Vec<DictionaryEntry>> {
-    match get_cached_db_entry(term, language) {
+    match get_cached_entries(term, language) {
         Ok(result) => {
             if result.len() < max_results {
                 return None;
@@ -360,7 +351,7 @@ fn run(
                 Ok(sr) => {
                     print_search_result(s, &sr);
                     if !sr.full_matches.is_empty() {
-                        return write_db_entry_to_cache(s, &sr.full_matches, language);
+                        return write_to_cache(s, &sr.full_matches, language);
                     }
                     return Ok(());
                 }
@@ -395,53 +386,18 @@ fn get_db_path(
     return PathBuf::from(DICTIONARY_DB_PATH!(get_language(language).value()));
 }
 
-fn write_db_entry_to_cache(
-    term: &String,
-    value: &Vec<DictionaryEntry>,
-    language: &Language,
-) -> Result<()> {
+fn write_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language) -> Result<()> {
     let value_as_json: String = CachedDbEntry {
         entries: value.clone(),
     }
     .to_json()
     .unwrap();
-
-    // this directory will be created if it does not exist
-    let path = DICTIONARY_CACHING_PATH!(language.value());
-
-    // works like std::fs::open
-    let db = sled::open(path)?;
-
-    // key and value types can be `Vec<u8>`, `[u8]`, or `str`.
-    let key = term;
-
-    // `generate_id`
-    // let value = db.generate_id()?.to_be_bytes();
-
-    //dbg!(
-    db.insert(key, value_as_json.as_bytes()); // as in BTreeMap::insert
-    db.get(key)?; // as in BTreeMap::get
-                  //db.remove(key)?,             // as in BTreeMap::remove
-                  //);
-
-    Ok(())
+    return write_db_entry_to_cache(term, &value_as_json, language);
 }
 
-fn get_cached_db_entry(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
-    let path = DICTIONARY_CACHING_PATH!(language.value());
-
-    let db = sled::open(path)?;
-
-    match db.get(term) {
-        Ok(Some(b)) => {
-            return String::from_utf8((&b).to_vec())
-                .map_err(|err| anyhow::Error::new(err))
-                .and_then(|s| parse(&s))
-                .map(|cde| cde.entries)
-        }
-        Ok(_) => bail!("entry not found"),
-        Err(err) => bail!(err),
-    };
+fn get_cached_entries(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
+    return wiktionary_cache::get_cached_db_entry(term, language)
+        .map(|cde: CachedDbEntry| cde.entries);
 }
 
 pub fn parse(line: &String) -> Result<CachedDbEntry> {
