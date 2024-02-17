@@ -400,10 +400,6 @@ fn get_cached_entries(term: &String, language: &Language) -> Result<Vec<Dictiona
         .map(|cde: CachedDbEntry| cde.entries);
 }
 
-pub fn parse(line: &String) -> Result<CachedDbEntry> {
-    return serde_json::from_str(line).map_err(|err| anyhow::Error::new(err));
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     match args.stats {
