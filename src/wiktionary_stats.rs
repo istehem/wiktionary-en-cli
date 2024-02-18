@@ -8,6 +8,7 @@ use utilities::file_utils::*;
 
 pub struct Stats {
     path: String,
+    caching_dir: String,
     number_of_entries: Option<usize>,
     file_size: Option<u64>,
 }
@@ -16,6 +17,7 @@ impl Stats {
     pub fn to_pretty_string(&self) -> ColoredString {
         let mut res: Vec<ColoredString> = Vec::new();
         res.push(format!("{:<19}: {}", "dictionary file".green(), self.path).normal());
+        res.push(format!("{:<19}: {}", "caching dir".green(), self.caching_dir).normal());
 
         if let Some(n) = self.number_of_entries {
             res.push(
@@ -45,6 +47,7 @@ impl Stats {
 pub fn calculate_stats(path: &Path) -> Stats {
     return Stats {
         path: path.display().to_string(),
+        caching_dir: String::from(env!("CACHING_DIR")),
         file_size: file_size_in_megabytes(path),
         number_of_entries: number_of_entries(path),
     };

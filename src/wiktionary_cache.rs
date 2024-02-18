@@ -1,11 +1,14 @@
 use anyhow::{bail, Result};
 
 use utilities::language::*;
-use utilities::paths::*;
 
 macro_rules! DICTIONARY_CACHING_PATH {
     ($language:expr) => {
-        format!("{}/cache/wiktionary-cache-{}", project_dir(), $language)
+        format!(
+            "{}/cache/wiktionary-cache-{}",
+            env!("CACHING_DIR"),
+            $language
+        )
     };
 }
 

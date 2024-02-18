@@ -16,7 +16,6 @@ use std::thread;
 
 use utilities::file_utils::*;
 use utilities::language::*;
-use utilities::paths::*;
 
 mod wiktionary_data;
 use crate::wiktionary_data::*;
@@ -25,14 +24,20 @@ use crate::wiktionary_stats::*;
 mod wiktionary_cache;
 use crate::wiktionary_cache::*;
 
+macro_rules! PROJECT_DIR {
+    () => {
+        env!("CARGO_MANIFEST_DIR")
+    };
+}
+
 macro_rules! DICTIONARY_DB_PATH {
     ($language:expr) => {
-        format!("{}/files/wiktionary-{}.json", project_dir(), $language)
+        format!("{}/files/wiktionary-{}.json", PROJECT_DIR!(), $language)
     };
 }
 macro_rules! DEFAULT_DB_PARTITIONED_DIR {
     () => {
-        format!("{}/files/partitioned", project_dir())
+        format!("{}/files/partitioned", PROJECT_DIR!())
     };
 }
 
