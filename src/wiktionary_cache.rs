@@ -4,11 +4,7 @@ use utilities::language::*;
 
 macro_rules! DICTIONARY_CACHING_PATH {
     ($language:expr) => {
-        format!(
-            "{}/cache/wiktionary-cache-{}",
-            env!("CACHING_DIR"),
-            $language
-        )
+        format!("{}/wiktionary-cache-{}", env!("CACHING_DIR"), $language)
     };
 }
 
