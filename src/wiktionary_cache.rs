@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Result};
 
 use utilities::language::*;
 
@@ -12,10 +12,12 @@ pub fn write_db_entry_to_cache(term: &String, value: &String, language: &Languag
     // this directory will be created if it does not exist
     let path = DICTIONARY_CACHING_PATH!(language.value());
 
-    let db = sled::open(path)?;
+    let db = sled::open(&path);
+    ensure!(db.is_ok(), format!("error writing to cache db: {}", path));
     let key = term;
 
     return db
+        .unwrap()
         .insert(key, value.as_bytes())
         .map_err(|err| anyhow::Error::new(err))
         .map(|_| return);
@@ -27,9 +29,10 @@ pub fn get_cached_db_entry<T: for<'a> serde::Deserialize<'a>>(
 ) -> Result<T> {
     let path = DICTIONARY_CACHING_PATH!(language.value());
 
-    let db = sled::open(path)?;
+    let db = sled::open(&path);
+    ensure!(db.is_ok(), format!("error reading from cache db: {}", path));
 
-    match db.get(term) {
+    match db.unwrap().get(term) {
         Ok(Some(b)) => {
             return String::from_utf8((&b).to_vec())
                 .map_err(|err| anyhow::Error::new(err))
