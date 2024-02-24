@@ -24,20 +24,14 @@ use crate::wiktionary_stats::*;
 mod wiktionary_cache;
 use crate::wiktionary_cache::*;
 
-macro_rules! PROJECT_DIR {
-    () => {
-        env!("CARGO_MANIFEST_DIR")
-    };
-}
-
 macro_rules! DICTIONARY_DB_PATH {
     ($language:expr) => {
-        format!("{}/files/wiktionary-{}.json", PROJECT_DIR!(), $language)
+        format!("{}/wiktionary-{}.json", env!("DICTIONARY_DIR"), $language)
     };
 }
 macro_rules! DEFAULT_DB_PARTITIONED_DIR {
     () => {
-        format!("{}/files/partitioned", PROJECT_DIR!())
+        format!("{}/partitioned", env!("DICTIONARY_DIR"))
     };
 }
 
