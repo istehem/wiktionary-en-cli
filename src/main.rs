@@ -119,7 +119,7 @@ fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<Dictiona
         line.is_ok(),
         format!("Couldn't read line {} in DB file.", i)
     );
-    let parse_res: Result<DictionaryEntry> = wiktionary_data::parse(&line?);
+    let parse_res: Result<DictionaryEntry> = wiktionary_cache::parse(&line?);
     ensure!(
         parse_res.is_ok(),
         format!("Couldn't parse line {} in DB file.", i)
@@ -382,7 +382,7 @@ fn get_db_path(
 
 fn write_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language) -> Result<()> {
     let entry = CachedDbEntry {
-        entries: value.clone()
+        entries: value.clone(),
     };
     return write_db_entry_to_cache(term, &entry, language);
 }

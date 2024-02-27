@@ -1,4 +1,3 @@
-use anyhow::Result;
 use colored::ColoredString;
 use colored::Colorize;
 use indoc::formatdoc;
@@ -227,8 +226,4 @@ fn format_translations(translations: &Vec<Translation>) -> ColoredString {
         res.push(NEWLINE.normal().join(translations_to_strings(translations)));
     }
     return NEWLINE.normal().join(res);
-}
-
-pub fn parse(line: &String) -> Result<DictionaryEntry> {
-    return serde_json::from_str(line).map_err(|err| anyhow::Error::new(err));
 }
