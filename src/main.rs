@@ -72,11 +72,6 @@ struct SearchResult {
 pub struct CachedDbEntry {
     entries: Vec<DictionaryEntry>,
 }
-impl CachedDbEntry {
-    pub fn to_json(&self) -> Result<String> {
-        return serde_json::to_string(self).map_err(|err| anyhow::Error::new(err));
-    }
-}
 
 fn print_entry(json: &DictionaryEntry) {
     println!("{}", json.to_pretty_string());
@@ -386,12 +381,10 @@ fn get_db_path(
 }
 
 fn write_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language) -> Result<()> {
-    let value_as_json: String = CachedDbEntry {
-        entries: value.clone(),
-    }
-    .to_json()
-    .unwrap();
-    return write_db_entry_to_cache(term, &value_as_json, language);
+    let entry = CachedDbEntry {
+        entries: value.clone()
+    };
+    return write_db_entry_to_cache(term, &entry, language);
 }
 
 fn get_cached_entries(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {

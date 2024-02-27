@@ -8,17 +8,22 @@ macro_rules! DICTIONARY_CACHING_PATH {
     };
 }
 
-pub fn write_db_entry_to_cache(term: &String, value: &String, language: &Language) -> Result<()> {
+pub fn write_db_entry_to_cache<T: serde::Serialize>(
+    term: &String,
+    value: &T,
+    language: &Language,
+) -> Result<()> {
     // this directory will be created if it does not exist
     let path = DICTIONARY_CACHING_PATH!(language.value());
 
     let db = sled::open(&path);
     ensure!(db.is_ok(), format!("error writing to cache db: {}", path));
-    let key = term;
+    let json_string = serde_json::to_string(value);
+    ensure!(json_string.is_ok(), "cannot serialize entry");
 
     return db
         .unwrap()
-        .insert(key, value.as_bytes())
+        .insert(term, json_string.unwrap().as_bytes())
         .map_err(|err| anyhow::Error::new(err))
         .map(|_| return);
 }
