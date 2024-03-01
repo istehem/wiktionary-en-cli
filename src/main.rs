@@ -14,6 +14,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
 
+use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use utilities::language::*;
 
@@ -119,7 +120,7 @@ fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<Dictiona
         line.is_ok(),
         format!("Couldn't read line {} in DB file.", i)
     );
-    let parse_res: Result<DictionaryEntry> = wiktionary_cache::parse(&line?);
+    let parse_res: Result<DictionaryEntry> = anyhow_serde::from_str(&line?);
     ensure!(
         parse_res.is_ok(),
         format!("Couldn't parse line {} in DB file.", i)
