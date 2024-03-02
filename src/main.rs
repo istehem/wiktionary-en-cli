@@ -116,16 +116,12 @@ fn find_entry(file_reader: BufReader<File>, index: usize) -> Result<DictionaryEn
 }
 
 fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
-    ensure!(
-        line.is_ok(),
-        format!("Couldn't read line {} in DB file.", i)
-    );
-    let parse_res: Result<DictionaryEntry> = anyhow_serde::from_str(&line?);
-    ensure!(
-        parse_res.is_ok(),
-        format!("Couldn't parse line {} in DB file.", i)
-    );
-    return parse_res;
+    return line
+        .map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
+        .and_then(|line| {
+            anyhow_serde::from_str(&line)
+                .map_err(|e| e.context(format!("Couldn't parse line {} in DB file.", i)))
+        });
 }
 
 fn print_stats(input_path_buf: PathBuf) -> Result<()> {
