@@ -36,10 +36,14 @@ pub fn get_cached_db_entry<T: for<'a> serde::Deserialize<'a>>(
     let path = DICTIONARY_CACHING_PATH!(language.value());
 
     let db = sled::open(&path);
-    ensure!(db.is_ok(), format!("error reading from cache db: {}", path));
 
-    match db.unwrap().get(term) {
-        Ok(Some(b)) => {
+    match db
+        .map_err(|err| {
+            anyhow::Error::new(err).context(format!("error reading from cache db: {}", path))
+        })
+        .map(|db| db.get(term))
+    {
+        Ok(Ok(Some(b))) => {
             return String::from_utf8((&b).to_vec())
                 .map_err(|err| anyhow::Error::new(err))
                 .and_then(|s| anyhow_serde::from_str(&s))
