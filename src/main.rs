@@ -311,16 +311,16 @@ fn evaluate_cache(
     term: &String,
     max_results: usize,
     language: &Language,
-) -> Option<Vec<DictionaryEntry>> {
+) -> Result<Option<Vec<DictionaryEntry>>> {
     match get_cached_entries(term, language) {
-        Ok(result) => {
+        Ok(Some(result)) => {
             if result.len() < max_results {
-                return None;
+                return Ok(None);
             } else {
-                return Some(result);
+                return Ok(Some(result));
             }
         }
-        _ => None,
+        result => result,
     }
 }
 
@@ -334,20 +334,23 @@ fn run(
 ) -> Result<()> {
     match term {
         Some(s) => match evaluate_cache(s, max_results, language) {
-            Some(csr) => {
+            Ok(Some(csr)) => {
                 print_entries(&csr);
                 return Ok(());
             }
-            _ => match search(&path, s.clone(), max_results, case_insensitive, partitioned) {
-                Ok(sr) => {
-                    print_search_result(s, &sr);
-                    if !sr.full_matches.is_empty() {
-                        return write_to_cache(s, &sr.full_matches, language);
+            Ok(None) => {
+                match search(&path, s.clone(), max_results, case_insensitive, partitioned) {
+                    Ok(sr) => {
+                        print_search_result(s, &sr);
+                        if !sr.full_matches.is_empty() {
+                            return write_to_cache(s, &sr.full_matches, language);
+                        }
+                        return Ok(());
                     }
-                    return Ok(());
+                    Err(e) => bail!(e),
                 }
-                Err(e) => bail!(e),
-            },
+            }
+            Err(e) => bail!(e),
         },
         None => return random_entry(&path.as_path()),
     };
@@ -384,9 +387,9 @@ fn write_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Langua
     return write_db_entry_to_cache(term, &entry, language);
 }
 
-fn get_cached_entries(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
+fn get_cached_entries(term: &String, language: &Language) -> Result<Option<Vec<DictionaryEntry>>> {
     return wiktionary_cache::get_cached_db_entry(term, language)
-        .map(|cde: CachedDbEntry| cde.entries);
+        .map(|cde: Option<CachedDbEntry>| cde.map(|cde| cde.entries));
 }
 
 fn main() -> Result<()> {

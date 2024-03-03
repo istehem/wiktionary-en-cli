@@ -35,7 +35,7 @@ pub fn write_db_entry_to_cache<T: serde::Serialize>(
 pub fn get_cached_db_entry<T: for<'a> serde::Deserialize<'a>>(
     term: &String,
     language: &Language,
-) -> Result<T> {
+) -> Result<Option<T>> {
     let path = DICTIONARY_CACHING_PATH!(language.value());
 
     let db = sled::open(&path)
@@ -47,7 +47,7 @@ pub fn get_cached_db_entry<T: for<'a> serde::Deserialize<'a>>(
                 .map_err(|err| anyhow::Error::new(err))
                 .and_then(|s| anyhow_serde::from_str(&s))
         }
-        Ok(_) => bail!("entry not found"),
+        Ok(_) => return Ok(None),
         Err(err) => bail!(err),
     };
 }
