@@ -358,7 +358,7 @@ fn run(
 
 fn get_language(language: &Option<String>) -> Language {
     if let Some(language) = language {
-        return Language::from_string(&language).unwrap_or(Language::EN);
+        return Language::from_string(&language).unwrap_or_default();
     }
     return Language::EN;
 }
