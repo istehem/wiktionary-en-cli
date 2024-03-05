@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 
 use utilities::anyhow_serde;
 use utilities::language::*;
@@ -20,8 +20,7 @@ pub fn write_db_entry_to_cache<T: serde::Serialize>(
     let db = sled::open(&path)
         .map_err(|err| anyhow::Error::new(err).context(format!("cannot open db: {}", path)));
 
-    let json = anyhow_serde::to_string(value)
-        .map_err(|err| err.context(format!("cannot serialize entry")));
+    let json = anyhow_serde::to_string(value).context(format!("cannot serialize entry"));
 
     return json.and_then(|json| {
         db.and_then(|db| {

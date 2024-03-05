@@ -1,4 +1,4 @@
-use anyhow::{bail, ensure, Result};
+use anyhow::{bail, ensure, Context, Result};
 use clap::Parser;
 use colored::Colorize;
 use edit_distance::edit_distance;
@@ -120,7 +120,7 @@ fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<Dictiona
         .map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
         .and_then(|line| {
             anyhow_serde::from_str(&line)
-                .map_err(|e| e.context(format!("Couldn't parse line {} in DB file.", i)))
+                .with_context(|| format!("Couldn't parse line {} in DB file.", i))
         });
 }
 
