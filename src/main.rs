@@ -216,16 +216,17 @@ fn search_worker(
     for (i, line) in file_reader.lines().enumerate() {
         let parse_res: Result<DictionaryEntry> = parse_line(line, i);
 
-        if let Ok(json) = parse_res {
-            min_distance = evaluate_entry(
-                &mut search_result,
-                &term,
-                json,
-                case_insensitive,
-                min_distance,
-            );
-        } else {
-            bail!(parse_res.unwrap_err());
+        match parse_res {
+            Ok(json) => {
+                min_distance = evaluate_entry(
+                    &mut search_result,
+                    &term,
+                    json,
+                    case_insensitive,
+                    min_distance,
+                )
+            }
+            Err(err) => bail!(err),
         }
 
         if search_result.full_matches.len() == max_results {
