@@ -181,6 +181,25 @@ fn do_search(
     return search_result;
 }
 
+fn evaluate_entry(
+    search_result: &mut SearchResult,
+    term: &String,
+    json: DictionaryEntry,
+    case_insensitive: bool,
+    min_distance: usize,
+) -> usize {
+    let distance = levenshtein_distance(&json.word, &term, case_insensitive);
+    if distance == 0 {
+        search_result.full_matches.push(json.clone());
+    }
+    if distance < min_distance {
+        search_result.did_you_mean = Some(json);
+        search_result.distance = distance;
+        return distance;
+    }
+    return min_distance;
+}
+
 fn search_worker(
     file_reader: BufReader<File>,
     term: String,
@@ -196,17 +215,19 @@ fn search_worker(
     let mut min_distance = usize::MAX;
     for (i, line) in file_reader.lines().enumerate() {
         let parse_res: Result<DictionaryEntry> = parse_line(line, i);
-        ensure!(parse_res.is_ok(), parse_res.unwrap_err());
-        let json: DictionaryEntry = parse_res?;
-        let distance = levenshtein_distance(&json.word, &term, case_insensitive);
-        if distance < min_distance {
-            min_distance = distance;
-            search_result.did_you_mean = Some(json.clone());
-            search_result.distance = distance;
+
+        if let Ok(json) = parse_res {
+            min_distance = evaluate_entry(
+                &mut search_result,
+                &term,
+                json,
+                case_insensitive,
+                min_distance,
+            );
+        } else {
+            bail!(parse_res.unwrap_err());
         }
-        if distance == 0 {
-            search_result.full_matches.push(json);
-        }
+
         if search_result.full_matches.len() == max_results {
             is_solution_found.store(true, Ordering::Relaxed);
             break;
