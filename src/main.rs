@@ -141,17 +141,17 @@ fn random_entry(input_path: &Path) -> Result<()> {
     let n_entries: Option<usize> = file_reader.ok().map(|br| br.lines().count());
     let mut rng = thread_rng();
     let random_entry_number: Option<usize> = n_entries.map(|n| rng.gen_range(0, n - 1));
-    match get_file_reader(input_path)
-        .ok()
-        .zip(random_entry_number)
-        .map(|(br, index)| find_entry(br, index))
-        .transpose()
-    {
-        Ok(Some(json)) => print_entry(&json),
-        Ok(None) => bail!("Couldn't generate random entry number."),
-        Err(err) => bail!(err),
+
+    if let Some(random_entry_number) = random_entry_number {
+        let result = get_file_reader(input_path)
+            .and_then(|file_reader| find_entry(file_reader, random_entry_number));
+        return result.map(|entry| {
+            print_entry(&entry);
+            return;
+        });
     }
-    return Ok(());
+
+    bail!("Couldn't generate random entry number.");
 }
 
 fn levenshtein_distance(search_term: &String, word: &String, case_insensitive: bool) -> usize {
