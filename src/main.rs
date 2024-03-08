@@ -137,21 +137,20 @@ fn print_stats(input_path_buf: PathBuf) -> Result<()> {
 
 fn random_entry(input_path: &Path) -> Result<()> {
     let file_reader = get_file_reader(input_path);
-    ensure!(file_reader.is_ok(), file_reader.unwrap_err());
-    let n_entries: Option<usize> = file_reader.ok().map(|br| br.lines().count());
-    let mut rng = thread_rng();
-    let random_entry_number: Option<usize> = n_entries.map(|n| rng.gen_range(0, n - 1));
+    let n_entries = file_reader.map(|file_reader| file_reader.lines().count());
+    let random_entry_number = n_entries.map(|n| thread_rng().gen_range(0, n - 1));
 
-    if let Some(random_entry_number) = random_entry_number {
-        let result = get_file_reader(input_path)
-            .and_then(|file_reader| find_entry(file_reader, random_entry_number));
-        return result.map(|entry| {
-            print_entry(&entry);
-            return;
-        });
+    match random_entry_number {
+        Ok(random_entry_number) => {
+            let result = get_file_reader(input_path)
+                .and_then(|file_reader| find_entry(file_reader, random_entry_number));
+            return result.map(|entry| {
+                print_entry(&entry);
+                return;
+            });
+        }
+        Err(err) => bail!(err.context("Couldn't generate random entry number.")),
     }
-
-    bail!("Couldn't generate random entry number.");
 }
 
 fn levenshtein_distance(search_term: &String, word: &String, case_insensitive: bool) -> usize {
