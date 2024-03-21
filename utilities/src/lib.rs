@@ -25,7 +25,7 @@ pub mod colored_string_utils {
                     res = format!("{}{}", res, self).normal();
                 }
             }
-            return res.clone();
+            return res;
         }
 
         fn joinwrap(&self, list: Vec<ColoredString>, width: usize) -> ColoredString {

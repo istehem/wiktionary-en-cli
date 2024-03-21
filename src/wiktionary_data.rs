@@ -63,26 +63,19 @@ impl DictionaryEntry {
               {} ({})
               {}
               {}
-              {}
-              {}
-              {}
-              {}
-              {}
-              {}
-              {}
               ",
             horizontal_line(),
-            &self.word.clone().green().bold(),
+            self.word.green().bold(),
             self.pos,
             horizontal_line(),
-            format_etymology(&self.etymology_text),
-            horizontal_line(),
-            format_sounds(&self.sounds),
-            horizontal_line(),
-            format_senses(&self.senses),
-            horizontal_line(),
-            format_translations(&self.translations),
-            horizontal_line()
+            format!("{}{}{}", "\n", horizontal_line(), "\n")
+                .normal()
+                .join(vec![
+                    format_etymology(&self.etymology_text),
+                    format_sounds(&self.sounds),
+                    format_senses(&self.senses),
+                    format_translations(&self.translations),
+                ])
         );
     }
 }
