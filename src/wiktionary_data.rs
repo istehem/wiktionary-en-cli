@@ -57,6 +57,25 @@ struct Sound {
 
 impl DictionaryEntry {
     pub fn to_pretty_string(&self) -> String {
+        let mut entries: Vec<ColoredString> = Vec::new();
+        let etymology = format_etymology(&self.etymology_text);
+        let sounds = format_sounds(&self.sounds);
+        let senses = format_senses(&self.senses);
+        let translations = format_translations(&self.translations);
+
+        if let Some(etymology) = etymology {
+            entries.push(etymology);
+        }
+        if let Some(sounds) = sounds {
+            entries.push(sounds);
+        }
+        if let Some(senses) = senses {
+            entries.push(senses);
+        }
+        if let Some(translations) = translations {
+            entries.push(translations);
+        }
+
         return formatdoc!(
             "
               {}
@@ -70,23 +89,20 @@ impl DictionaryEntry {
             horizontal_line(),
             format!("{}{}{}", "\n", horizontal_line(), "\n")
                 .normal()
-                .join(vec![
-                    format_etymology(&self.etymology_text),
-                    format_sounds(&self.sounds),
-                    format_senses(&self.senses),
-                    format_translations(&self.translations),
-                ])
+                .join(entries)
         );
     }
 }
 
-fn format_etymology(etymology: &Option<String>) -> ColoredString {
+fn format_etymology(etymology: &Option<String>) -> Option<ColoredString> {
     let mut res: Vec<ColoredString> = Vec::new();
     res.push("Etymology:".bold());
     if etymology.is_some() {
         res.push(etymology.clone().unwrap().normal());
+    } else {
+        return None;
     }
-    return NEWLINE.normal().joinwrap(res, LINE_WRAP_AT);
+    return Some(NEWLINE.normal().joinwrap(res, LINE_WRAP_AT));
 }
 
 fn senses_to_strings(senses: &Vec<Sense>) -> Vec<ColoredString> {
@@ -98,8 +114,11 @@ fn senses_to_strings(senses: &Vec<Sense>) -> Vec<ColoredString> {
         .collect();
 }
 
-fn format_senses(senses: &Vec<Sense>) -> ColoredString {
-    return NEWLINE.normal().join(senses_to_strings(senses));
+fn format_senses(senses: &Vec<Sense>) -> Option<ColoredString> {
+    if senses.is_empty() {
+        return None;
+    }
+    return Some(NEWLINE.normal().join(senses_to_strings(senses)));
 }
 
 fn format_sense(sense: &Sense, index: usize) -> ColoredString {
@@ -128,13 +147,15 @@ fn format_examples(examples: &Vec<Example>) -> ColoredString {
     .normal();
 }
 
-fn format_sounds(sounds: &Vec<Sound>) -> ColoredString {
+fn format_sounds(sounds: &Vec<Sound>) -> Option<ColoredString> {
     let mut res: Vec<ColoredString> = Vec::new();
     res.push("Pronunciation".bold());
     if !sounds.is_empty() {
         res.push(NEWLINE.normal().join(sounds_to_strings(sounds)));
+    } else {
+        return None;
     }
-    return NEWLINE.normal().join(res);
+    return Some(NEWLINE.normal().join(res));
 }
 
 fn sounds_to_strings(sounds: &Vec<Sound>) -> Vec<ColoredString> {
@@ -212,11 +233,13 @@ fn translations_to_strings(translations: &Vec<Translation>) -> Vec<ColoredString
         .collect();
 }
 
-fn format_translations(translations: &Vec<Translation>) -> ColoredString {
+fn format_translations(translations: &Vec<Translation>) -> Option<ColoredString> {
     let mut res: Vec<ColoredString> = Vec::new();
     res.push("Translations".bold());
     if !translations.is_empty() {
         res.push(NEWLINE.normal().join(translations_to_strings(translations)));
+    } else {
+        return None;
     }
-    return NEWLINE.normal().join(res);
+    return Some(NEWLINE.normal().join(res));
 }
