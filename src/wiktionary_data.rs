@@ -75,6 +75,7 @@ impl DictionaryEntry {
         if let Some(translations) = translations {
             entries.push(translations);
         }
+        let horizontal_line = horizontal_line();
 
         return formatdoc!(
             "
@@ -83,11 +84,11 @@ impl DictionaryEntry {
               {}
               {}
               ",
-            horizontal_line(),
+            horizontal_line,
             self.word.green().bold(),
             self.pos,
-            horizontal_line(),
-            format!("{}{}{}", "\n", horizontal_line(), "\n")
+            horizontal_line,
+            format!("{}{}{}", NEWLINE, horizontal_line, NEWLINE)
                 .normal()
                 .join(entries)
         );
