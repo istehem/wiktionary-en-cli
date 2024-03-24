@@ -7,6 +7,12 @@ use utilities::cache_utils;
 use utilities::colored_string_utils::*;
 use utilities::file_utils::*;
 
+macro_rules! format_key_value {
+    ($key:expr, $value:expr) => {
+        format!("{:<19}: {}", $key, $value)
+    };
+}
+
 pub struct Stats {
     path: String,
     caching_dir: String,
@@ -19,40 +25,29 @@ pub struct Stats {
 impl Stats {
     pub fn to_pretty_string(&self) -> ColoredString {
         let mut res: Vec<ColoredString> = Vec::new();
-        res.push(format!("{:<19}: {}", "dictionary file".green(), self.path).normal());
-        res.push(format!("{:<19}: {}", "caching dir".green(), self.caching_dir).normal());
+        res.push(format_key_value!("dictionary file".green(), self.path).normal());
+        res.push(format_key_value!("caching dir".green(), self.caching_dir).normal());
 
         if let Some(n) = self.cached_entries {
-            res.push(format!("{:<19}: {}", "cached entries".green(), format_integer(n)).normal());
+            res.push(format_key_value!("cached entries".green(), format_integer(n)).normal());
         }
         if let Some(n) = self.cache_size {
             res.push(
-                format!(
-                    "{:<19}: {} {}",
+                format_key_value!(
                     "cache size".green(),
-                    format_integer(n.try_into().unwrap()),
-                    "M"
+                    format!("{} {}", format_integer(n.try_into().unwrap()), "M")
                 )
                 .normal(),
             );
         }
         if let Some(n) = self.number_of_entries {
-            res.push(
-                format!(
-                    "{:<19}: {}",
-                    "dictionary entries".green(),
-                    format_integer(n)
-                )
-                .normal(),
-            );
+            res.push(format_key_value!("dictionary entries".green(), format_integer(n)).normal());
         }
         if let Some(s) = self.file_size {
             res.push(
-                format!(
-                    "{:<19}: {} {}",
+                format_key_value!(
                     "dictionary size".green(),
-                    format_integer(s.try_into().unwrap()),
-                    "M"
+                    format!("{} {}", format_integer(s.try_into().unwrap()), "M")
                 )
                 .normal(),
             );
