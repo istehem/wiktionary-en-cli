@@ -3,12 +3,15 @@ use colored::Colorize;
 use std::io::BufRead;
 use std::path::Path;
 
+use utilities::cache_utils;
 use utilities::colored_string_utils::*;
 use utilities::file_utils::*;
 
 pub struct Stats {
     path: String,
     caching_dir: String,
+    cache_size: Option<usize>,
+    cached_entries: Option<usize>,
     number_of_entries: Option<usize>,
     file_size: Option<u64>,
 }
@@ -19,6 +22,12 @@ impl Stats {
         res.push(format!("{:<19}: {}", "dictionary file".green(), self.path).normal());
         res.push(format!("{:<19}: {}", "caching dir".green(), self.caching_dir).normal());
 
+        if let Some(n) = self.cache_size {
+            res.push(format!("{:<19}: {}", "cache size".green(), format_integer(n)).normal());
+        }
+        if let Some(n) = self.cached_entries {
+            res.push(format!("{:<19}: {}", "cached entries".green(), format_integer(n)).normal());
+        }
         if let Some(n) = self.number_of_entries {
             res.push(
                 format!(
@@ -44,13 +53,22 @@ impl Stats {
     }
 }
 
-pub fn calculate_stats(path: &Path) -> Stats {
+pub fn calculate_stats(dictionary_path: &Path, cache_path: &String) -> Stats {
     return Stats {
-        path: path.display().to_string(),
+        path: dictionary_path.display().to_string(),
         caching_dir: String::from(env!("CACHING_DIR")),
-        file_size: file_size_in_megabytes(path),
-        number_of_entries: number_of_entries(path),
+        cache_size: None,
+        cached_entries: cached_entries(cache_path),
+        file_size: file_size_in_megabytes(dictionary_path),
+        number_of_entries: number_of_entries(dictionary_path),
     };
+}
+
+fn cached_entries(cache_path: &String) -> Option<usize> {
+    if let Ok(number) = cache_utils::get_number_of_entries(cache_path) {
+        return Some(number);
+    }
+    return None;
 }
 
 fn file_size_in_megabytes(input_path: &Path) -> Option<u64> {

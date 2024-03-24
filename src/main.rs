@@ -124,13 +124,20 @@ fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<Dictiona
         });
 }
 
-fn print_stats(input_path_buf: PathBuf) -> Result<()> {
+fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
     let input_path = input_path_buf.as_path();
     if input_path.is_dir() {
         bail!("Sorry, cannot calculate stats for partitioned search yet");
     }
 
-    println!("{}", calculate_stats(input_path).to_pretty_string());
+    println!(
+        "{}",
+        calculate_stats(
+            input_path,
+            &wiktionary_cache::DICTIONARY_CACHING_PATH!(language.value())
+        )
+        .to_pretty_string()
+    );
 
     return Ok(());
 }
@@ -415,19 +422,23 @@ fn get_cached_entries(term: &String, language: &Language) -> Result<Option<Vec<D
 
 fn main() -> Result<()> {
     let args = Cli::parse();
+    let language = get_language(&args.language);
     match args.stats {
         true => {
-            return print_stats(get_db_path(
-                args.db_path,
-                &args.language,
-                args.partitioned,
-                &args.search_term,
-            ))
+            return print_stats(
+                get_db_path(
+                    args.db_path,
+                    &args.language,
+                    args.partitioned,
+                    &args.search_term,
+                ),
+                &language,
+            )
         }
         _ => {
             return run(
                 &args.search_term,
-                &get_language(&args.language),
+                &language,
                 args.max_results,
                 args.case_insensitive,
                 args.partitioned,
