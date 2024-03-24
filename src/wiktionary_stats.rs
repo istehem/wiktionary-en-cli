@@ -10,7 +10,7 @@ use utilities::file_utils::*;
 pub struct Stats {
     path: String,
     caching_dir: String,
-    cache_size: Option<usize>,
+    cache_size: Option<u64>,
     cached_entries: Option<usize>,
     number_of_entries: Option<usize>,
     file_size: Option<u64>,
@@ -22,11 +22,19 @@ impl Stats {
         res.push(format!("{:<19}: {}", "dictionary file".green(), self.path).normal());
         res.push(format!("{:<19}: {}", "caching dir".green(), self.caching_dir).normal());
 
-        if let Some(n) = self.cache_size {
-            res.push(format!("{:<19}: {}", "cache size".green(), format_integer(n)).normal());
-        }
         if let Some(n) = self.cached_entries {
             res.push(format!("{:<19}: {}", "cached entries".green(), format_integer(n)).normal());
+        }
+        if let Some(n) = self.cache_size {
+            res.push(
+                format!(
+                    "{:<19}: {} {}",
+                    "cache size".green(),
+                    format_integer(n.try_into().unwrap()),
+                    "M"
+                )
+                .normal(),
+            );
         }
         if let Some(n) = self.number_of_entries {
             res.push(
@@ -44,7 +52,7 @@ impl Stats {
                     "{:<19}: {} {}",
                     "dictionary size".green(),
                     format_integer(s.try_into().unwrap()),
-                    "MB"
+                    "M"
                 )
                 .normal(),
             );
@@ -56,8 +64,8 @@ impl Stats {
 pub fn calculate_stats(dictionary_path: &Path, cache_path: &String) -> Stats {
     return Stats {
         path: dictionary_path.display().to_string(),
-        caching_dir: String::from(env!("CACHING_DIR")),
-        cache_size: None,
+        caching_dir: cache_path.clone(),
+        cache_size: cache_size_in_megabytes(cache_path),
         cached_entries: cached_entries(cache_path),
         file_size: file_size_in_megabytes(dictionary_path),
         number_of_entries: number_of_entries(dictionary_path),
@@ -71,12 +79,19 @@ fn cached_entries(cache_path: &String) -> Option<usize> {
     return None;
 }
 
+fn cache_size_in_megabytes(cache_path: &String) -> Option<u64> {
+    if let Ok(number) = cache_utils::get_size_on_disk(cache_path) {
+        return Some(number / (1024 * 1024));
+    }
+    return None;
+}
+
 fn file_size_in_megabytes(input_path: &Path) -> Option<u64> {
     if input_path.is_dir() {
         return None;
     }
     if let Ok(metadata) = input_path.metadata() {
-        return Some(metadata.len() / 1024);
+        return Some(metadata.len() / (1024 * 1024));
     }
     return None;
 }
