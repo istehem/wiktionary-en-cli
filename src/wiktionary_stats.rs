@@ -13,6 +13,8 @@ macro_rules! format_key_value {
     };
 }
 
+const MEGABYTE: u64 = 1024*1024;
+
 pub struct Stats {
     path: String,
     caching_dir: String,
@@ -76,7 +78,7 @@ fn cached_entries(cache_path: &String) -> Option<usize> {
 
 fn cache_size_in_megabytes(cache_path: &String) -> Option<u64> {
     if let Ok(number) = cache_utils::get_size_on_disk(cache_path) {
-        return Some(number / (1024 * 1024));
+        return Some(number / MEGABYTE);
     }
     return None;
 }
@@ -86,7 +88,7 @@ fn file_size_in_megabytes(input_path: &Path) -> Option<u64> {
         return None;
     }
     if let Ok(metadata) = input_path.metadata() {
-        return Some(metadata.len() / (1024 * 1024));
+        return Some(metadata.len() / MEGABYTE);
     }
     return None;
 }
