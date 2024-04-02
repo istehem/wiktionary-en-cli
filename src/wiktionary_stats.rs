@@ -9,50 +9,50 @@ use utilities::file_utils::*;
 
 macro_rules! format_key_value {
     ($key:expr, $value:expr) => {
-        format!("{:<19}: {}", $key, $value)
+        format!("{:<19}: {}", $key.green(), $value).normal()
     };
 }
 
-const MEGABYTE: u64 = 1024*1024;
+macro_rules! format_float {
+    ($value:expr) => {
+        format!("{:.2}", $value).yellow()
+    };
+}
+
+const MEGABYTE: f64 = 1024.0 * 1024.0;
 
 pub struct Stats {
     path: String,
     caching_dir: String,
-    cache_size: Option<u64>,
+    cache_size: Option<f64>,
     cached_entries: Option<usize>,
     number_of_entries: Option<usize>,
-    file_size: Option<u64>,
+    file_size: Option<f64>,
 }
 
 impl Stats {
     pub fn to_pretty_string(&self) -> ColoredString {
         let mut res: Vec<ColoredString> = Vec::new();
-        res.push(format_key_value!("dictionary file".green(), self.path).normal());
-        res.push(format_key_value!("caching dir".green(), self.caching_dir).normal());
+        res.push(format_key_value!("dictionary file", self.path));
+        res.push(format_key_value!("caching dir", self.caching_dir));
 
         if let Some(n) = self.cached_entries {
-            res.push(format_key_value!("cached entries".green(), format_integer(n)).normal());
+            res.push(format_key_value!("cached entries", format_integer(n)));
         }
-        if let Some(n) = self.cache_size {
-            res.push(
-                format_key_value!(
-                    "cache size".green(),
-                    format!("{} {}", format_integer(n.try_into().unwrap()), "M")
-                )
-                .normal(),
-            );
+        if let Some(s) = self.cache_size {
+            res.push(format_key_value!(
+                "cache size",
+                format!("{} {}", format_float!(s), "M")
+            ));
         }
         if let Some(n) = self.number_of_entries {
-            res.push(format_key_value!("dictionary entries".green(), format_integer(n)).normal());
+            res.push(format_key_value!("dictionary entries", format_integer(n)));
         }
         if let Some(s) = self.file_size {
-            res.push(
-                format_key_value!(
-                    "dictionary size".green(),
-                    format!("{} {}", format_integer(s.try_into().unwrap()), "M")
-                )
-                .normal(),
-            );
+            res.push(format_key_value!(
+                "dictionary size",
+                format!("{} {}", format_float!(s), "M")
+            ));
         }
         return NEWLINE.normal().join(res);
     }
@@ -76,19 +76,19 @@ fn cached_entries(cache_path: &String) -> Option<usize> {
     return None;
 }
 
-fn cache_size_in_megabytes(cache_path: &String) -> Option<u64> {
+fn cache_size_in_megabytes(cache_path: &String) -> Option<f64> {
     if let Ok(number) = cache_utils::get_size_on_disk(cache_path) {
-        return Some(number / MEGABYTE);
+        return Some(number as f64 / MEGABYTE);
     }
     return None;
 }
 
-fn file_size_in_megabytes(input_path: &Path) -> Option<u64> {
+fn file_size_in_megabytes(input_path: &Path) -> Option<f64> {
     if input_path.is_dir() {
         return None;
     }
     if let Ok(metadata) = input_path.metadata() {
-        return Some(metadata.len() / MEGABYTE);
+        return Some(metadata.len() as f64 / MEGABYTE);
     }
     return None;
 }
