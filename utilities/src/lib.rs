@@ -2,6 +2,7 @@ pub mod colored_string_utils {
     use colored::ColoredString;
     use colored::Colorize;
     use textwrap::fill;
+    use std::fmt::Display;
 
     pub const NEWLINE: &str = "\n";
     pub const LINE_WRAP_AT: usize = 80;
@@ -10,24 +11,29 @@ pub mod colored_string_utils {
         fn join(&self, list: Vec<Self>) -> Self
         where
             Self: Sized;
+    }
+
+    pub trait JoinWrap {
         fn joinwrap(&self, list: Vec<Self>, width: usize) -> Self
         where
             Self: Sized;
     }
 
-    impl Join for ColoredString {
-        fn join(&self, list: Vec<ColoredString>) -> ColoredString {
-            let mut res: ColoredString = "".normal();
+    impl <T: Display + From<String>> Join for T {
+        fn join(&self, list: Vec<T>) -> T {
+            let mut res: T = T::from("");
             let len: usize = list.len();
             for (i, string) in list.iter().enumerate() {
-                res = format!("{}{}", res, string).normal();
+                res = T::from(format!("{}{}", res, string));
                 if i < len - 1 {
-                    res = format!("{}{}", res, self).normal();
+                    res = T::from(format!("{}{}", res, self));
                 }
             }
             return res;
         }
+    }
 
+    impl JoinWrap for ColoredString {
         fn joinwrap(&self, list: Vec<ColoredString>, width: usize) -> ColoredString {
             let text = self.join(list);
             return fill(&text, width).normal();
