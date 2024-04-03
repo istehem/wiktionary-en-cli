@@ -12,6 +12,6 @@ anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 rand = "0.7.3"
 indoc = "1.0"
-colored = "1.0"
+colored = "2.1.0"
 edit-distance="*"
 textwrap="*"

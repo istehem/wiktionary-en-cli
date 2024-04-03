@@ -1,8 +1,8 @@
 pub mod colored_string_utils {
     use colored::ColoredString;
     use colored::Colorize;
-    use textwrap::fill;
     use std::fmt::Display;
+    use textwrap::fill;
 
     pub const NEWLINE: &str = "\n";
     pub const LINE_WRAP_AT: usize = 80;
@@ -19,9 +19,9 @@ pub mod colored_string_utils {
             Self: Sized;
     }
 
-    impl <T: Display + From<String>> Join for T {
+    impl<T: Display + From<String>> Join for T {
         fn join(&self, list: Vec<T>) -> T {
-            let mut res: T = T::from("");
+            let mut res: T = T::from(String::new());
             let len: usize = list.len();
             for (i, string) in list.iter().enumerate() {
                 res = T::from(format!("{}{}", res, string));
