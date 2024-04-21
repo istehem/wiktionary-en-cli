@@ -211,10 +211,9 @@ fn translations_to_strings(translations: &Vec<Translation>) -> Vec<ColoredString
     let langs: Vec<Option<String>> = Language::iterator()
         .map(|lang| Some(lang.value()))
         .collect();
-    let translations_as_set: HashSet<Translation> = translations
-        .clone()
+    let translations_as_set: HashSet<&Translation> = translations
         .into_iter()
-        .filter(|translation| langs.contains(&&translation.code))
+        .filter(|translation| langs.contains(&translation.code))
         .collect();
     let mut filtered_translations = Vec::from_iter(translations_as_set);
     filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
@@ -224,7 +223,7 @@ fn translations_to_strings(translations: &Vec<Translation>) -> Vec<ColoredString
             format!(
                 " {}) {}",
                 translation.lang.italic(),
-                translation.word.unwrap_or_else(String::new)
+                translation.word.as_ref().unwrap_or(&String::new())
             )
             .normal()
         })
