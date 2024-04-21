@@ -96,21 +96,20 @@ impl DictionaryEntry {
 }
 
 fn format_etymology(etymology: &Option<String>) -> Option<ColoredString> {
-    if etymology.is_none() {
-        return None;
+    if let Some(etymology) = etymology {
+        let mut res: Vec<ColoredString> = Vec::new();
+        res.push("Etymology:".bold());
+        res.push(etymology.normal());
+        return Some(NEWLINE.normal().joinwrap(res, LINE_WRAP_AT));
     }
-    let mut res: Vec<ColoredString> = Vec::new();
-    res.push("Etymology:".bold());
-    res.push(etymology.clone().unwrap().normal());
-    return Some(NEWLINE.normal().joinwrap(res, LINE_WRAP_AT));
+    return None;
 }
 
 fn senses_to_strings(senses: &Vec<Sense>) -> Vec<ColoredString> {
     return senses
-        .clone()
         .into_iter()
         .enumerate()
-        .map(|(i, sense)| format_sense(&sense, i))
+        .map(|(i, sense)| format_sense(sense, i))
         .collect();
 }
 
@@ -160,7 +159,7 @@ fn format_sounds(sounds: &Vec<Sound>) -> Option<ColoredString> {
 fn sounds_to_strings(sounds: &Vec<Sound>) -> Vec<ColoredString> {
     let mut results: Vec<ColoredString> = Vec::new();
     for (i, sound) in sounds.into_iter().enumerate() {
-        sound.ipa.clone().map(|s| {
+        sound.ipa.as_ref().map(|s| {
             results.push(
                 format!(
                     " {}. IPA:  {} {}",
@@ -171,7 +170,7 @@ fn sounds_to_strings(sounds: &Vec<Sound>) -> Vec<ColoredString> {
                 .normal(),
             )
         });
-        sound.enpr.clone().map(|s| {
+        sound.enpr.as_ref().map(|s| {
             results.push(
                 format!(
                     " {}. enPr: {} {}",
@@ -225,7 +224,7 @@ fn translations_to_strings(translations: &Vec<Translation>) -> Vec<ColoredString
             format!(
                 " {}) {}",
                 translation.lang.italic(),
-                translation.word.clone().unwrap_or_else(String::new)
+                translation.word.unwrap_or_else(String::new)
             )
             .normal()
         })
