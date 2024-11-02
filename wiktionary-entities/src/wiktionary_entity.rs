@@ -7,6 +7,10 @@ use textwrap::{fill, indent};
 
 use utilities::colored_string_utils::*;
 use utilities::language::*;
+use utilities::language::*;
+use utilities::anyhow_serde;
+use anyhow::Result;
+
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
@@ -54,6 +58,11 @@ struct Sound {
     #[serde(default)]
     tags: Vec<String>,
 }
+
+pub fn parse_entry(entry_string: String) -> Result<DictionaryEntry> {
+    return anyhow_serde::from_str(&entry_string);
+}
+
 
 impl DictionaryEntry {
     pub fn to_pretty_string(&self) -> String {

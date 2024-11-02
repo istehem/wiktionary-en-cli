@@ -10,7 +10,7 @@ fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<Dictiona
     return line
         .map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
         .and_then(|line| {
-            anyhow_serde::from_str(&line)
+            parse_entry(line)
                 .with_context(|| format!("Couldn't parse line {} in DB file.", i))
         });
 }
