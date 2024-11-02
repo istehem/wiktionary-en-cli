@@ -394,7 +394,9 @@ fn get_db_path(
         return PathBuf::from(utilities::DEFAULT_DB_PARTITIONED_DIR!());
     }
 
-    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(get_language(language).value()));
+    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(
+        get_language(language).value()
+    ));
 }
 
 fn write_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language) -> Result<()> {

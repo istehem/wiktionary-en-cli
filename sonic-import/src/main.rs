@@ -1,8 +1,8 @@
-use anyhow::{bail, Result, Context};
+use anyhow::{bail, Context, Result};
 use std::path::Path;
+use utilities::anyhow_serde;
 use utilities::file_utils;
 use utilities::language::*;
-use utilities::anyhow_serde;
 
 use wiktionary_entities::wiktionary_entity::*;
 
@@ -20,14 +20,15 @@ pub fn do_import(path: &Path) -> Result<()> {
         Ok(_) => return Ok(()),
         _ => bail!("No such DB file: '{}'", path.display()),
     }
-
 }
 
 fn main() -> Result<()> {
-    println!("{}","Hello World!");
+    println!("{}", "Hello World!");
     println!("{}", env!("DICTIONARY_DIR"));
-    println!("{}", utilities::DICTIONARY_CACHING_PATH!(Language::EN.value())); 
-    println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value())); 
+    println!(
+        "{}",
+        utilities::DICTIONARY_CACHING_PATH!(Language::EN.value())
+    );
+    println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value()));
     return Ok(());
 }
-
