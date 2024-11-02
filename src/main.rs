@@ -25,17 +25,6 @@ use crate::wiktionary_stats::*;
 mod wiktionary_cache;
 use crate::wiktionary_cache::*;
 
-macro_rules! DICTIONARY_DB_PATH {
-    ($language:expr) => {
-        format!("{}/wiktionary-{}.json", env!("DICTIONARY_DIR"), $language)
-    };
-}
-macro_rules! DEFAULT_DB_PARTITIONED_DIR {
-    () => {
-        format!("{}/partitioned", env!("DICTIONARY_DIR"))
-    };
-}
-
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 
 /// A To English Dictionary
@@ -134,7 +123,7 @@ fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
         "{}",
         calculate_stats(
             input_path,
-            &wiktionary_cache::DICTIONARY_CACHING_PATH!(language.value())
+            &utilities::DICTIONARY_CACHING_PATH!(language.value())
         )
         .to_pretty_string()
     );
@@ -402,10 +391,10 @@ fn get_db_path(
     }
 
     if partitioned && search_term.is_some() {
-        return PathBuf::from(DEFAULT_DB_PARTITIONED_DIR!());
+        return PathBuf::from(utilities::DEFAULT_DB_PARTITIONED_DIR!());
     }
 
-    return PathBuf::from(DICTIONARY_DB_PATH!(get_language(language).value()));
+    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(get_language(language).value()));
 }
 
 fn write_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language) -> Result<()> {

@@ -3,6 +3,10 @@ name = "wiktionary-en-cli"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = 'wiktionary-en-import'
+path = "sonic-import/src/main.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -15,3 +19,4 @@ indoc = "1.0"
 colored = "2.1.0"
 edit-distance="*"
 textwrap="*"
+wiktionary_entities = { version = "0.1.0", path = "wiktionary-entities" }
