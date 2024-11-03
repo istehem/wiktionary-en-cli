@@ -26,7 +26,17 @@ fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
     parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
-fn parse_and_persist(file_reader: BufReader<File>) -> Result<()> {
+fn to_sonic_language(language: &Language) -> Lang {
+    return match language {
+        Language::EN => Lang::Eng,
+        Language::DE => Lang::Deu,
+        Language::SV => Lang::Swe,
+        Language::FR => Lang::Fra,
+        Language::ES => Lang::Spa,
+    };
+}
+
+fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Result<()> {
     let channel = start_sonic_ingest_channel();
 
     let result = channel.and_then(|channel| {
@@ -34,8 +44,10 @@ fn parse_and_persist(file_reader: BufReader<File>) -> Result<()> {
         for (i, line) in file_reader.lines().enumerate() {
             let _pushed = check_line(line, i).and_then(|line| {
                 let dictionary_entry = parse_line(&line, i)?;
-                let dest = Dest::col_buc("wiktionary", "en").obj(&line);
-                let pushed = channel.push(PushRequest::new(dest, dictionary_entry.word));
+                let dest = Dest::col_buc("wiktionary", language.value()).obj(&line);
+                let pushed = channel.push(
+                    PushRequest::new(dest, dictionary_entry.word).lang(to_sonic_language(language)),
+                );
                 return Ok(pushed);
             });
             count = i;
@@ -47,9 +59,9 @@ fn parse_and_persist(file_reader: BufReader<File>) -> Result<()> {
     return result;
 }
 
-pub fn do_import(path: &Path) -> Result<()> {
+pub fn do_import(path: &Path, language: &Language) -> Result<()> {
     match file_utils::get_file_reader(path) {
-        Ok(path) => return parse_and_persist(path),
+        Ok(path) => return parse_and_persist(path, language),
         _ => bail!("No such DB file: '{}'", path.display()),
     }
 }
@@ -71,6 +83,7 @@ fn main() -> Result<()> {
         utilities::DICTIONARY_CACHING_PATH!(Language::EN.value())
     );
     println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value()));
-    let db_path: PathBuf = get_db_path(None, &Some(Language::EN));
-    return do_import(db_path.as_path());
+    let language = Language::EN;
+    let db_path: PathBuf = get_db_path(None, &Some(language));
+    return do_import(db_path.as_path(), &language);
 }
