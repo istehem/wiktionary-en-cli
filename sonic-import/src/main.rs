@@ -2,7 +2,6 @@ use anyhow::{bail, Context, Result};
 use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
 use utilities::file_utils;
-use utilities::file_utils::*;
 use utilities::language::*;
 
 use wiktionary_entities::wiktionary_entity::*;
