@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 #utilities = { path = "../utilities" }
 #wiktionary_entities = { version = "0.1.0", path = "../wiktionary-entities" }
-sonic-channel = { version = "1.1", features = ["ingest"] }
+#sonic-channel = { version = "1.1", features = ["ingest"] }
 #anyhow = "1.0"
 #serde_json = "1.0"
 #serde = { version = "1.0" }

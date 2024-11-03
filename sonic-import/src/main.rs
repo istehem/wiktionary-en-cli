@@ -8,19 +8,43 @@ use wiktionary_entities::wiktionary_entity::*;
 
 use std::fs::File;
 
-fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
-    return line
-        .map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
-        .and_then(|line| {
-            parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
-        });
+use sonic_channel::*;
+
+fn start_sonic_ingest_channel() -> Result<IngestChannel> {
+    let channel = IngestChannel::start("localhost:1491", "SecretPassword");
+    return channel
+        .map_err(|e| anyhow::Error::new(e).context("Couldn't open sonic db, please start it"));
+}
+
+fn check_line(line: Result<String, std::io::Error>, i: usize) -> Result<String> {
+    return line.map_err(|e| {
+        anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i))
+    });
+}
+
+fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
+    parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
 fn parse_and_persist(file_reader: BufReader<File>) -> Result<()> {
-    for (i, line) in file_reader.lines().enumerate() {
-        let _dictionary_entry = parse_line(line, i);
-    }
-    return Ok(());
+    let channel = start_sonic_ingest_channel();
+
+    let result = channel.and_then(|channel| {
+        let mut count = 0;
+        for (i, line) in file_reader.lines().enumerate() {
+            let _pushed = check_line(line, i).and_then(|line| {
+                let dictionary_entry = parse_line(&line, i)?;
+                let dest = Dest::col_buc("wiktionary", "en").obj(&line);
+                let pushed = channel.push(PushRequest::new(dest, dictionary_entry.word));
+                return Ok(pushed);
+            });
+            count = i;
+        }
+        println!("iterated over {} entries", count);
+        return Ok(());
+    });
+
+    return result;
 }
 
 pub fn do_import(path: &Path) -> Result<()> {

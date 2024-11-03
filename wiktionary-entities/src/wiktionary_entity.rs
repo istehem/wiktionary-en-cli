@@ -58,10 +58,9 @@ struct Sound {
     tags: Vec<String>,
 }
 
-pub fn parse_entry(entry_string: String) -> Result<DictionaryEntry> {
-    return anyhow_serde::from_str(&entry_string);
+pub fn parse_entry(entry_string: &String) -> Result<DictionaryEntry> {
+    return anyhow_serde::from_str(entry_string);
 }
-
 
 impl DictionaryEntry {
     pub fn to_pretty_string(&self) -> String {
