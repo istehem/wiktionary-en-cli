@@ -10,6 +10,25 @@ use std::fs::File;
 
 use sonic_channel::*;
 
+use clap::Parser;
+
+/// Import Dictionary Data into Sonic
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+struct Cli {
+    /// A word to search for; omitting it will yield a random entry
+    search_term: String,
+    /// Override dictionary db file to use
+    #[clap(long, short = 'd')]
+    db_path: Option<String>,
+    /// Language to import
+    #[clap(long, short = 'l')]
+    language: Option<String>,
+    /// Force import even if data still exists in the bucket
+    #[clap(long, short = 'f')]
+    force: bool,
+}
+
 fn start_sonic_ingest_channel() -> Result<IngestChannel> {
     let channel = IngestChannel::start("localhost:1491", "SecretPassword");
     return channel
@@ -40,17 +59,22 @@ fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Resul
     let channel = start_sonic_ingest_channel();
 
     let result = channel.and_then(|channel| {
+        let flushb_count = channel.flush(FlushRequest::bucket("wiktionary", &language.value()))?;
+        dbg!(flushb_count);
         let mut count = 0;
         for (i, line) in file_reader.lines().enumerate() {
             let _pushed = check_line(line, i).and_then(|line| {
                 let dictionary_entry = parse_line(&line, i)?;
-                let dest = Dest::col_buc("wiktionary", language.value()).obj(&line);
+                let dest =
+                    Dest::col_buc("wiktionary", &language.value()).obj(&dictionary_entry.word);
                 let pushed = channel.push(
-                    PushRequest::new(dest, dictionary_entry.word).lang(to_sonic_language(language)),
+                    PushRequest::new(dest, &dictionary_entry.word)
+                        .lang(to_sonic_language(language)),
                 );
+                //dbg!(&dictionary_entry.word);
+                count = i;
                 return Ok(pushed);
             });
-            count = i;
         }
         println!("iterated over {} entries", count);
         return Ok(());
@@ -75,7 +99,16 @@ fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf {
         .value()));
 }
 
+fn get_language(language: &Option<String>) -> Language {
+    if let Some(language) = language {
+        return Language::from_string(&language).unwrap_or_default();
+    }
+    return Language::EN;
+}
+
 fn main() -> Result<()> {
+    let args = Cli::parse();
+    let language = get_language(&args.language);
     println!("{}", "Hello World!");
     println!("{}", env!("DICTIONARY_DIR"));
     println!(
@@ -83,7 +116,33 @@ fn main() -> Result<()> {
         utilities::DICTIONARY_CACHING_PATH!(Language::EN.value())
     );
     println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value()));
-    let language = Language::EN;
-    let db_path: PathBuf = get_db_path(None, &Some(language));
-    return do_import(db_path.as_path(), &language);
+    let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
+    if args.force {
+        return do_import(&db_path, &language);
+    } else {
+        let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
+
+        let ingest_channel = start_sonic_ingest_channel()?;
+        let bucket_count = ingest_channel.count(CountRequest::buckets("wiktionary"))?;
+        dbg!(bucket_count);
+
+        let object_count =
+            ingest_channel.count(CountRequest::objects("wiktionary", language.value()))?;
+        dbg!(object_count);
+
+        let objects = channel.query(
+            QueryRequest::new(
+                Dest::col_buc("wiktionary", language.value()),
+                &args.search_term,
+            )
+            .lang(to_sonic_language(&language)),
+        )?;
+        dbg!(objects);
+        let result = channel.suggest(SuggestRequest::new(
+            Dest::col_buc("wiktionary", language.value()),
+            &args.search_term,
+        ))?;
+        dbg!(result);
+    }
+    return Ok(());
 }

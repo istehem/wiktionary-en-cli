@@ -5,11 +5,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use textwrap::{fill, indent};
 
+use anyhow::Result;
+use utilities::anyhow_serde;
 use utilities::colored_string_utils::*;
 use utilities::language::*;
-use utilities::anyhow_serde;
-use anyhow::Result;
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
@@ -99,6 +98,19 @@ impl DictionaryEntry {
                 .normal()
                 .join(entries)
         );
+    }
+    pub fn all_examples(&self) -> Option<String> {
+        if self.senses.is_empty() {
+            return None;
+        }
+        let mut examples: Vec<String> = Vec::new();
+        for sense in &self.senses {
+            examples.extend(sense.examples.iter().map(|e| e.text.clone()));
+        }
+        if examples.is_empty() {
+            return None;
+        }
+        return Some(String::from(" ").join(examples));
     }
 }
 
