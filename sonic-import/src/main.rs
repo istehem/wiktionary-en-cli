@@ -67,13 +67,21 @@ fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Resul
                 let dictionary_entry = parse_line(&line, i)?;
                 let dest =
                     Dest::col_buc("wiktionary", &language.value()).obj(&dictionary_entry.word);
-                let pushed = channel.push(
-                    PushRequest::new(dest, &dictionary_entry.word)
-                        .lang(to_sonic_language(language)),
-                );
-                //dbg!(&dictionary_entry.word);
+                let examples = dictionary_entry.all_examples();
+
+                if examples.is_empty() {
+                    let _pushed = channel.push(
+                        PushRequest::new(dest, &dictionary_entry.word)
+                            .lang(to_sonic_language(language)),
+                    );
+                } else {
+                    for example in examples {
+                        let _pushed = channel.push(PushRequest::new(dest.clone(), &example));
+                        //dbg!(&example);
+                    }
+                }
                 count = i;
-                return Ok(pushed);
+                return Ok(());
             });
         }
         println!("iterated over {} entries", count);
