@@ -63,7 +63,7 @@ fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Resul
         dbg!(flushb_count);
         let mut count = 0;
         for (i, line) in file_reader.lines().enumerate() {
-            let _pushed = check_line(line, i).and_then(|line| {
+            let pushed = check_line(line, i).and_then(|line| {
                 let dictionary_entry = parse_line(&line, i)?;
                 let dest =
                     Dest::col_buc("wiktionary", &language.value()).obj(&dictionary_entry.word);
@@ -76,13 +76,19 @@ fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Resul
                     );
                 } else {
                     for example in examples {
-                        let _pushed = channel.push(PushRequest::new(dest.clone(), &example));
+                        let pushed = channel.push(PushRequest::new(dest.clone(), &example));
+                        if let Err(e) = pushed {
+                            bail!(anyhow::Error::new(e).context(format!("couldn't push example '{}' for obj '{}'", &example, &dictionary_entry.word)));
+                        }
                         //dbg!(&example);
                     }
                 }
                 count = i;
                 return Ok(());
             });
+            if let Err(e) = pushed {
+                bail!(e);
+            }
         }
         println!("iterated over {} entries", count);
         return Ok(());
