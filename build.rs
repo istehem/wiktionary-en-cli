@@ -12,4 +12,6 @@ fn main() {
     set_rusc_env_variable("CACHING_DIR", format!("{}/{}", PROJECT_DIR!(), "cache"));
 
     set_rusc_env_variable("DICTIONARY_DIR", format!("{}/{}", PROJECT_DIR!(), "files"));
+
+    set_rusc_env_variable("PROJECT_DIR", String::from(PROJECT_DIR!()));
 }
