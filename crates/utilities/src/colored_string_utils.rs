@@ -1,4 +1,3 @@
-
 use colored::ColoredString;
 use colored::Colorize;
 use std::fmt::Display;

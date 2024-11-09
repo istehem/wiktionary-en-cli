@@ -9,7 +9,7 @@ use wiktionary_entities::wiktionary_entity::*;
 use std::fs::File;
 
 use clap::Parser;
-use polodb_core::{CollectionT, Database, Collection, IndexModel};
+use polodb_core::{Collection, CollectionT, Database, IndexModel};
 
 use polodb_core::bson::doc;
 
@@ -28,7 +28,7 @@ struct Cli {
     /// Force import even if data still exists in the bucket
     #[clap(long, short = 'f')]
     force: bool,
-    /// Create indices 
+    /// Create indices
     #[clap(long, short = 'i')]
     create_indices: bool,
 }
@@ -46,12 +46,11 @@ fn loop_and_insert(db: Database, file_reader: BufReader<File>, language: &Langua
                 let collection = db.collection::<DictionaryEntry>(language.value().as_str());
                 let insert = collection.insert_one(dictionary_entry);
                 if let Err(err) = insert {
-                   bail!(err); 
+                    bail!(err);
                 }
-            },
-            _ => bail!(format!("couldn't read line {}", i))
-            
-        } 
+            }
+            _ => bail!(format!("couldn't read line {}", i)),
+        }
         count = count + 1;
     }
     println!("iterated over {} entries", count);
@@ -116,8 +115,8 @@ fn execute_query(term: &String, collection: Collection<DictionaryEntry>) -> Resu
                 println!("{}", entry?.to_pretty_string());
             }
             return Ok(());
-        },
-        Err(err)   => bail!(err)
+        }
+        Err(err) => bail!(err),
     }
 }
 
@@ -127,11 +126,11 @@ fn run_on_db(term: &String, language: &Language, create_indices: bool) -> Result
         Ok(db) => {
             let collection = db.collection::<DictionaryEntry>(&language.value());
             if create_indices {
-                create_index_on_word(&collection)?;       
+                create_index_on_word(&collection)?;
             }
             execute_query(term, collection)?;
             return Ok(());
-        },
+        }
         _ => bail!("No such DB file"),
     }
 }
@@ -143,7 +142,11 @@ fn main() -> Result<()> {
     if args.force {
         return do_import(&db_path, &language);
     } else {
-        run_on_db(&args.search_term, &get_language(&args.language), args.create_indices)?;
+        run_on_db(
+            &args.search_term,
+            &get_language(&args.language),
+            args.create_indices,
+        )?;
     }
     return Ok(());
 }
