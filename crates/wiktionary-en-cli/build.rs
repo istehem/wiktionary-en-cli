@@ -1,6 +1,6 @@
 macro_rules! PROJECT_DIR {
     () => {
-        env!("CARGO_MANIFEST_DIR")
+        format!("{}/../../", env!("CARGO_MANIFEST_DIR"))
     };
 }
 

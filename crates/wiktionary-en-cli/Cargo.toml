@@ -1,0 +1,46 @@
+[package]
+name = "wiktionary-en-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wiktionary_entities = { version = "0.1.0", path = "../wiktionary-entities" }
+utilities = { path = "../utilities" }
+clap = { version = "3.0", features = ["derive"] }
+anyhow = {workspace = true} 
+serde = { version = "1.0", features = ["derive"] }
+sled = "0.34"
+colored = "2.1.0"
+textwrap="*"
+indoc = "1.0"
+rand = "0.7.3"
+edit-distance="*"
+
+#[[bin]]
+#name = 'wiktionary-en-import'
+#path = "polodb-import/src/main.rs"
+
+#[workspace]
+#members = ["crates/*"]
+#default-members = ["crates/polodb-import"]
+
+#[workspace.package]
+#name = "wiktionary-en-cli"
+#version = "0.1.0"
+#edition = "2021"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+#[workspace.dependencies]
+#utilities = { path = "crates/uutilities" }
+#clap = { version = "3.0", features = ["derive"] }
+#anyhow = "1.0"
+#serde = { version = "1.0", features = ["derive"] }
+#rand = "0.7.3"
+#indoc = "1.0"
+#colored = "2.1.0"
+#edit-distance="*"
+#textwrap="*"
+#wiktionary_entities = { version = "0.1.0", path = "wiktionary-entities" }
+#polodb_core = "*"
