@@ -18,8 +18,8 @@ use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use utilities::language::*;
 
-mod wiktionary_data;
-use crate::wiktionary_data::*;
+use wiktionary_entities::wiktionary_entity::*;
+
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
 mod wiktionary_cache;
