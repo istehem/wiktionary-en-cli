@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 utilities = { path = "../utilities" }
+wiktionary-en-db = { path = "../wiktionary-en-db" }
 clap = { version = "3.0", features = ["derive"] }
 anyhow = {workspace = true} 
 serde = { version = "1.0", features = ["derive"] }
 wiktionary_entities = { version = "0.1.0", path = "../wiktionary-entities" }
-polodb_core = "*"
