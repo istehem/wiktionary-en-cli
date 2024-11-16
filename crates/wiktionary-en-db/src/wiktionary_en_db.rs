@@ -22,6 +22,14 @@ pub fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf
         .value()));
 }
 
+fn delete_all_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
+    let delete_result = collection.delete_many(doc! {});
+    match delete_result {
+        Ok(delete_result) => Ok(delete_result.deleted_count),
+        Err(err) => bail!(err),
+    }
+}
+
 fn find_by_word_in_collection(
     term: &String,
     collection: Collection<DictionaryEntry>,
@@ -60,6 +68,7 @@ fn insert_wiktionary_file_into_db(
 ) -> Result<()> {
     let mut count = 0;
     let collection = db.collection::<DictionaryEntry>(language.value().as_str());
+    delete_all_in_collection(&collection)?;
     create_index_on_word(&collection)?;
     let mut all_entries = Vec::new();
     for (i, line) in file_reader.lines().enumerate() {
