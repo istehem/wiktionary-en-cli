@@ -11,22 +11,20 @@ use clap::Parser;
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {
-    /// A word to search for; omitting it will yield a random entry
-    search_term: String,
     /// Override dictionary db file to use
     #[clap(long, short = 'd')]
     db_path: Option<String>,
     /// Language to import
     #[clap(long, short = 'l')]
     language: Option<String>,
-    /// Force import even if data still exists in the bucket
+    /// Force import, existing data will be overwritten
     #[clap(long, short = 'f')]
     force: bool,
 }
 
-pub fn do_import(path: &Path, language: &Language) -> Result<()> {
+pub fn do_import(path: &Path, language: &Language, force: bool) -> Result<()> {
     match file_utils::get_file_reader(path) {
-        Ok(path) => return insert_wiktionary_file(path, language),
+        Ok(path) => return insert_wiktionary_file(path, language, force),
         _ => bail!("No such DB file: '{}'", path.display()),
     }
 }
@@ -38,26 +36,9 @@ fn get_language(language: &Option<String>) -> Language {
     return Language::EN;
 }
 
-pub fn find(term: &String, language: &Language) -> Result<()> {
-    match find_by_word(term, language) {
-        Ok(entries) => {
-            for entry in entries {
-                println!("{}", entry.to_pretty_string());
-            }
-            return Ok(());
-        }
-        err @ Err(_) => err.map(|_| {}),
-    }
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language);
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
-    if args.force {
-        return do_import(&db_path, &language);
-    } else {
-        find(&args.search_term, &get_language(&args.language))?;
-    }
-    return Ok(());
+    return do_import(&db_path, &language, args.force);
 }

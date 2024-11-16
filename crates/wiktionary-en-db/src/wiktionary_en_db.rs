@@ -65,11 +65,31 @@ fn insert_wiktionary_file_into_db(
     db: Database,
     file_reader: BufReader<File>,
     language: &Language,
+    force: bool,
 ) -> Result<()> {
-    let mut count = 0;
     let collection = db.collection::<DictionaryEntry>(language.value().as_str());
+
+    if !force {
+        let count = &collection.count_documents();
+        match count {
+            Ok(count) => {
+                if *count > 0 {
+                    println!(
+                        "there already exists {} entries in the {} collection",
+                        count,
+                        &collection.name()
+                    );
+                }
+                return Ok(());
+            }
+            Err(_) => bail!("could not determine content of db"),
+        }
+    }
+
     delete_all_in_collection(&collection)?;
     create_index_on_word(&collection)?;
+
+    let mut count = 0;
     let mut all_entries = Vec::new();
     for (i, line) in file_reader.lines().enumerate() {
         match line {
@@ -94,11 +114,15 @@ fn insert_wiktionary_file_into_db(
     return Ok(());
 }
 
-pub fn insert_wiktionary_file(file_reader: BufReader<File>, language: &Language) -> Result<()> {
+pub fn insert_wiktionary_file(
+    file_reader: BufReader<File>,
+    language: &Language,
+    force: bool,
+) -> Result<()> {
     let db_result = Database::open_path(get_polo_db_path());
 
     match db_result {
-        Ok(db) => return insert_wiktionary_file_into_db(db, file_reader, language),
+        Ok(db) => return insert_wiktionary_file_into_db(db, file_reader, language, force),
         Err(err) => bail!(err),
     }
 }
