@@ -41,18 +41,11 @@ fn find_by_word_in_collection(
     }
 }
 
-pub fn find_by_word(
-    term: &String,
-    language: &Language,
-    create_indices: bool,
-) -> Result<Vec<DictionaryEntry>> {
+pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
     let db_result = Database::open_path(get_polo_db_path());
     match db_result {
         Ok(db) => {
             let collection = db.collection::<DictionaryEntry>(&language.value());
-            if create_indices {
-                create_index_on_word(&collection)?;
-            }
             let result = find_by_word_in_collection(term, collection)?;
             return Ok(result);
         }
@@ -66,11 +59,12 @@ fn insert_wiktionary_file_into_db(
     language: &Language,
 ) -> Result<()> {
     let mut count = 0;
+    let collection = db.collection::<DictionaryEntry>(language.value().as_str());
+    create_index_on_word(&collection)?;
     for (i, line) in file_reader.lines().enumerate() {
         match line {
             Ok(ok_line) => {
                 let dictionary_entry = parse_line(&ok_line, i)?;
-                let collection = db.collection::<DictionaryEntry>(language.value().as_str());
                 let insert = collection.insert_one(dictionary_entry);
                 if let Err(err) = insert {
                     bail!(err);
@@ -97,7 +91,7 @@ fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
     parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
-pub fn create_index_on_word(collection: &Collection<DictionaryEntry>) -> Result<()> {
+fn create_index_on_word(collection: &Collection<DictionaryEntry>) -> Result<()> {
     let result = collection.create_index(IndexModel {
         keys: doc! {
             "word": 1,

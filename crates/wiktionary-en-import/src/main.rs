@@ -22,9 +22,6 @@ struct Cli {
     /// Force import even if data still exists in the bucket
     #[clap(long, short = 'f')]
     force: bool,
-    /// Create indices
-    #[clap(long, short = 'i')]
-    create_indices: bool,
 }
 
 pub fn do_import(path: &Path, language: &Language) -> Result<()> {
@@ -41,8 +38,8 @@ fn get_language(language: &Option<String>) -> Language {
     return Language::EN;
 }
 
-pub fn find(term: &String, language: &Language, create_indices: bool) -> Result<()> {
-    match find_by_word(term, language, create_indices) {
+pub fn find(term: &String, language: &Language) -> Result<()> {
+    match find_by_word(term, language) {
         Ok(entries) => {
             for entry in entries {
                 println!("{}", entry.to_pretty_string());
@@ -60,11 +57,7 @@ fn main() -> Result<()> {
     if args.force {
         return do_import(&db_path, &language);
     } else {
-        find(
-            &args.search_term,
-            &get_language(&args.language),
-            args.create_indices,
-        )?;
+        find(&args.search_term, &get_language(&args.language))?;
     }
     return Ok(());
 }
