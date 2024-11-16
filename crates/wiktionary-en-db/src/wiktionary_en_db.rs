@@ -61,20 +61,23 @@ fn insert_wiktionary_file_into_db(
     let mut count = 0;
     let collection = db.collection::<DictionaryEntry>(language.value().as_str());
     create_index_on_word(&collection)?;
+    let mut all_entries = Vec::new();
     for (i, line) in file_reader.lines().enumerate() {
         match line {
             Ok(ok_line) => {
                 let dictionary_entry = parse_line(&ok_line, i)?;
-                let insert = collection.insert_one(dictionary_entry);
-                if let Err(err) = insert {
-                    bail!(err);
-                }
+                all_entries.push(dictionary_entry);
             }
             _ => bail!(format!("couldn't read line {}", i)),
         }
         count = count + 1;
     }
-    println!("iterated over {} entries", count);
+    let batch_insert = collection.insert_many(all_entries);
+    if let Err(err) = batch_insert {
+        bail!(err);
+    }
+
+    println!("inserted {} entries for language {}", count, &language.value());
     return Ok(());
 }
 
