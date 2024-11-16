@@ -77,7 +77,11 @@ fn insert_wiktionary_file_into_db(
         bail!(err);
     }
 
-    println!("inserted {} entries for language {}", count, &language.value());
+    println!(
+        "inserted {} entries for language {}",
+        count,
+        &language.value()
+    );
     return Ok(());
 }
 
