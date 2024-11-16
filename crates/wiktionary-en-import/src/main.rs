@@ -4,7 +4,6 @@ use utilities::file_utils;
 use utilities::language::*;
 
 use wiktionary_en_db::wiktionary_en_db::*;
-use wiktionary_entities::wiktionary_entity::*;
 
 use clap::Parser;
 
@@ -42,6 +41,18 @@ fn get_language(language: &Option<String>) -> Language {
     return Language::EN;
 }
 
+pub fn find(term: &String, language: &Language, create_indices: bool) -> Result<()> {
+    match find_by_word(term, language, create_indices) {
+        Ok(entries) => {
+            for entry in entries {
+                println!("{}", entry.to_pretty_string());
+            }
+            return Ok(());
+        }
+        err @ Err(_) => err.map(|_| {}),
+    }
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language);
@@ -49,7 +60,7 @@ fn main() -> Result<()> {
     if args.force {
         return do_import(&db_path, &language);
     } else {
-        find_by_word(
+        find(
             &args.search_term,
             &get_language(&args.language),
             args.create_indices,

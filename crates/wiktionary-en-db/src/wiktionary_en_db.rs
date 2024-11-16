@@ -25,20 +25,27 @@ pub fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf
 fn find_by_word_in_collection(
     term: &String,
     collection: Collection<DictionaryEntry>,
-) -> Result<()> {
-    let result = collection.find(doc! { "word" : term}).run();
-    match result {
+) -> Result<Vec<DictionaryEntry>> {
+    let mut result = Vec::new();
+    let search_result = collection.find(doc! { "word" : term}).run();
+    match search_result {
         Ok(entries) => {
             for entry in entries {
-                println!("{}", entry?.to_pretty_string());
+                if let Ok(entry) = entry {
+                    result.push(entry);
+                }
             }
-            return Ok(());
+            return Ok(result);
         }
         Err(err) => bail!(err),
     }
 }
 
-pub fn find_by_word(term: &String, language: &Language, create_indices: bool) -> Result<()> {
+pub fn find_by_word(
+    term: &String,
+    language: &Language,
+    create_indices: bool,
+) -> Result<Vec<DictionaryEntry>> {
     let db_result = Database::open_path(get_polo_db_path());
     match db_result {
         Ok(db) => {
@@ -46,8 +53,8 @@ pub fn find_by_word(term: &String, language: &Language, create_indices: bool) ->
             if create_indices {
                 create_index_on_word(&collection)?;
             }
-            find_by_word_in_collection(term, collection)?;
-            return Ok(());
+            let result = find_by_word_in_collection(term, collection)?;
+            return Ok(result);
         }
         _ => bail!("No such DB file"),
     }
