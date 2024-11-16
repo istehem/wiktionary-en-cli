@@ -5,6 +5,7 @@ use utilities::language::*;
 
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
+use rand::{thread_rng, Rng};
 use wiktionary_entities::wiktionary_entity::*;
 
 use std::fs::File;
@@ -56,6 +57,36 @@ pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<Dictionary
             let collection = db.collection::<DictionaryEntry>(&language.value());
             let result = find_by_word_in_collection(term, collection)?;
             return Ok(result);
+        }
+        _ => bail!("No such DB file"),
+    }
+}
+
+fn random_entry_in_collection(collection: &Collection<DictionaryEntry>) -> Result<DictionaryEntry> {
+    let n_entries = number_of_entries(collection)?;
+    let random_entry_number = thread_rng().gen_range(0, n_entries - 1);
+    let result = collection
+        .find(doc! {})
+        .skip(random_entry_number)
+        .limit(1)
+        .run();
+    match result {
+        Ok(mut cursor) => {
+            if let Some(entry) = cursor.next() {
+                return Ok(entry?);
+            }
+            bail!("no entries found")
+        }
+        Err(err) => bail!(err),
+    }
+}
+
+pub fn random_entry_for_language(language: &Language) -> Result<DictionaryEntry> {
+    let db_result = Database::open_path(get_polo_db_path());
+    match db_result {
+        Ok(db) => {
+            let collection = db.collection::<DictionaryEntry>(&language.value());
+            return Ok(random_entry_in_collection(&collection)?);
         }
         _ => bail!("No such DB file"),
     }

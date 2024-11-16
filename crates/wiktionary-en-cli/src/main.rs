@@ -3,12 +3,11 @@ use clap::Parser;
 use colored::Colorize;
 use edit_distance::edit_distance;
 use indoc::printdoc;
-use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -95,15 +94,6 @@ fn print_entries(entries: &Vec<DictionaryEntry>) {
     }
 }
 
-fn find_entry(file_reader: BufReader<File>, index: usize) -> Result<DictionaryEntry> {
-    for (i, line) in file_reader.lines().enumerate() {
-        if i == index {
-            return parse_line(line, i);
-        }
-    }
-    bail!("No entry found.");
-}
-
 fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
     return line
         .map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
@@ -129,24 +119,6 @@ fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
     );
 
     return Ok(());
-}
-
-fn random_entry(input_path: &Path) -> Result<()> {
-    let file_reader = get_file_reader(input_path);
-    let n_entries = file_reader.map(|file_reader| file_reader.lines().count());
-    let random_entry_number = n_entries.map(|n| thread_rng().gen_range(0, n - 1));
-
-    match random_entry_number {
-        Ok(random_entry_number) => {
-            let result = get_file_reader(input_path)
-                .and_then(|file_reader| find_entry(file_reader, random_entry_number));
-            return result.map(|entry| {
-                print_entry(&entry);
-                return;
-            });
-        }
-        Err(err) => bail!(err.context("Couldn't generate random entry number.")),
-    }
 }
 
 fn levenshtein_distance(search_term: &String, word: &String, case_insensitive: bool) -> usize {
@@ -363,8 +335,12 @@ fn run(
             }
             Err(e) => bail!(e),
         },
-        None => return random_entry(&path.as_path()),
+        None => println!(
+            "{}",
+            random_entry_for_language(language)?.to_pretty_string()
+        ),
     };
+    return Ok(());
 }
 
 fn get_language(language: &Option<String>) -> Language {
