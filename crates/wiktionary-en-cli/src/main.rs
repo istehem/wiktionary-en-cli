@@ -22,8 +22,8 @@ use wiktionary_entities::wiktionary_entity::*;
 
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
-mod wiktionary_cache;
-use crate::wiktionary_cache::*;
+
+use wiktionary_en_db::wiktionary_en_db::*;
 
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 
@@ -324,20 +324,17 @@ fn search(
     }
 }
 
-fn evaluate_cache(
-    term: &String,
-    max_results: usize,
-    language: &Language,
-) -> Result<Option<Vec<DictionaryEntry>>> {
-    match get_cached_entries(term, language) {
-        Ok(Some(result)) => {
-            if result.len() < max_results {
+fn find_by_word_in_db(term: &String, language: &Language) -> Result<Option<Vec<DictionaryEntry>>> {
+    let db_hits = find_by_word(term, language);
+    match db_hits {
+        Ok(result) => {
+            if result.is_empty() {
                 return Ok(None);
             } else {
                 return Ok(Some(result));
             }
         }
-        result => result,
+        Err(err) => bail!(err),
     }
 }
 
@@ -350,7 +347,7 @@ fn run(
     path: PathBuf,
 ) -> Result<()> {
     match term {
-        Some(s) => match evaluate_cache(s, max_results, language) {
+        Some(s) => match find_by_word_in_db(s, language) {
             Ok(Some(csr)) => {
                 print_entries(&csr);
                 return Ok(());
@@ -359,9 +356,6 @@ fn run(
                 match search(&path, s.clone(), max_results, case_insensitive, partitioned) {
                     Ok(sr) => {
                         print_search_result(s, &sr);
-                        if !sr.full_matches.is_empty() {
-                            return write_to_cache(s, &sr.full_matches, language);
-                        }
                         return Ok(());
                     }
                     Err(e) => bail!(e),
@@ -397,18 +391,6 @@ fn get_db_path(
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(
         get_language(language).value()
     ));
-}
-
-fn write_to_cache(term: &String, value: &Vec<DictionaryEntry>, language: &Language) -> Result<()> {
-    let entry = CachedDbEntry {
-        entries: value.clone(),
-    };
-    return write_db_entry_to_cache(term, &entry, language);
-}
-
-fn get_cached_entries(term: &String, language: &Language) -> Result<Option<Vec<DictionaryEntry>>> {
-    return wiktionary_cache::get_cached_db_entry(term, language)
-        .map(|cde: Option<CachedDbEntry>| cde.map(|cde| cde.entries));
 }
 
 fn main() -> Result<()> {
