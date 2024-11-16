@@ -61,6 +61,14 @@ pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<Dictionary
     }
 }
 
+fn number_of_entries(collection: &Collection<DictionaryEntry>) -> Result<u64> {
+    let count: &Result<u64, polodb_core::Error> = &collection.count_documents();
+    return match count {
+        Ok(count) => Ok(*count),
+        Err(err) => bail!(err.to_string()),
+    };
+}
+
 fn insert_wiktionary_file_into_db(
     db: Database,
     file_reader: BufReader<File>,
@@ -70,19 +78,13 @@ fn insert_wiktionary_file_into_db(
     let collection = db.collection::<DictionaryEntry>(language.value().as_str());
 
     if !force {
-        let count = &collection.count_documents();
-        match count {
-            Ok(count) => {
-                if *count > 0 {
-                    println!(
-                        "there already exists {} entries in the {} collection",
-                        count,
-                        &collection.name()
-                    );
-                }
-                return Ok(());
-            }
-            Err(_) => bail!("could not determine content of db"),
+        let count = number_of_entries(&collection)?;
+        if count > 0 {
+            bail!(
+                "dictionary already contains {} entries for language {}",
+                count,
+                language.value()
+            );
         }
     }
 
