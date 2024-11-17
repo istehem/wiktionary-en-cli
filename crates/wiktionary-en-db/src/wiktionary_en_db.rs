@@ -58,7 +58,7 @@ pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<Dictionary
             let result = find_by_word_in_collection(term, collection)?;
             return Ok(result);
         }
-        _ => bail!("No such DB file"),
+        Err(err) => bail!(err),
     }
 }
 
@@ -88,7 +88,7 @@ pub fn random_entry_for_language(language: &Language) -> Result<DictionaryEntry>
             let collection = db.collection::<DictionaryEntry>(&language.value());
             return Ok(random_entry_in_collection(&collection)?);
         }
-        _ => bail!("No such DB file"),
+        Err(err) => bail!(err),
     }
 }
 
