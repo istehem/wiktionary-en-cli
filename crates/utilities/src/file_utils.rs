@@ -9,6 +9,6 @@ pub fn get_file_reader(path: &Path) -> Result<BufReader<File>> {
         .map_err(|err| anyhow::Error::new(err));
     match file_buffer_result {
         ok @ Ok(_) => return ok,
-        _ => bail!("No such DB file: '{}'", path.display()),
+        Err(err) => bail!(err.context(format!("Coldn't open DB file: '{}'", path.display()))),
     }
 }

@@ -25,7 +25,7 @@ struct Cli {
 pub fn do_import(path: &Path, language: &Language, force: bool) -> Result<()> {
     match file_utils::get_file_reader(path) {
         Ok(path) => return insert_wiktionary_file(path, language, force),
-        _ => bail!("No such DB file: '{}'", path.display()),
+        Err(err) => bail!(err),
     }
 }
 

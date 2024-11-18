@@ -130,7 +130,7 @@ fn insert_wiktionary_file_into_db(
                 let dictionary_entry = parse_line(&ok_line, i)?;
                 all_entries.push(dictionary_entry);
             }
-            _ => bail!(format!("couldn't read line {}", i)),
+            _ => bail!("couldn't read line {}", i),
         }
         count = count + 1;
     }
