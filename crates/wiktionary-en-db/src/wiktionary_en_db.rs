@@ -93,10 +93,10 @@ pub fn random_entry_for_language(language: &Language) -> Result<DictionaryEntry>
 }
 
 fn number_of_entries(collection: &Collection<DictionaryEntry>) -> Result<u64> {
-    let count: &Result<u64, polodb_core::Error> = &collection.count_documents();
+    let count: Result<u64, polodb_core::Error> = collection.count_documents();
     return match count {
-        Ok(count) => Ok(*count),
-        Err(err) => bail!(err.to_string()),
+        Ok(count) => Ok(count),
+        Err(err) => bail!(err),
     };
 }
 
