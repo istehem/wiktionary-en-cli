@@ -16,6 +16,9 @@ use std::thread;
 use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use utilities::language::*;
+use utilities::PROJECT_DIR;
+use utilities::DICTIONARY_DIR;
+use utilities::CACHING_DIR;
 
 use wiktionary_entities::wiktionary_entity::*;
 
