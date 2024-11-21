@@ -572,18 +572,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 
 [[package]]
-name = "polodb-import"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "polodb_core",
- "serde",
- "utilities",
- "wiktionary_entities",
-]
-
-[[package]]
 name = "polodb-librocksdb-sys"
 version = "9.0.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1127,11 +1115,40 @@ dependencies = [
  "colored",
  "edit-distance",
  "indoc",
- "rand 0.7.3",
  "serde",
  "sled",
  "textwrap",
  "utilities",
+ "wiktionary-en-db",
+ "wiktionary_entities",
+]
+
+[[package]]
+name = "wiktionary-en-db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "colored",
+ "indoc",
+ "polodb_core",
+ "rand 0.7.3",
+ "serde",
+ "serde_json",
+ "sled",
+ "textwrap",
+ "utilities",
+ "wiktionary_entities",
+]
+
+[[package]]
+name = "wiktionary-en-import"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde",
+ "utilities",
+ "wiktionary-en-db",
  "wiktionary_entities",
 ]
 

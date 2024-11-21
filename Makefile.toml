@@ -1,0 +1,17 @@
+[env]
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+WIKTIONARY_CACHE="cache"
+
+[tasks.install-wiktionary-en-cli]
+workspace = false
+command = "cargo"
+args = ["install", "--path", "crates/wiktionary-en-cli"]
+
+[tasks.install-wiktionary-en-import]
+workspace = false
+command = "cargo"
+args = ["install", "--path", "crates/wiktionary-en-import"]
+
+[tasks.install]
+workspace = false
+dependencies = ["install-wiktionary-en-cli", "install-wiktionary-en-import"]

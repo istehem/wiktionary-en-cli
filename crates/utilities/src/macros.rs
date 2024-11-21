@@ -15,7 +15,7 @@ macro_rules! DICTIONARY_DIR {
 #[macro_export]
 macro_rules! CACHING_DIR {
     () => {
-        format!("{}/{}", PROJECT_DIR!(), "cache")
+        format!("{}/{}", PROJECT_DIR!(), env!("WIKTIONARY_CACHE"))
     };
 }
 
