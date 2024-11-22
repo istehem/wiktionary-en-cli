@@ -43,6 +43,6 @@ macro_rules! DEFAULT_DB_PARTITIONED_DIR {
 #[macro_export]
 macro_rules! DICTIONARY_POLO_DB_DIR {
     () => {
-        format!("{}/wiktionary-polo-db", PROJECT_DIR!())
+        env!("DICTIONARY_POLD_DB_DIR")
     };
 }
