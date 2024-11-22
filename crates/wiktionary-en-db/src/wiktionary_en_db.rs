@@ -2,8 +2,6 @@ use anyhow::{bail, Context, Result};
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use utilities::language::*;
-use utilities::DICTIONARY_DIR;
-use utilities::PROJECT_DIR;
 
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};

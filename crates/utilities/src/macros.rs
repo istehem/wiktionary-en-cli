@@ -13,23 +13,16 @@ macro_rules! DICTIONARY_DIR {
 }
 
 #[macro_export]
-macro_rules! CACHING_DIR {
-    () => {
-        format!("{}/{}", PROJECT_DIR!(), env!("WIKTIONARY_CACHE"))
-    };
-}
-
-#[macro_export]
 macro_rules! DICTIONARY_CACHING_PATH {
     ($language:expr) => {
-        format!("{}/wiktionary-cache-{}", CACHING_DIR!(), $language)
+        format!(env!("DICTIONARY_CACHING_PATH_PLACEHOLDER"), $language)
     };
 }
 
 #[macro_export]
 macro_rules! DICTIONARY_DB_PATH {
     ($language:expr) => {
-        format!("{}/wiktionary-{}.json", DICTIONARY_DIR!(), $language)
+        format!(env!("DICTIONARY_DB_PATH_PLACEHOLDER"), $language)
     };
 }
 
