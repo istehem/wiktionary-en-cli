@@ -1,18 +1,4 @@
 #[macro_export]
-macro_rules! PROJECT_DIR {
-    () => {
-        format!("{}/../..", env!("CARGO_MANIFEST_DIR"))
-    };
-}
-
-#[macro_export]
-macro_rules! DICTIONARY_DIR {
-    () => {
-        format!("{}/{}", PROJECT_DIR!(), "files")
-    };
-}
-
-#[macro_export]
 macro_rules! DICTIONARY_CACHING_PATH {
     ($language:expr) => {
         format!(env!("DICTIONARY_CACHING_PATH_PLACEHOLDER"), $language)
@@ -27,9 +13,9 @@ macro_rules! DICTIONARY_DB_PATH {
 }
 
 #[macro_export]
-macro_rules! DEFAULT_DB_PARTITIONED_DIR {
+macro_rules! DEFAULT_PARTIONED_DB_DIR_PATH {
     () => {
-        format!("{}/partitioned", DICTIONARY_DIR!())
+        env!("DEFAULT_PARTIONED_DB_DIR_PATH")
     };
 }
 

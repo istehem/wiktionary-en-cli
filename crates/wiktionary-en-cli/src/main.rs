@@ -16,8 +16,6 @@ use std::thread;
 use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use utilities::language::*;
-use utilities::DICTIONARY_DIR;
-use utilities::PROJECT_DIR;
 
 use wiktionary_entities::wiktionary_entity::*;
 
@@ -363,7 +361,7 @@ fn get_db_path(
     }
 
     if partitioned && search_term.is_some() {
-        return PathBuf::from(utilities::DEFAULT_DB_PARTITIONED_DIR!());
+        return PathBuf::from(utilities::DEFAULT_PARTIONED_DB_DIR_PATH!());
     }
 
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(
