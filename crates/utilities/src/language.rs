@@ -27,7 +27,7 @@ impl Language {
         return Language::iterator().map(|lang| lang.value()).collect();
     }
     pub fn from_str_or_default(language: &str) -> Language {
-        return Self::from_str(language).unwrap_or_default();
+        return language.parse().unwrap_or_default();
     }
 }
 
