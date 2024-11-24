@@ -40,7 +40,7 @@ impl Default for Language {
 impl FromStr for Language {
     type Err = anyhow::Error;
 
-    fn from_str(language: &str) -> Result<Self, Self::Err> {
+    fn from_str(language: &str) -> anyhow::Result<Self> {
         return Language::iterator()
             .find(|l| l.value() == String::from(language))
             .ok_or_else(|| anyhow::anyhow!("unknown language {}", language));
