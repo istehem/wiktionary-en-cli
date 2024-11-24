@@ -1012,7 +1012,6 @@ dependencies = [
  "colored",
  "serde",
  "serde_json",
- "sled",
  "textwrap",
 ]
 
@@ -1116,7 +1115,6 @@ dependencies = [
  "edit-distance",
  "indoc",
  "serde",
- "sled",
  "textwrap",
  "utilities",
  "wiktionary-en-db",
@@ -1134,7 +1132,6 @@ dependencies = [
  "rand 0.7.3",
  "serde",
  "serde_json",
- "sled",
  "textwrap",
  "utilities",
  "wiktionary_entities",
