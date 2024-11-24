@@ -341,9 +341,9 @@ fn run(
 
 fn get_language(language: &Option<String>) -> Language {
     if let Some(language) = language {
-        return Language::from_string(&language).unwrap_or_default();
+        return Language::from_str_or_default(&language);
     }
-    return Language::EN;
+    return Language::default();
 }
 
 fn get_db_path(

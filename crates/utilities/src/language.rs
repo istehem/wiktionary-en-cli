@@ -1,4 +1,5 @@
 use self::Language::*;
+use std::str::FromStr;
 
 #[derive(Copy, Clone)]
 pub enum Language {
@@ -25,13 +26,23 @@ impl Language {
     pub fn as_strings() -> Vec<String> {
         return Language::iterator().map(|lang| lang.value()).collect();
     }
-    pub fn from_string(language: &String) -> Option<Language> {
-        return Language::iterator().find(|l| &l.value() == language);
+    pub fn from_str_or_default(language: &str) -> Language {
+        return Self::from_str(language).unwrap_or_default();
     }
 }
 
 impl Default for Language {
     fn default() -> Self {
         EN
+    }
+}
+
+impl FromStr for Language {
+    type Err = anyhow::Error;
+
+    fn from_str(language: &str) -> Result<Self, Self::Err> {
+        return Language::iterator()
+            .find(|l| l.value() == String::from(language))
+            .ok_or_else(|| anyhow::anyhow!("unknown language {}", language));
     }
 }
