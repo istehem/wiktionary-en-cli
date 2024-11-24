@@ -111,11 +111,7 @@ fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
 
     println!(
         "{}",
-        calculate_stats(
-            input_path,
-            &utilities::DICTIONARY_CACHING_PATH!(language.value())
-        )
-        .to_pretty_string()
+        calculate_stats(input_path, &language).to_pretty_string()
     );
 
     return Ok(());
