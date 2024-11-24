@@ -1115,7 +1115,6 @@ dependencies = [
  "edit-distance",
  "indoc",
  "serde",
- "textwrap",
  "utilities",
  "wiktionary-en-db",
  "wiktionary_entities",
@@ -1126,13 +1125,8 @@ name = "wiktionary-en-db"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "colored",
- "indoc",
  "polodb_core",
  "rand 0.7.3",
- "serde",
- "serde_json",
- "textwrap",
  "utilities",
  "wiktionary_entities",
 ]
@@ -1143,7 +1137,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "serde",
  "utilities",
  "wiktionary-en-db",
  "wiktionary_entities",

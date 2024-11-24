@@ -9,10 +9,5 @@ edition = "2021"
 utilities = { path = "../utilities" }
 wiktionary_entities = { version = "0.1.0", path = "../wiktionary-entities" }
 anyhow = {workspace = true}
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-colored = "2.1.0"
-indoc = "1.0"
-textwrap="*"
 polodb_core = "*"
 rand = "0.7.3"
