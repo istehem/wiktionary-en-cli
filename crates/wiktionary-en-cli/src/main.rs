@@ -348,52 +348,39 @@ fn get_language(language: &Option<String>) -> Result<Language> {
 
 fn get_db_path(
     path: Option<String>,
-    language: &Option<String>,
+    language: &Language,
     partitioned: bool,
     search_term: &Option<String>,
-) -> Result<PathBuf> {
+) -> PathBuf {
     if let Some(path) = path {
-        return Ok(PathBuf::from(path));
+        return PathBuf::from(path);
     }
 
     if partitioned && search_term.is_some() {
-        return Ok(PathBuf::from(utilities::DEFAULT_PARTIONED_DB_DIR_PATH!()));
+        return PathBuf::from(utilities::DEFAULT_PARTIONED_DB_DIR_PATH!());
     }
 
-    return Ok(PathBuf::from(utilities::DICTIONARY_DB_PATH!(get_language(
-        language
-    )?
-    .value())));
+    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
 }
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let language = get_language(&args.language);
+    let language = get_language(&args.language)?;
     match args.stats {
         true => {
             return print_stats(
-                get_db_path(
-                    args.db_path,
-                    &args.language,
-                    args.partitioned,
-                    &args.search_term,
-                )?,
-                &language?,
+                get_db_path(args.db_path, &language, args.partitioned, &args.search_term),
+                &language,
             )
         }
         _ => {
             return run(
                 &args.search_term,
-                &language?,
+                &language,
                 args.max_results,
                 args.case_insensitive,
                 args.partitioned,
-                get_db_path(
-                    args.db_path,
-                    &args.language,
-                    args.partitioned,
-                    &args.search_term,
-                )?,
+                get_db_path(args.db_path, &language, args.partitioned, &args.search_term),
             )
         }
     };
