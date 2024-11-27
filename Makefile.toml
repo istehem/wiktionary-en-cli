@@ -1,9 +1,9 @@
 [env]
 CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
-DICTIONARY_DB_PATH_PLACEHOLDER = "${CARGO_MAKE_WORKING_DIRECTORY}/files/wiktionary-{}.json"
-DEFAULT_PARTIONED_DB_DIR_PATH = "${CARGO_MAKE_WORKING_DIRECTORY}/files/partitioned/"
+DICTIONARY_DB_PATH_PLACEHOLDER = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-json-extract/wiktionary-{}.json"
+DEFAULT_PARTIONED_DB_DIR_PATH = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-json-extract/partitioned/"
 
-DICTIONARY_POLD_DB_DIR = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-polo-db/"
+DICTIONARY_POLD_DB_DIR = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-polo-db/"
 
 [tasks.install-wiktionary-en-cli]
 workspace = false
