@@ -339,11 +339,11 @@ fn run(
     return Ok(());
 }
 
-fn get_language(language: &Option<String>) -> Language {
+fn get_language(language: &Option<String>) -> Result<Language> {
     if let Some(language) = language {
-        return Language::from_str_or_default(&language);
+        return language.parse();
     }
-    return Language::default();
+    return Ok(Language::default());
 }
 
 fn get_db_path(
@@ -351,18 +351,19 @@ fn get_db_path(
     language: &Option<String>,
     partitioned: bool,
     search_term: &Option<String>,
-) -> PathBuf {
+) -> Result<PathBuf> {
     if let Some(path) = path {
-        return PathBuf::from(path);
+        return Ok(PathBuf::from(path));
     }
 
     if partitioned && search_term.is_some() {
-        return PathBuf::from(utilities::DEFAULT_PARTIONED_DB_DIR_PATH!());
+        return Ok(PathBuf::from(utilities::DEFAULT_PARTIONED_DB_DIR_PATH!()));
     }
 
-    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(
-        get_language(language).value()
-    ));
+    return Ok(PathBuf::from(utilities::DICTIONARY_DB_PATH!(get_language(
+        language
+    )?
+    .value())));
 }
 
 fn main() -> Result<()> {
@@ -376,14 +377,14 @@ fn main() -> Result<()> {
                     &args.language,
                     args.partitioned,
                     &args.search_term,
-                ),
-                &language,
+                )?,
+                &language?,
             )
         }
         _ => {
             return run(
                 &args.search_term,
-                &language,
+                &language?,
                 args.max_results,
                 args.case_insensitive,
                 args.partitioned,
@@ -392,7 +393,7 @@ fn main() -> Result<()> {
                     &args.language,
                     args.partitioned,
                     &args.search_term,
-                ),
+                )?,
             )
         }
     };

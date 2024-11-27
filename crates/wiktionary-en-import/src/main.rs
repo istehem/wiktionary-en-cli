@@ -29,16 +29,16 @@ pub fn do_import(path: &Path, language: &Language, force: bool) -> Result<()> {
     }
 }
 
-fn get_language(language: &Option<String>) -> Language {
+fn get_language(language: &Option<String>) -> Result<Language> {
     if let Some(language) = language {
-        return Language::from_str_or_default(&language);
+        return language.parse();
     }
-    return Language::default();
+    return Ok(Language::default());
 }
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let language = get_language(&args.language);
+    let language = get_language(&args.language)?;
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
     return do_import(&db_path, &language, args.force);
 }

@@ -43,6 +43,6 @@ impl FromStr for Language {
     fn from_str(language: &str) -> anyhow::Result<Self> {
         return Language::iterator()
             .find(|l| l.value() == String::from(language))
-            .ok_or_else(|| anyhow::anyhow!("unknown language {}", language));
+            .ok_or_else(|| anyhow::anyhow!("unsupported language code: '{}'", language));
     }
 }
