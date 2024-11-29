@@ -1,5 +1,5 @@
 [package]
-name = "wiktionary_entities"
+name = "wiktionary-en-entities"
 version = "0.1.0"
 edition = "2021"
 

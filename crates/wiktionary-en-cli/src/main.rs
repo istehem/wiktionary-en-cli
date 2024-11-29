@@ -17,7 +17,7 @@ use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use utilities::language::*;
 
-use wiktionary_entities::wiktionary_entity::*;
+use wiktionary_en_entities::wiktionary_entity::*;
 
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;

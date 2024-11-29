@@ -6,7 +6,7 @@ use utilities::language::*;
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{thread_rng, Rng};
-use wiktionary_entities::wiktionary_entity::*;
+use wiktionary_en_entities::wiktionary_entity::*;
 
 use std::fs::File;
 

@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 utilities = { path = "../utilities" }
-wiktionary_entities = { version = "0.1.0", path = "../wiktionary-entities" }
+wiktionary-en-entities = { version = "0.1.0", path = "../wiktionary-en-entities" }
 anyhow = {workspace = true}
 polodb_core = "*"
 rand = "0.7.3"
