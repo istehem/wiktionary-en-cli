@@ -39,7 +39,7 @@ struct Cli {
     /// Use case insensitive search
     #[clap(short = 'i', long)]
     case_insensitive: bool,
-    /// Set search term language (ignored when used with --db-path)
+    /// Set search term language
     #[clap(long, short = 'l')]
     language: Option<String>,
     /// Show dictionary information
