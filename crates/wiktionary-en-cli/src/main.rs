@@ -1,17 +1,15 @@
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 use colored::Colorize;
 use edit_distance::edit_distance;
 use indoc::printdoc;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
-use std::thread;
 
 use utilities::anyhow_serde;
 use utilities::file_utils::*;
@@ -44,8 +42,6 @@ struct Cli {
     /// Set search term language (ignored when used with --db-path)
     #[clap(long, short = 'l')]
     language: Option<String>,
-    #[clap(short, long)]
-    partitioned: bool,
     /// Show dictionary information
     #[clap(short, long)]
     stats: bool,
@@ -106,7 +102,10 @@ fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<Dictiona
 fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
     let input_path = input_path_buf.as_path();
     if input_path.is_dir() {
-        bail!("Sorry, cannot calculate stats for partitioned search yet");
+        bail!(
+            "specified wiktionary extract file '{}' is directory",
+            input_path.display()
+        );
     }
 
     println!(
@@ -203,92 +202,15 @@ fn search_worker(
     return Ok(search_result);
 }
 
-fn search_partitioned(
-    input_path: &PathBuf,
-    term: String,
-    max_results: usize,
-    case_insensitive: bool,
-) -> Result<SearchResult> {
-    let is_solution_found = Arc::new(AtomicBool::new(false));
-
-    let mut children = vec![];
-    let paths = fs::read_dir(input_path);
-    ensure!(
-        paths.is_ok(),
-        format!("Couldn't find db dir: '{}'", input_path.display())
-    );
-    for path in paths.unwrap() {
-        let term = term.clone();
-        let max_results = max_results.clone();
-        let case_insensitive_c = case_insensitive.clone();
-        let is_solution_found = is_solution_found.clone();
-        children.push(thread::spawn(move || {
-            if let Ok(path) = path {
-                match get_file_reader(path.path().as_path()) {
-                    Ok(br) => {
-                        return search_worker(
-                            br,
-                            term,
-                            max_results,
-                            case_insensitive_c,
-                            is_solution_found,
-                        )
-                    }
-                    Err(e) => bail!(e),
-                }
-            }
-            bail!("db file path contains an invalid partition entry");
-        }));
-    }
-
-    let mut search_results: Vec<SearchResult> = Vec::new();
-    let mut did_you_mean: Option<DictionaryEntry> = None;
-    let mut min_distance = usize::MAX;
-
-    for child in children {
-        if let Ok(child_join) = child.join() {
-            match child_join {
-                Ok(result) => {
-                    if result.distance < min_distance {
-                        min_distance = result.distance.clone();
-                        did_you_mean = result.did_you_mean.clone();
-                    }
-                    search_results.push(result)
-                }
-                Err(err) => bail!(err),
-            }
-        } else {
-            bail!("thread panicked!");
-        }
-    }
-
-    let full_matches: Vec<DictionaryEntry> = search_results
-        .into_iter()
-        .map(|r| r.full_matches)
-        .flatten()
-        .collect();
-    let search_result = SearchResult {
-        full_matches: full_matches,
-        did_you_mean: did_you_mean,
-        distance: min_distance,
-    };
-    return Ok(search_result);
-}
-
 fn search(
     input_path: &PathBuf,
     term: String,
     max_results: usize,
     case_insensitive: bool,
-    partitioned: bool,
 ) -> Result<SearchResult> {
-    if partitioned {
-        return search_partitioned(input_path, term, max_results, case_insensitive);
-    } else {
-        match get_file_reader(input_path.as_path()) {
-            Ok(br) => return do_search(br, term, max_results, case_insensitive),
-            Err(e) => bail!(e),
-        }
+    match get_file_reader(input_path.as_path()) {
+        Ok(br) => return do_search(br, term, max_results, case_insensitive),
+        Err(e) => bail!(e),
     }
 }
 
@@ -311,7 +233,6 @@ fn run(
     language: &Language,
     max_results: usize,
     case_insensitive: bool,
-    partitioned: bool,
     path: PathBuf,
 ) -> Result<()> {
     match term {
@@ -320,15 +241,13 @@ fn run(
                 print_entries(&csr);
                 return Ok(());
             }
-            Ok(None) => {
-                match search(&path, s.clone(), max_results, case_insensitive, partitioned) {
-                    Ok(sr) => {
-                        print_search_result(s, &sr);
-                        return Ok(());
-                    }
-                    Err(e) => bail!(e),
+            Ok(None) => match search(&path, s.clone(), max_results, case_insensitive) {
+                Ok(sr) => {
+                    print_search_result(s, &sr);
+                    return Ok(());
                 }
-            }
+                Err(e) => bail!(e),
+            },
             Err(e) => bail!(e),
         },
         None => println!(
@@ -346,20 +265,10 @@ fn get_language(language: &Option<String>) -> Result<Language> {
     return Ok(Language::default());
 }
 
-fn get_db_path(
-    path: Option<String>,
-    language: &Language,
-    partitioned: bool,
-    search_term: &Option<String>,
-) -> PathBuf {
+fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     if let Some(path) = path {
         return PathBuf::from(path);
     }
-
-    if partitioned && search_term.is_some() {
-        return PathBuf::from(utilities::DEFAULT_PARTIONED_DB_DIR_PATH!());
-    }
-
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
 }
 
@@ -367,20 +276,14 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
     match args.stats {
-        true => {
-            return print_stats(
-                get_db_path(args.db_path, &language, args.partitioned, &args.search_term),
-                &language,
-            )
-        }
+        true => return print_stats(get_db_path(args.db_path, &language), &language),
         _ => {
             return run(
                 &args.search_term,
                 &language,
                 args.max_results,
                 args.case_insensitive,
-                args.partitioned,
-                get_db_path(args.db_path, &language, args.partitioned, &args.search_term),
+                get_db_path(args.db_path, &language),
             )
         }
     };
