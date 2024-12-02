@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
 use utilities::file_utils;
@@ -45,27 +45,19 @@ fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Resul
         let mut count = 0;
         for (i, line) in file_reader.lines().enumerate() {
             let pushed = check_line(line, i).and_then(|line| {
-                let dictionary_entry = parse_line(&line, i)?;
+                let dictionary_entry: DictionaryEntry = parse_line(&line, i)?;
                 let dest =
                     Dest::col_buc("wiktionary", &language.value()).obj(&dictionary_entry.word);
-                let examples = dictionary_entry.all_examples();
 
-                if examples.is_empty() {
-                    let _pushed = channel.push(
-                        PushRequest::new(dest, &dictionary_entry.word)
-                            .lang(to_sonic_language(language)),
-                    );
-                } else {
-                    for example in examples {
-                        let pushed = channel.push(PushRequest::new(dest.clone(), &example));
-                        if let Err(e) = pushed {
-                            bail!(anyhow::Error::new(e).context(format!(
-                                "couldn't push example '{}' for obj '{}'",
-                                &example, &dictionary_entry.word
-                            )));
-                        }
-                        //dbg!(&example);
-                    }
+                let push_result = channel.push(
+                    PushRequest::new(dest, &dictionary_entry.word)
+                        .lang(to_sonic_language(language)),
+                );
+                if let Err(err) = push_result {
+                    return Err(anyhow!(err).context(format!(
+                        "failed for '{}' after {} iterations",
+                        &dictionary_entry.word, count
+                    )));
                 }
                 count = i;
                 return Ok(());
@@ -88,8 +80,12 @@ pub fn do_import(path: &Path, language: &Language) -> Result<()> {
     }
 }
 
-pub fn generate_indices(language: &Language, db_path: &PathBuf, search_term: &String, force: bool) -> Result<()> {
-    println!("{}", "Hello World!");
+pub fn generate_indices(
+    language: &Language,
+    db_path: &PathBuf,
+    search_term: &String,
+    force: bool,
+) -> Result<()> {
     println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value()));
     if force {
         return do_import(db_path, language);
@@ -105,11 +101,8 @@ pub fn generate_indices(language: &Language, db_path: &PathBuf, search_term: &St
         dbg!(object_count);
 
         let objects = channel.query(
-            QueryRequest::new(
-                Dest::col_buc("wiktionary", language.value()),
-                search_term,
-            )
-            .lang(to_sonic_language(language)),
+            QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
+                .lang(to_sonic_language(language)),
         )?;
         dbg!(objects);
         let result = channel.suggest(SuggestRequest::new(
