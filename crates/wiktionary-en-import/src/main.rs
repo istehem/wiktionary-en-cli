@@ -20,9 +20,16 @@ struct Cli {
     /// Force import, existing data will be overwritten
     #[clap(long, short = 'f')]
     force: bool,
+    #[clap(long, short = 'i')]
+    create_index: bool,
 }
 
-pub fn do_import(path: &Path, language: &Language, force: bool) -> Result<()> {
+
+fn generate_identifier_indices(language: &Language, path: &PathBuf, search_term: &String, force: bool) -> Result<()> {
+    return wiktionary_en_identifier_index::generate_indices(language, path, search_term, force);
+}
+
+fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
     match file_utils::get_file_reader(path) {
         Ok(path) => return insert_wiktionary_file(path, language, force),
         Err(err) => bail!(err),
@@ -40,5 +47,9 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
-    return do_import(&db_path, &language, args.force);
+    import_wiktionary_extract(&db_path, &language, args.force)?;
+    if args.create_index {
+        generate_identifier_indices(&language, &db_path, &String::from("test"), args.force)?;
+    }
+    return Ok(());
 }

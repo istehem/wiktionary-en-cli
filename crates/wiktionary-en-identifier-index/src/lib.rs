@@ -10,25 +10,6 @@ use std::fs::File;
 
 use sonic_channel::*;
 
-use clap::Parser;
-
-/// Import Dictionary Data into Sonic
-#[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
-struct Cli {
-    /// A word to search for; omitting it will yield a random entry
-    search_term: String,
-    /// Override dictionary db file to use
-    #[clap(long, short = 'd')]
-    db_path: Option<String>,
-    /// Language to import
-    #[clap(long, short = 'l')]
-    language: Option<String>,
-    /// Force import even if data still exists in the bucket
-    #[clap(long, short = 'f')]
-    force: bool,
-}
-
 fn start_sonic_ingest_channel() -> Result<IngestChannel> {
     let channel = IngestChannel::start("localhost:1491", "SecretPassword");
     return channel
@@ -107,30 +88,11 @@ pub fn do_import(path: &Path, language: &Language) -> Result<()> {
     }
 }
 
-fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf {
-    if let Some(path) = path {
-        return PathBuf::from(path);
-    }
-    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language
-        .unwrap_or_default()
-        .value()));
-}
-
-fn get_language(language: &Option<String>) -> Result<Language> {
-    if let Some(language) = language {
-        return language.parse();
-    }
-    return Ok(Language::default());
-}
-
-fn main() -> Result<()> {
-    let args = Cli::parse();
-    let language = get_language(&args.language)?;
+pub fn generate_indices(language: &Language, db_path: &PathBuf, search_term: &String, force: bool) -> Result<()> {
     println!("{}", "Hello World!");
     println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value()));
-    let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
-    if args.force {
-        return do_import(&db_path, &language);
+    if force {
+        return do_import(db_path, language);
     } else {
         let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
 
@@ -145,14 +107,14 @@ fn main() -> Result<()> {
         let objects = channel.query(
             QueryRequest::new(
                 Dest::col_buc("wiktionary", language.value()),
-                &args.search_term,
+                search_term,
             )
-            .lang(to_sonic_language(&language)),
+            .lang(to_sonic_language(language)),
         )?;
         dbg!(objects);
         let result = channel.suggest(SuggestRequest::new(
             Dest::col_buc("wiktionary", language.value()),
-            &args.search_term,
+            search_term,
         ))?;
         dbg!(result);
     }
