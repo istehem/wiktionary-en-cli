@@ -52,7 +52,7 @@ fn main() -> Result<()> {
     let language = get_language(&args.language)?;
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
     if args.create_index {
-        generate_identifier_indices(&language, &db_path, &String::from("test"), args.force)?;
+        generate_identifier_indices(&language, &db_path, &String::from("snaark"), args.force)?;
     } else {
         import_wiktionary_extract(&db_path, &language, args.force)?;
     }

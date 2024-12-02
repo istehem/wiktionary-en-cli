@@ -1,9 +1,9 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::io::{prelude::*, BufReader};
 use std::path::{Path, PathBuf};
 use utilities::file_utils;
 use utilities::language::*;
-use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 use wiktionary_en_entities::wiktionary_entity::*;
 
@@ -48,18 +48,19 @@ fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Resul
             let pushed = check_line(line, i).and_then(|line| {
                 let dictionary_entry: DictionaryEntry = parse_line(&line, i)?;
                 let obj = STANDARD.encode(&dictionary_entry.word);
-                let dest =
-                    Dest::col_buc("wiktionary", &language.value()).obj(&obj);
+                let dest = Dest::col_buc("wiktionary", &language.value()).obj(&obj);
 
                 let push_result = channel.push(
                     PushRequest::new(dest, &dictionary_entry.word)
                         .lang(to_sonic_language(language)),
                 );
                 if let Err(err) = push_result {
-                    return Err(anyhow!(err).context(format!(
-                        "failed for '{}' after {} iterations",
-                        &dictionary_entry.word, count
-                    )));
+                    println!(
+                        "failed to index '{}' after {} iterations with error {}",
+                        &dictionary_entry.word,
+                        count,
+                        err.to_string()
+                    );
                 }
                 count = i;
                 return Ok(());
