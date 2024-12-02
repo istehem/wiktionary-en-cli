@@ -10,4 +10,5 @@ utilities = { path = "../utilities" }
 wiktionary-en-entities = { version = "0.1.0", path = "../wiktionary-en-entities" }
 sonic-channel = { version = "1.1", features = ["ingest"] }
 clap = { version = "3.0", features = ["derive"] }
+base64 = "*"
 anyhow = {workspace = true} 

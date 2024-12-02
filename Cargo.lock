@@ -1178,6 +1178,7 @@ name = "wiktionary-en-identifier-index"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64",
  "clap",
  "sonic-channel",
  "utilities",
