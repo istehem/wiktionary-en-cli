@@ -24,13 +24,8 @@ struct Cli {
     create_index: bool,
 }
 
-fn generate_identifier_indices(
-    language: &Language,
-    path: &PathBuf,
-    search_term: &String,
-    force: bool,
-) -> Result<()> {
-    return wiktionary_en_identifier_index::generate_indices(language, path, search_term, force);
+fn generate_identifier_indices(language: &Language, path: &PathBuf, force: bool) -> Result<()> {
+    return wiktionary_en_identifier_index::generate_indices(language, path, force);
 }
 
 fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
@@ -52,7 +47,7 @@ fn main() -> Result<()> {
     let language = get_language(&args.language)?;
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
     if args.create_index {
-        generate_identifier_indices(&language, &db_path, &String::from("snaark"), args.force)?;
+        generate_identifier_indices(&language, &db_path, args.force)?;
     } else {
         import_wiktionary_extract(&db_path, &language, args.force)?;
     }

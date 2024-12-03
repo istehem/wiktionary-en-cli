@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::Parser;
 use colored::Colorize;
 use edit_distance::edit_distance;
@@ -45,6 +45,9 @@ struct Cli {
     /// Show dictionary information
     #[clap(short, long)]
     stats: bool,
+    /// Autocomplete word
+    #[clap(short, long)]
+    autocomplete: bool,
 }
 
 struct SearchResult {
@@ -275,16 +278,21 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
-    match args.stats {
-        true => return print_stats(get_db_path(args.db_path, &language), &language),
-        _ => {
-            return run(
-                &args.search_term,
-                &language,
-                args.max_results,
-                args.case_insensitive,
-                get_db_path(args.db_path, &language),
-            )
-        }
-    };
+
+    if args.stats {
+        return print_stats(get_db_path(args.db_path, &language), &language);
+    }
+    if args.autocomplete {
+        let search_term = &args
+            .search_term
+            .ok_or(anyhow!("a search term is required"))?;
+        return wiktionary_en_identifier_index::query_indices(&language, search_term);
+    }
+    return run(
+        &args.search_term,
+        &language,
+        args.max_results,
+        args.case_insensitive,
+        get_db_path(args.db_path, &language),
+    );
 }

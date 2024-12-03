@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 wiktionary-en-entities = { version = "0.1.0", path = "../wiktionary-en-entities" }
 wiktionary-en-db = { path = "../wiktionary-en-db" }
+wiktionary-en-identifier-index = { path = "../wiktionary-en-identifier-index" }
 utilities = { path = "../utilities" }
 clap = { version = "3.0", features = ["derive"] }
 anyhow = {workspace = true} 

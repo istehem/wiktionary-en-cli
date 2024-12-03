@@ -83,36 +83,34 @@ pub fn do_import(path: &Path, language: &Language) -> Result<()> {
     }
 }
 
-pub fn generate_indices(
-    language: &Language,
-    db_path: &PathBuf,
-    search_term: &String,
-    force: bool,
-) -> Result<()> {
+pub fn query_indices(language: &Language, search_term: &String) -> Result<()> {
+    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
+
+    let ingest_channel = start_sonic_ingest_channel()?;
+    let bucket_count = ingest_channel.count(CountRequest::buckets("wiktionary"))?;
+    dbg!(bucket_count);
+
+    let object_count =
+        ingest_channel.count(CountRequest::objects("wiktionary", language.value()))?;
+    dbg!(object_count);
+
+    let objects = channel.query(
+        QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
+            .lang(to_sonic_language(language)),
+    )?;
+    dbg!(objects);
+    let result = channel.suggest(SuggestRequest::new(
+        Dest::col_buc("wiktionary", language.value()),
+        search_term,
+    ))?;
+    dbg!(result);
+    return Ok(());
+}
+
+pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {
     println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value()));
     if force {
         return do_import(db_path, language);
-    } else {
-        let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
-
-        let ingest_channel = start_sonic_ingest_channel()?;
-        let bucket_count = ingest_channel.count(CountRequest::buckets("wiktionary"))?;
-        dbg!(bucket_count);
-
-        let object_count =
-            ingest_channel.count(CountRequest::objects("wiktionary", language.value()))?;
-        dbg!(object_count);
-
-        let objects = channel.query(
-            QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
-                .lang(to_sonic_language(language)),
-        )?;
-        dbg!(objects);
-        let result = channel.suggest(SuggestRequest::new(
-            Dest::col_buc("wiktionary", language.value()),
-            search_term,
-        ))?;
-        dbg!(result);
     }
     return Ok(());
 }
