@@ -83,7 +83,19 @@ pub fn do_import(path: &Path, language: &Language) -> Result<()> {
     }
 }
 
-pub fn query_indices(language: &Language, search_term: &String) -> Result<()> {
+pub fn suggest(language: &Language, search_term: &String) -> Result<()> {
+    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
+    let suggestions = channel.suggest(SuggestRequest::new(
+        Dest::col_buc("wiktionary", language.value()),
+        search_term,
+    ))?;
+    for suggestion in suggestions {
+        println!("{}", suggestion);
+    }
+    return Ok(());
+}
+
+pub fn query(language: &Language, search_term: &String) -> Result<()> {
     let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
 
     let ingest_channel = start_sonic_ingest_channel()?;
@@ -98,12 +110,12 @@ pub fn query_indices(language: &Language, search_term: &String) -> Result<()> {
         QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
             .lang(to_sonic_language(language)),
     )?;
-    dbg!(objects);
-    let result = channel.suggest(SuggestRequest::new(
-        Dest::col_buc("wiktionary", language.value()),
-        search_term,
-    ))?;
-    dbg!(result);
+
+    for object in objects {
+        let decoded = STANDARD.decode(object)?;
+        let word = String::from_utf8(decoded)?;
+        println!("{}", word);
+    }
     return Ok(());
 }
 

@@ -286,7 +286,7 @@ fn main() -> Result<()> {
         let search_term = &args
             .search_term
             .ok_or(anyhow!("a search term is required"))?;
-        return wiktionary_en_identifier_index::query_indices(&language, search_term);
+        return wiktionary_en_identifier_index::suggest(&language, search_term);
     }
     return run(
         &args.search_term,
