@@ -288,6 +288,12 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
 }
 
+fn print_lines<T: std::fmt::Display>(entries: &Vec<T>) {
+    for entry in entries {
+        println!("{}", entry);
+    }
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
@@ -299,13 +305,17 @@ fn main() -> Result<()> {
         let search_term = &args
             .search_term
             .ok_or(anyhow!("a search term is required"))?;
-        return wiktionary_en_identifier_index::suggest(&language, search_term).map(|_| return);
+        let result = wiktionary_en_identifier_index::suggest(&language, search_term)?;
+        print_lines(&result);
+        return Ok(());
     }
     if args.query {
         let search_term = &args
             .search_term
             .ok_or(anyhow!("a search term is required"))?;
-        return wiktionary_en_identifier_index::query(&language, search_term).map(|_| return);
+        let result = wiktionary_en_identifier_index::query(&language, search_term)?;
+        print_lines(&result);
+        return Ok(());
     }
     return run(
         &args.search_term,

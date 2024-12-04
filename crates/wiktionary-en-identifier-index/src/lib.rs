@@ -100,9 +100,6 @@ pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>>
         Dest::col_buc("wiktionary", language.value()),
         search_term,
     ))?;
-    for suggestion in &suggestions {
-        println!("{}", suggestion);
-    }
     return Ok(suggestions);
 }
 
@@ -117,7 +114,6 @@ pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
     for object in &objects {
         let decoded = STANDARD.decode(object)?;
         let term = String::from_utf8(decoded)?;
-        println!("{}", term);
         terms.push(term);
     }
     return Ok(terms);
