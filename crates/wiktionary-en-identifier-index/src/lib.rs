@@ -132,7 +132,6 @@ pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<
 }
 
 pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {
-    println!("{}", utilities::DICTIONARY_DB_PATH!(Language::EN.value()));
     if force {
         return do_import(db_path, language);
     }
