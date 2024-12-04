@@ -83,21 +83,7 @@ pub fn do_import(path: &Path, language: &Language) -> Result<()> {
     }
 }
 
-pub fn suggest(language: &Language, search_term: &String) -> Result<()> {
-    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
-    let suggestions = channel.suggest(SuggestRequest::new(
-        Dest::col_buc("wiktionary", language.value()),
-        search_term,
-    ))?;
-    for suggestion in suggestions {
-        println!("{}", suggestion);
-    }
-    return Ok(());
-}
-
-pub fn query(language: &Language, search_term: &String) -> Result<()> {
-    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
-
+pub fn statistics(language: &Language) -> Result<()> {
     let ingest_channel = start_sonic_ingest_channel()?;
     let bucket_count = ingest_channel.count(CountRequest::buckets("wiktionary"))?;
     dbg!(bucket_count);
@@ -105,18 +91,46 @@ pub fn query(language: &Language, search_term: &String) -> Result<()> {
     let object_count =
         ingest_channel.count(CountRequest::objects("wiktionary", language.value()))?;
     dbg!(object_count);
+    return Ok(());
+}
 
+pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
+    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
+    let suggestions = channel.suggest(SuggestRequest::new(
+        Dest::col_buc("wiktionary", language.value()),
+        search_term,
+    ))?;
+    for suggestion in &suggestions {
+        println!("{}", suggestion);
+    }
+    return Ok(suggestions);
+}
+
+pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
+    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
     let objects = channel.query(
         QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
             .lang(to_sonic_language(language)),
     )?;
 
-    for object in objects {
+    for object in &objects {
         let decoded = STANDARD.decode(object)?;
         let word = String::from_utf8(decoded)?;
         println!("{}", word);
     }
-    return Ok(());
+    return Ok(objects);
+}
+
+pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
+    let suggestions = suggest(language, search_term)?;
+    if let Some(first) = suggestions.first() {
+        return Ok(Some(first.to_string()));
+    }
+    let query_results = query(language, search_term)?;
+    if let Some(first) = query_results.first() {
+        return Ok(Some(first.to_string()));
+    }
+    return Ok(None);
 }
 
 pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {

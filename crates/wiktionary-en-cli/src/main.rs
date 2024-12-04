@@ -48,6 +48,9 @@ struct Cli {
     /// Autocomplete word
     #[clap(short, long)]
     autocomplete: bool,
+    /// Query word
+    #[clap(short, long)]
+    query: bool,
 }
 
 struct SearchResult {
@@ -286,7 +289,13 @@ fn main() -> Result<()> {
         let search_term = &args
             .search_term
             .ok_or(anyhow!("a search term is required"))?;
-        return wiktionary_en_identifier_index::suggest(&language, search_term);
+        return wiktionary_en_identifier_index::suggest(&language, search_term).map(|_| return);
+    }
+    if args.query {
+        let search_term = &args
+            .search_term
+            .ok_or(anyhow!("a search term is required"))?;
+        return wiktionary_en_identifier_index::query(&language, search_term).map(|_| return);
     }
     return run(
         &args.search_term,
