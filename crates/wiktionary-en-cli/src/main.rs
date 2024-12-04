@@ -247,13 +247,23 @@ fn run(
                 print_entries(&csr);
                 return Ok(());
             }
-            Ok(None) => match search(&path, s.clone(), max_results, case_insensitive) {
-                Ok(sr) => {
-                    print_search_result(s, &sr);
+            Ok(None) => {
+                let did_you_mean = wiktionary_en_identifier_index::did_you_mean(language, s)?;
+                if let Some(did_you_mean) = did_you_mean {
+                    let result = find_by_word_in_db(&did_you_mean, language)?;
+                    if let Some(result) = result {
+                        print_entries(&result);
+                    }
                     return Ok(());
                 }
-                Err(e) => bail!(e),
-            },
+                match search(&path, s.clone(), max_results, case_insensitive) {
+                    Ok(sr) => {
+                        print_search_result(s, &sr);
+                        return Ok(());
+                    }
+                    Err(e) => bail!(e),
+                }
+            }
             Err(e) => bail!(e),
         },
         None => println!(

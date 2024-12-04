@@ -113,12 +113,14 @@ pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
             .lang(to_sonic_language(language)),
     )?;
 
+    let mut terms: Vec<String> = Vec::new();
     for object in &objects {
         let decoded = STANDARD.decode(object)?;
-        let word = String::from_utf8(decoded)?;
-        println!("{}", word);
+        let term = String::from_utf8(decoded)?;
+        println!("{}", term);
+        terms.push(term);
     }
-    return Ok(objects);
+    return Ok(terms);
 }
 
 pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
