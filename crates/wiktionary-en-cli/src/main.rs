@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use clap::Parser;
 use colored::Colorize;
 use edit_distance::edit_distance;
-use indoc::printdoc;
+use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
@@ -68,18 +68,22 @@ fn print_entry(json: &DictionaryEntry) {
     println!("{}", json.to_pretty_string());
 }
 
+fn did_you_mean_banner(search_term: &String, partial_match: &String) -> String {
+    return formatdoc!(
+        "
+        No result for {}.
+        Did you mean  {}?
+        ",
+        search_term.red(),
+        partial_match.yellow()
+    );
+}
+
 fn print_search_result(term: &String, search_result: &SearchResult) {
     if search_result.full_matches.is_empty() {
         match &search_result.did_you_mean {
             Some(result) => {
-                printdoc!(
-                    "
-                          No result for {}.
-                          Did you mean  {}?
-                          ",
-                    term.red(),
-                    &result.word.yellow()
-                );
+                println!("{}", did_you_mean_banner(term, &result.word));
                 print_entry(&result);
             }
             None => println!("{}", "No results"),
@@ -252,9 +256,10 @@ fn run(
                 if let Some(did_you_mean) = did_you_mean {
                     let result = find_by_word_in_db(&did_you_mean, language)?;
                     if let Some(result) = result {
+                        println!("{}", did_you_mean_banner(&s, &did_you_mean));
                         print_entries(&result);
+                        return Ok(());
                     }
-                    return Ok(());
                 }
                 match search(&path, s.clone(), max_results, case_insensitive) {
                     Ok(sr) => {
