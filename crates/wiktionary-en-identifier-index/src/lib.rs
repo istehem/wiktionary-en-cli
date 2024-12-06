@@ -128,7 +128,12 @@ pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<
     let rated_suggestions = suggestions
         .iter()
         /* an exact match, that is distance 0, is not what we are looking for */
-        .map(|suggestion| (std::cmp::max(1, edit_distance(search_term, suggestion)), suggestion));
+        .map(|suggestion| {
+            (
+                std::cmp::max(1, edit_distance(search_term, suggestion)),
+                suggestion,
+            )
+        });
     let best_result = rated_suggestions
         .min()
         .map(|rated_result| rated_result.1.to_string());
