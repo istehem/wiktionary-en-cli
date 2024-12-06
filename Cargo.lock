@@ -1181,6 +1181,7 @@ dependencies = [
  "anyhow",
  "base64",
  "clap",
+ "edit-distance",
  "sonic-channel",
  "utilities",
  "wiktionary-en-entities",

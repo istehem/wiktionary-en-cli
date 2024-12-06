@@ -11,6 +11,8 @@ use std::fs::File;
 
 use sonic_channel::*;
 
+use edit_distance::edit_distance;
+
 fn start_sonic_ingest_channel() -> Result<IngestChannel> {
     let channel = IngestChannel::start("localhost:1491", "SecretPassword");
     return channel
@@ -120,15 +122,17 @@ pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
 }
 
 pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
-    let suggestions = suggest(language, search_term)?;
-    if let Some(first) = suggestions.first() {
-        return Ok(Some(first.to_string()));
-    }
-    let query_results = query(language, search_term)?;
-    if let Some(first) = query_results.first() {
-        return Ok(Some(first.to_string()));
-    }
-    return Ok(None);
+    let mut suggestions = suggest(language, search_term)?;
+    suggestions.append(&mut query(language, search_term)?);
+
+    let rated_suggestions = suggestions
+        .iter()
+        .map(|suggestion| (edit_distance(search_term, suggestion), suggestion));
+    let best_result = rated_suggestions
+        .min()
+        .map(|rated_result| rated_result.1.to_string());
+
+    return Ok(best_result);
 }
 
 pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {
