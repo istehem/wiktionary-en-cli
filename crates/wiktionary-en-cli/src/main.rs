@@ -97,12 +97,6 @@ fn print_search_result(term: &String, search_result: &SearchResult) {
     }
 }
 
-fn print_entries(entries: &Vec<DictionaryEntry>) {
-    for entry in entries {
-        print_entry(&entry);
-    }
-}
-
 fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
     return line
         .map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
@@ -251,7 +245,7 @@ fn run(
     match term {
         Some(s) => match find_by_word_in_db(s, language) {
             Ok(Some(csr)) => {
-                print_entries(&csr);
+                print_lines_in_pager(&csr)?;
                 return Ok(());
             }
             Ok(None) => {
@@ -260,7 +254,7 @@ fn run(
                     let result = find_by_word_in_db(&did_you_mean, language)?;
                     if let Some(result) = result {
                         println!("{}", did_you_mean_banner(&s, &did_you_mean));
-                        print_entries(&result);
+                        print_lines_in_pager(&result)?;
                         return Ok(());
                     }
                 }
@@ -301,9 +295,6 @@ fn print_lines_in_pager<T: std::fmt::Display>(entries: &Vec<T>) -> Result<()> {
 
     for entry in entries {
         writeln!(output, "{}", entry)?;
-    }
-    for i in 0..=10000 {
-        writeln!(output, "{}", i)?;
     }
     minus::page_all(output)?;
     return Ok(());

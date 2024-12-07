@@ -10,6 +10,8 @@ use utilities::anyhow_serde;
 use utilities::colored_string_utils::*;
 use utilities::language::*;
 
+use std::fmt;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
     lang_code: String,
@@ -105,6 +107,12 @@ impl DictionaryEntry {
             examples.extend(sense.examples.iter().map(|e| e.text.clone()));
         }
         return examples;
+    }
+}
+
+impl fmt::Display for DictionaryEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return write!(f, "{}", self.to_pretty_string());
     }
 }
 
