@@ -275,15 +275,17 @@ fn run(
                 }
                 match search(&path, s.clone(), max_results, case_insensitive) {
                     Ok(sr) => {
-                        let did_you_mean = match sr.did_you_mean {
-                            Some(did_you_mean) => Some(DidYouMean {
-                                searched_for: s.to_string(),
-                                suggestion: did_you_mean.word,
-                            }),
-                            _ => None,
-                        };
+                        if let Some(did_you_mean) = sr.did_you_mean {
+                            return Ok(WiktionaryEnResult {
+                                did_you_mean: Some(DidYouMean {
+                                    searched_for: s.to_string(),
+                                    suggestion: did_you_mean.word.clone(),
+                                }),
+                                hits: vec![did_you_mean],
+                            });
+                        }
                         return Ok(WiktionaryEnResult {
-                            did_you_mean: did_you_mean,
+                            did_you_mean: None,
                             hits: sr.full_matches,
                         });
                     }
