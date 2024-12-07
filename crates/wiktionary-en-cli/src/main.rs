@@ -22,6 +22,9 @@ use crate::wiktionary_stats::*;
 
 use wiktionary_en_db::wiktionary_en_db::*;
 
+use minus::Pager;
+use std::fmt::Write;
+
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 
 /// A To English Dictionary
@@ -293,6 +296,19 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
 }
 
+fn print_lines_in_pager<T: std::fmt::Display>(entries: &Vec<T>) -> Result<()> {
+    let mut output = Pager::new();
+
+    for entry in entries {
+        writeln!(output, "{}", entry)?;
+    }
+    for i in 0..=10000 {
+        writeln!(output, "{}", i)?;
+    }
+    minus::page_all(output)?;
+    return Ok(());
+}
+
 fn print_lines<T: std::fmt::Display>(entries: &Vec<T>) {
     for entry in entries {
         println!("{}", entry);
@@ -319,7 +335,7 @@ fn main() -> Result<()> {
             .search_term
             .ok_or(anyhow!("a search term is required"))?;
         let result = wiktionary_en_identifier_index::query(&language, search_term)?;
-        print_lines(&result);
+        print_lines_in_pager(&result)?;
         return Ok(());
     }
     return run(
