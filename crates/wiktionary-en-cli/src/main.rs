@@ -25,6 +25,8 @@ use wiktionary_en_db::wiktionary_en_db::*;
 use minus::Pager;
 use std::fmt::Write;
 
+use std::fmt;
+
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 
 /// A To English Dictionary
@@ -57,18 +59,37 @@ struct Cli {
 }
 
 struct SearchResult {
+    search_term: String,
     full_matches: Vec<DictionaryEntry>,
     did_you_mean: Option<DictionaryEntry>,
     distance: usize,
 }
 
+impl fmt::Display for SearchResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.full_matches.is_empty() {
+            match &self.did_you_mean {
+                Some(did_you_mean) => {
+                    writeln!(
+                        f,
+                        "{}",
+                        did_you_mean_banner(&self.search_term, &did_you_mean.word)
+                    )?;
+                    writeln!(f, "{}", did_you_mean)?;
+                }
+                None => writeln!(f, "{}", "No results")?,
+            }
+        }
+        for full_match in &self.full_matches {
+            writeln!(f, "{}", &full_match)?;
+        }
+        return Ok(());
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CachedDbEntry {
     entries: Vec<DictionaryEntry>,
-}
-
-fn print_entry(json: &DictionaryEntry) {
-    println!("{}", json.to_pretty_string());
 }
 
 fn did_you_mean_banner(search_term: &String, partial_match: &String) -> String {
@@ -80,21 +101,6 @@ fn did_you_mean_banner(search_term: &String, partial_match: &String) -> String {
         search_term.red(),
         partial_match.yellow()
     );
-}
-
-fn print_search_result(term: &String, search_result: &SearchResult) {
-    if search_result.full_matches.is_empty() {
-        match &search_result.did_you_mean {
-            Some(result) => {
-                println!("{}", did_you_mean_banner(term, &result.word));
-                print_entry(&result);
-            }
-            None => println!("{}", "No results"),
-        }
-    }
-    for full_match in &search_result.full_matches {
-        print_entry(&full_match);
-    }
 }
 
 fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
@@ -177,6 +183,7 @@ fn search_worker(
     is_solution_found: Arc<AtomicBool>,
 ) -> Result<SearchResult> {
     let mut search_result = SearchResult {
+        search_term: term.clone(),
         full_matches: Vec::new(),
         did_you_mean: None,
         distance: usize::MAX,
@@ -254,26 +261,20 @@ fn run(
                     let result = find_by_word_in_db(&did_you_mean, language)?;
                     if let Some(result) = result {
                         println!("{}", did_you_mean_banner(&s, &did_you_mean));
-                        print_lines_in_pager(&result)?;
-                        return Ok(());
+                        return print_lines_in_pager(&result);
                     }
                 }
                 match search(&path, s.clone(), max_results, case_insensitive) {
                     Ok(sr) => {
-                        print_search_result(s, &sr);
-                        return Ok(());
+                        return print_in_pager(&sr);
                     }
                     Err(e) => bail!(e),
                 }
             }
             Err(e) => bail!(e),
         },
-        None => println!(
-            "{}",
-            random_entry_for_language(language)?.to_pretty_string()
-        ),
+        None => return print_in_pager(&random_entry_for_language(language)?.to_pretty_string()),
     };
-    return Ok(());
 }
 
 fn get_language(language: &Option<String>) -> Result<Language> {
@@ -288,6 +289,13 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
         return PathBuf::from(path);
     }
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+}
+
+fn print_in_pager<T: std::fmt::Display>(value: &T) -> Result<()> {
+    let mut output = Pager::new();
+    writeln!(output, "{}", value)?;
+    minus::page_all(output)?;
+    return Ok(());
 }
 
 fn print_lines_in_pager<T: std::fmt::Display>(entries: &Vec<T>) -> Result<()> {
