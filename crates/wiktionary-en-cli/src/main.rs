@@ -58,33 +58,36 @@ struct Cli {
     query: bool,
 }
 
-struct SearchResult {
-    search_term: String,
-    full_matches: Vec<DictionaryEntry>,
-    did_you_mean: Option<DictionaryEntry>,
-    distance: usize,
+struct DidYouMean {
+    searched_for: String,
+    suggestion: String,
 }
 
-impl fmt::Display for SearchResult {
+struct WiktionaryEnResult {
+    did_you_mean: Option<DidYouMean>,
+    hits: Vec<DictionaryEntry>,
+}
+
+impl fmt::Display for WiktionaryEnResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.full_matches.is_empty() {
-            match &self.did_you_mean {
-                Some(did_you_mean) => {
-                    writeln!(
-                        f,
-                        "{}",
-                        did_you_mean_banner(&self.search_term, &did_you_mean.word)
-                    )?;
-                    writeln!(f, "{}", did_you_mean)?;
-                }
-                None => writeln!(f, "{}", "No results")?,
-            }
+        if let Some(did_you_mean) = &self.did_you_mean {
+            writeln!(
+                f,
+                "{}",
+                did_you_mean_banner(&did_you_mean.searched_for, &did_you_mean.suggestion)
+            )?;
         }
-        for full_match in &self.full_matches {
-            writeln!(f, "{}", &full_match)?;
+        for hit in &self.hits {
+            writeln!(f, "{}", &hit)?;
         }
         return Ok(());
     }
+}
+
+struct SearchResult {
+    full_matches: Vec<DictionaryEntry>,
+    did_you_mean: Option<DictionaryEntry>,
+    distance: usize,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -183,7 +186,6 @@ fn search_worker(
     is_solution_found: Arc<AtomicBool>,
 ) -> Result<SearchResult> {
     let mut search_result = SearchResult {
-        search_term: term.clone(),
         full_matches: Vec::new(),
         did_you_mean: None,
         distance: usize::MAX,
@@ -248,32 +250,55 @@ fn run(
     max_results: usize,
     case_insensitive: bool,
     path: PathBuf,
-) -> Result<()> {
+) -> Result<WiktionaryEnResult> {
     match term {
         Some(s) => match find_by_word_in_db(s, language) {
             Ok(Some(csr)) => {
-                print_lines_in_pager(&csr)?;
-                return Ok(());
+                return Ok(WiktionaryEnResult {
+                    did_you_mean: None,
+                    hits: csr,
+                });
             }
             Ok(None) => {
                 let did_you_mean = wiktionary_en_identifier_index::did_you_mean(language, s)?;
                 if let Some(did_you_mean) = did_you_mean {
                     let result = find_by_word_in_db(&did_you_mean, language)?;
                     if let Some(result) = result {
-                        println!("{}", did_you_mean_banner(&s, &did_you_mean));
-                        return print_lines_in_pager(&result);
+                        return Ok(WiktionaryEnResult {
+                            did_you_mean: Some(DidYouMean {
+                                searched_for: s.to_string(),
+                                suggestion: did_you_mean,
+                            }),
+                            hits: result,
+                        });
                     }
                 }
                 match search(&path, s.clone(), max_results, case_insensitive) {
                     Ok(sr) => {
-                        return print_in_pager(&sr);
+                        let did_you_mean = match sr.did_you_mean {
+                            Some(did_you_mean) => Some(DidYouMean {
+                                searched_for: s.to_string(),
+                                suggestion: did_you_mean.word,
+                            }),
+                            _ => None,
+                        };
+                        return Ok(WiktionaryEnResult {
+                            did_you_mean: did_you_mean,
+                            hits: sr.full_matches,
+                        });
                     }
                     Err(e) => bail!(e),
                 }
             }
             Err(e) => bail!(e),
         },
-        None => return print_in_pager(&random_entry_for_language(language)?.to_pretty_string()),
+        None => {
+            let hit = random_entry_for_language(language)?;
+            return Ok(WiktionaryEnResult {
+                did_you_mean: None,
+                hits: vec![hit],
+            });
+        }
     };
 }
 
@@ -308,12 +333,6 @@ fn print_lines_in_pager<T: std::fmt::Display>(entries: &Vec<T>) -> Result<()> {
     return Ok(());
 }
 
-fn print_lines<T: std::fmt::Display>(entries: &Vec<T>) {
-    for entry in entries {
-        println!("{}", entry);
-    }
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
@@ -326,7 +345,7 @@ fn main() -> Result<()> {
             .search_term
             .ok_or(anyhow!("a search term is required"))?;
         let result = wiktionary_en_identifier_index::suggest(&language, search_term)?;
-        print_lines(&result);
+        print_lines_in_pager(&result)?;
         return Ok(());
     }
     if args.query {
@@ -337,11 +356,13 @@ fn main() -> Result<()> {
         print_lines_in_pager(&result)?;
         return Ok(());
     }
-    return run(
+    let result = run(
         &args.search_term,
         &language,
         args.max_results,
         args.case_insensitive,
         get_db_path(args.db_path, &language),
-    );
+    )?;
+
+    return print_in_pager(&result);
 }
