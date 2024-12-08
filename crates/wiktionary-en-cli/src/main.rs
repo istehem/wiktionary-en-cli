@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 use colored::Colorize;
 use edit_distance::edit_distance;
@@ -330,6 +330,7 @@ fn print_in_pager<T: std::fmt::Display>(value: &T) -> Result<()> {
     return Ok(());
 }
 
+#[cfg(feature = "sonic")]
 fn print_lines_in_pager<T: std::fmt::Display>(entries: &Vec<T>) -> Result<()> {
     let mut output = Pager::new();
 
@@ -351,7 +352,7 @@ fn main() -> Result<()> {
     if args.autocomplete {
         let search_term = &args
             .search_term
-            .ok_or(anyhow!("a search term is required"))?;
+            .ok_or(anyhow::anyhow!("a search term is required"))?;
         let result = wiktionary_en_identifier_index::suggest(&language, search_term)?;
         print_lines_in_pager(&result)?;
         return Ok(());
@@ -360,7 +361,7 @@ fn main() -> Result<()> {
     if args.query {
         let search_term = &args
             .search_term
-            .ok_or(anyhow!("a search term is required"))?;
+            .ok_or(anyhow::anyhow!("a search term is required"))?;
         let result = wiktionary_en_identifier_index::query(&language, search_term)?;
         print_lines_in_pager(&result)?;
         return Ok(());
