@@ -262,17 +262,20 @@ fn run(
                 });
             }
             Ok(None) => {
-                let did_you_mean = wiktionary_en_identifier_index::did_you_mean(language, s)?;
-                if let Some(did_you_mean) = did_you_mean {
-                    let result = find_by_word_in_db(&did_you_mean, language)?;
-                    if let Some(result) = result {
-                        return Ok(WiktionaryEnResult {
-                            did_you_mean: Some(DidYouMean {
-                                searched_for: s.to_string(),
-                                suggestion: did_you_mean,
-                            }),
-                            hits: result,
-                        });
+                #[cfg(feature = "sonic")]
+                {
+                    let did_you_mean = wiktionary_en_identifier_index::did_you_mean(language, s)?;
+                    if let Some(did_you_mean) = did_you_mean {
+                        let result = find_by_word_in_db(&did_you_mean, language)?;
+                        if let Some(result) = result {
+                            return Ok(WiktionaryEnResult {
+                                did_you_mean: Some(DidYouMean {
+                                    searched_for: s.to_string(),
+                                    suggestion: did_you_mean,
+                                }),
+                                hits: result,
+                            });
+                        }
                     }
                 }
                 match search(&path, s.clone(), max_results, case_insensitive) {
