@@ -7,7 +7,10 @@ DICTIONARY_POLD_DB_DIR = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-polo-db/
 [tasks.install-wiktionary-en-cli]
 workspace = false
 command = "cargo"
-args = ["install", "--path", "crates/wiktionary-en-cli"]
+args = [
+	"install", "--path", "crates/wiktionary-en-cli",
+	"--features", "sonic"
+]
 
 [tasks.install-wiktionary-en-import]
 workspace = false

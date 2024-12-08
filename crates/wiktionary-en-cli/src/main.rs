@@ -50,9 +50,11 @@ struct Cli {
     /// Show dictionary information
     #[clap(short, long)]
     stats: bool,
+    #[cfg(feature = "sonic")]
     /// Autocomplete word
     #[clap(short, long)]
     autocomplete: bool,
+    #[cfg(feature = "sonic")]
     /// Query word
     #[clap(short, long)]
     query: bool,
@@ -342,6 +344,7 @@ fn main() -> Result<()> {
     if args.stats {
         return print_stats(get_db_path(args.db_path, &language), &language);
     }
+    #[cfg(feature = "sonic")]
     if args.autocomplete {
         let search_term = &args
             .search_term
@@ -350,6 +353,7 @@ fn main() -> Result<()> {
         print_lines_in_pager(&result)?;
         return Ok(());
     }
+    #[cfg(feature = "sonic")]
     if args.query {
         let search_term = &args
             .search_term
