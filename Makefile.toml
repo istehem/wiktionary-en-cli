@@ -1,16 +1,23 @@
 [env]
 CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
 DICTIONARY_DB_PATH_PLACEHOLDER = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-json-extract/wiktionary-{}.json"
-
 DICTIONARY_POLD_DB_DIR = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-polo-db/"
+USE_SONIC_FEATURE = true
 
 [tasks.install-wiktionary-en-cli]
 workspace = false
 command = "cargo"
+condition = { env_true = [ "USE_SONIC_FEATURE" ] }
 args = [
 	"install", "--path", "crates/wiktionary-en-cli",
 	"--features", "sonic"
 ]
+
+[tasks.install-wiktionary-en-cli-no-sonic]
+condition = { env_false = ["USE_SONIC_FEATURE"] }
+workspace = false
+command = "cargo"
+args = ["install", "--path", "crates/wiktionary-en-cli"]
 
 [tasks.install-wiktionary-en-import]
 workspace = false
@@ -19,4 +26,4 @@ args = ["install", "--path", "crates/wiktionary-en-import"]
 
 [tasks.install]
 workspace = false
-dependencies = ["install-wiktionary-en-cli", "install-wiktionary-en-import"]
+dependencies = ["install-wiktionary-en-cli", "install-wiktionary-en-import", "install-wiktionary-en-cli-no-sonic"]
