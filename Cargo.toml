@@ -7,5 +7,8 @@ name = "wiktionary-en-cli"
 version = "0.1.0"
 edition = "2021"
 
+[workspace.features]
+sonic = [ "wiktionary-en-identifier-index" ]
+
 [workspace.dependencies]
 anyhow = "1.0"

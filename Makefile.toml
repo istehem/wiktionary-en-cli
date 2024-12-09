@@ -14,16 +14,29 @@ args = [
 ]
 
 [tasks.install-wiktionary-en-cli-no-sonic]
-condition = { env_false = ["USE_SONIC_FEATURE"] }
+condition = { env_false = [ "USE_SONIC_FEATURE" ] }
 workspace = false
 command = "cargo"
 args = ["install", "--path", "crates/wiktionary-en-cli"]
 
 [tasks.install-wiktionary-en-import]
+condition = { env_true = [ "USE_SONIC_FEATURE" ] }
 workspace = false
 command = "cargo"
-args = ["install", "--path", "crates/wiktionary-en-import"]
+args = [
+	"install", "--path", "crates/wiktionary-en-import",
+	"--features", "sonic"
+]
+
+[tasks.install-wiktionary-en-import-no-sonic]
+condition = { env_false = [ "USE_SONIC_FEATURE" ] }
+workspace = false
+command = "cargo"
+args = [ "install", "--path", "crates/wiktionary-en-import" ]
 
 [tasks.install]
 workspace = false
-dependencies = ["install-wiktionary-en-cli", "install-wiktionary-en-import", "install-wiktionary-en-cli-no-sonic"]
+dependencies = [
+	"install-wiktionary-en-cli", "install-wiktionary-en-import",
+	"install-wiktionary-en-cli-no-sonic", "install-wiktionary-en-import-no-sonic"
+]

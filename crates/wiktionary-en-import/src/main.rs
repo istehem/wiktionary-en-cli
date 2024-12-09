@@ -20,10 +20,13 @@ struct Cli {
     /// Force import, existing data will be overwritten
     #[clap(long, short = 'f')]
     force: bool,
+    #[cfg(feature = "sonic")]
+    /// Create identifier indices
     #[clap(long, short = 'i')]
     create_index: bool,
 }
 
+#[cfg(feature = "sonic")]
 fn generate_identifier_indices(language: &Language, path: &PathBuf, force: bool) -> Result<()> {
     return wiktionary_en_identifier_index::generate_indices(language, path, force);
 }
@@ -46,10 +49,9 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
+    #[cfg(feature = "sonic")]
     if args.create_index {
-        generate_identifier_indices(&language, &db_path, args.force)?;
-    } else {
-        import_wiktionary_extract(&db_path, &language, args.force)?;
+        return generate_identifier_indices(&language, &db_path, args.force);
     }
-    return Ok(());
+    return import_wiktionary_extract(&db_path, &language, args.force);
 }
