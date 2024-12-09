@@ -14,7 +14,7 @@ use sonic_channel::*;
 use edit_distance::edit_distance;
 
 fn start_sonic_ingest_channel() -> Result<IngestChannel> {
-    let channel = IngestChannel::start("localhost:1491", "SecretPassword");
+    let channel = IngestChannel::start(env!("SONIC_HOST"), env!("SONIC_PASSWORD"));
     return channel
         .map_err(|e| anyhow::Error::new(e).context("Couldn't open sonic db, please start it"));
 }
@@ -97,7 +97,7 @@ pub fn statistics(language: &Language) -> Result<()> {
 }
 
 pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
-    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
+    let channel = SearchChannel::start(env!("SONIC_HOST"), env!("SONIC_PASSWORD"))?;
     let suggestions = channel.suggest(SuggestRequest::new(
         Dest::col_buc("wiktionary", language.value()),
         search_term,
@@ -106,7 +106,7 @@ pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>>
 }
 
 pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
-    let channel = SearchChannel::start("localhost:1491", "SecretPassword")?;
+    let channel = SearchChannel::start(env!("SONIC_HOST"), env!("SONIC_PASSWORD"))?;
     let objects = channel.query(
         QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
             .lang(to_sonic_language(language)),

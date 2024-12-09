@@ -34,9 +34,19 @@ workspace = false
 command = "cargo"
 args = [ "install", "--path", "crates/wiktionary-en-import" ]
 
+
+[tasks.sonic-host]
+condition = { env_true = [ "USE_SONIC_FEATURE" ], env_not_set = [ "SONIC_HOST" ] }
+env = { "SONIC_HOST" = "localhost:1491" }
+
+[tasks.sonic-password]
+condition = { env_true = [ "USE_SONIC_FEATURE" ], env_not_set = [ "SONIC_PASSWORD" ] }
+env = { "SONIC_PASSWORD" = "SecretPassword" }
+
 [tasks.install]
 workspace = false
 dependencies = [
+	"sonic-host", "sonic-password",
 	"install-wiktionary-en-cli", "install-wiktionary-en-import",
 	"install-wiktionary-en-cli-no-sonic", "install-wiktionary-en-import-no-sonic"
 ]
