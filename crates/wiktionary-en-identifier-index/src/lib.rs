@@ -13,8 +13,16 @@ use sonic_channel::*;
 
 use edit_distance::edit_distance;
 
+fn sonic_host() -> String {
+    return env!("SONIC_HOST").to_string();
+}
+
+fn sonic_password() -> String {
+    return env!("SONIC_PASSWORD").to_string();
+}
+
 fn start_sonic_ingest_channel() -> Result<IngestChannel> {
-    let channel = IngestChannel::start(env!("SONIC_HOST"), env!("SONIC_PASSWORD"));
+    let channel = IngestChannel::start(sonic_host(), sonic_password());
     return channel
         .map_err(|e| anyhow::Error::new(e).context("Couldn't open sonic db, please start it"));
 }
@@ -97,7 +105,7 @@ pub fn statistics(language: &Language) -> Result<()> {
 }
 
 pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
-    let channel = SearchChannel::start(env!("SONIC_HOST"), env!("SONIC_PASSWORD"))?;
+    let channel = SearchChannel::start(sonic_host(), sonic_password())?;
     let suggestions = channel.suggest(SuggestRequest::new(
         Dest::col_buc("wiktionary", language.value()),
         search_term,
@@ -106,7 +114,7 @@ pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>>
 }
 
 pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
-    let channel = SearchChannel::start(env!("SONIC_HOST"), env!("SONIC_PASSWORD"))?;
+    let channel = SearchChannel::start(sonic_host(), sonic_password())?;
     let objects = channel.query(
         QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
             .lang(to_sonic_language(language)),
