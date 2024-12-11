@@ -105,10 +105,12 @@ pub fn statistics(language: &Language) -> Result<()> {
 }
 
 pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
+    // suggest queries for a term with spaces will restult in a server side error
+    let first_word: String = search_term.chars().take_while(|c| !c.eq(&' ')).collect();
     let channel = SearchChannel::start(sonic_host(), sonic_password())?;
     let suggestions = channel.suggest(SuggestRequest::new(
         Dest::col_buc("wiktionary", language.value()),
-        search_term,
+        &first_word,
     ))?;
     return Ok(suggestions);
 }
@@ -131,10 +133,10 @@ pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
 
 pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
     let mut alternatives = query(language, search_term)
-        .context(format!("could't suggest for term '{}'", search_term))?;
+        .context(format!("could't query for term '{}'", search_term))?;
     alternatives.append(
         &mut suggest(language, search_term)
-            .context(format!("could't query for term '{}'", search_term))?,
+            .context(format!("could't suggest for term '{}'", search_term))?,
     );
     let rated_suggestions = alternatives.iter().map(|suggestion| {
         (
