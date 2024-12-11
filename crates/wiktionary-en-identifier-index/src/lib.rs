@@ -130,10 +130,13 @@ pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
 }
 
 pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
-    let mut suggestions = suggest(language, search_term)?;
-    suggestions.append(&mut query(language, search_term)?);
-
-    let rated_suggestions = suggestions.iter().map(|suggestion| {
+    let mut alternatives = query(language, search_term)
+        .context(format!("could't suggest for term '{}'", search_term))?;
+    alternatives.append(
+        &mut suggest(language, search_term)
+            .context(format!("could't query for term '{}'", search_term))?,
+    );
+    let rated_suggestions = alternatives.iter().map(|suggestion| {
         (
             /* an exact match, that is distance 0, is not what we are looking for */
             std::cmp::max(1, edit_distance(search_term, suggestion)),
