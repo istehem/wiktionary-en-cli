@@ -106,7 +106,10 @@ pub fn statistics(language: &Language) -> Result<()> {
 
 pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
     // suggest queries for a term with spaces will restult in a server side error
-    let first_word: String = search_term.chars().take_while(|c| !c.eq(&' ')).collect();
+    let first_word: String = search_term
+        .chars()
+        .take_while(|c| c != &' ' && c != &'-')
+        .collect();
     let channel = SearchChannel::start(sonic_host(), sonic_password())?;
     let suggestions = channel.suggest(SuggestRequest::new(
         Dest::col_buc("wiktionary", language.value()),
