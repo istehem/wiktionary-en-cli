@@ -13,6 +13,8 @@ use sonic_channel::*;
 
 use edit_distance::edit_distance;
 
+const CANNOT_OPEN_SONIC_DB_ERROR_MSG: &str = "Couldn't open sonic db, please start it";
+
 fn sonic_host() -> String {
     return env!("SONIC_HOST").to_string();
 }
@@ -23,8 +25,12 @@ fn sonic_password() -> String {
 
 fn start_sonic_ingest_channel() -> Result<IngestChannel> {
     let channel = IngestChannel::start(sonic_host(), sonic_password());
-    return channel
-        .map_err(|e| anyhow::Error::new(e).context("Couldn't open sonic db, please start it"));
+    return channel.map_err(|e| anyhow::Error::new(e).context(CANNOT_OPEN_SONIC_DB_ERROR_MSG));
+}
+
+fn start_sonic_search_channel() -> Result<SearchChannel> {
+    let channel = SearchChannel::start(sonic_host(), sonic_password());
+    return channel.map_err(|e| anyhow::Error::new(e).context(CANNOT_OPEN_SONIC_DB_ERROR_MSG));
 }
 
 fn check_line(line: Result<String, std::io::Error>, i: usize) -> Result<String> {
@@ -110,7 +116,7 @@ pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>>
         .chars()
         .take_while(|c| c != &' ' && c != &'-')
         .collect();
-    let channel = SearchChannel::start(sonic_host(), sonic_password())?;
+    let channel = start_sonic_search_channel()?;
     let suggestions = channel.suggest(SuggestRequest::new(
         Dest::col_buc("wiktionary", language.value()),
         &first_word,
@@ -119,7 +125,7 @@ pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>>
 }
 
 pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
-    let channel = SearchChannel::start(sonic_host(), sonic_password())?;
+    let channel = start_sonic_search_channel()?;
     let objects = channel.query(
         QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
             .lang(to_sonic_language(language)),
