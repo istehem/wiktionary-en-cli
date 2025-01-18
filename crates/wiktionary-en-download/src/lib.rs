@@ -12,7 +12,7 @@ async fn stream_download() -> Result<()> {
     //let url = "https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl";
     let url = "https://kaikki.org/dictionary/German/kaikki.org-dictionary-German.jsonl";
     //let url = "https://www.pixelstalk.net/wp-content/uploads/2016/08/Cute-Girl-HD-Images.jpg";
-    let mut bytes = client.get(url).send().await.unwrap().bytes_stream();
+    let mut bytes = client.get(url).send().await?.bytes_stream();
 
     let file = File::create("wiktionary-de.jsonl")?;
     let mut writer: BufWriter<File> = BufWriter::new(file);
