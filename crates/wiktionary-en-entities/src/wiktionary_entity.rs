@@ -217,7 +217,14 @@ fn examples_to_strings(examples: &Vec<Example>) -> Vec<ColoredString> {
     return examples
         .into_iter()
         .enumerate()
-        .map(|(i, example)| format!("{}. {}", i.to_string().italic(), example.text.clone().unwrap_or(String::new())).normal())
+        .map(|(i, example)| {
+            format!(
+                "{}. {}",
+                i.to_string().italic(),
+                example.text.clone().unwrap_or(String::new())
+            )
+            .normal()
+        })
         .collect();
 }
 
