@@ -8,6 +8,7 @@ utilities = { path = "../utilities" }
 wiktionary-en-db = { path = "../wiktionary-en-db" }
 wiktionary-en-identifier-index = { path = "../wiktionary-en-identifier-index", optional = true }
 wiktionary-en-entities = { version = "0.1.0", path = "../wiktionary-en-entities" }
+wiktionary-en-download = { version = "0.1.0", path = "../wiktionary-en-download" }
 clap = { version = "3.0", features = ["derive"] }
 anyhow = {workspace = true} 
 

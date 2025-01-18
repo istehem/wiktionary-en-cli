@@ -24,6 +24,8 @@ struct Cli {
     /// Create identifier indices
     #[clap(long, short = 'i')]
     create_index: bool,
+    #[clap(long, short = 'x')]
+    download: bool,
 }
 
 #[cfg(feature = "sonic")]
@@ -52,6 +54,9 @@ fn main() -> Result<()> {
     #[cfg(feature = "sonic")]
     if args.create_index {
         return generate_identifier_indices(&language, &db_path, args.force);
+    }
+    if args.download {
+        return wiktionary_en_download::download();
     }
     return import_wiktionary_extract(&db_path, &language, args.force);
 }
