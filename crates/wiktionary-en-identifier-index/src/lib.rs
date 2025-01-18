@@ -148,11 +148,12 @@ pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<
             .context(format!("could't suggest for term '{}'", search_term))?,
     );
     let rated_suggestions = alternatives.iter().map(|suggestion| {
-        (
+        let distance = edit_distance(search_term, suggestion);
+        return (
             /* an exact match, that is distance 0, is not what we are looking for */
-            std::cmp::max(1, edit_distance(search_term, suggestion)),
+            if distance == 0 { usize::MAX } else { distance },
             suggestion,
-        )
+        );
     });
     let best_result = rated_suggestions
         .min()
