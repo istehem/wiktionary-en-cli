@@ -41,7 +41,7 @@ struct Example {
     #[serde(alias = "ref")]
     #[serde(default)]
     reference: Option<String>,
-    text: String,
+    text: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -100,13 +100,6 @@ impl DictionaryEntry {
                 .normal()
                 .join(entries)
         );
-    }
-    pub fn all_examples(&self) -> Vec<String> {
-        let mut examples: Vec<String> = Vec::new();
-        for sense in &self.senses {
-            examples.extend(sense.examples.iter().map(|e| e.text.clone()));
-        }
-        return examples;
     }
 }
 
@@ -224,7 +217,7 @@ fn examples_to_strings(examples: &Vec<Example>) -> Vec<ColoredString> {
     return examples
         .into_iter()
         .enumerate()
-        .map(|(i, example)| format!("{}. {}", i.to_string().italic(), example.text).normal())
+        .map(|(i, example)| format!("{}. {}", i.to_string().italic(), example.text.clone().unwrap_or(String::new())).normal())
         .collect();
 }
 
