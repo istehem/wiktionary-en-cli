@@ -39,7 +39,7 @@ pub fn download(language: &Language, force: bool) -> Result<()> {
     let output_filename = String::from(utilities::DICTIONARY_DB_PATH!(language.value()));
     if Path::new(&output_filename).exists() && !force {
         bail!(
-            "file {} already exists, use -f to override",
+            "file {} already exists, use force to override",
             &output_filename
         );
     }
