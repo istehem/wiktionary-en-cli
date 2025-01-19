@@ -5,6 +5,8 @@ use std::io::Write;
 use futures_util::StreamExt;
 use std::io::BufWriter;
 
+use utilities::language::*;
+
 #[tokio::main]
 async fn stream_download(url: &String, output_filename: &String) -> Result<()> {
     let client = reqwest::Client::new();
@@ -20,13 +22,19 @@ async fn stream_download(url: &String, output_filename: &String) -> Result<()> {
     return writer.flush().map_err(|err| anyhow::Error::new(err));
 }
 
+fn resource_url(language: Language) -> String {
+    let url = match language {
+        Language::EN => "https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl",
+        Language::DE => "https://kaikki.org/dictionary/German/kaikki.org-dictionary-German.jsonl",
+        Language::FR => "https://kaikki.org/dictionary/French/kaikki.org-dictionary-French.jsonl",
+        Language::ES => "https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl",
+        Language::SV => "https://kaikki.org/dictionary/Swedish/kaikki.org-dictionary-Swedish.jsonl",
+    };
+    return String::from(url);
+}
+
 pub fn download() -> Result<()> {
-    //let url = "https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl";
-    //let url = "https://kaikki.org/dictionary/German/kaikki.org-dictionary-German.jsonl";
-    //let url = "https://kaikki.org/dictionary/Swedish/kaikki.org-dictionary-Swedish.jsonl";
-    //let url = String::from("https://kaikki.org/dictionary/French/kaikki.org-dictionary-French.jsonl");
-    let url =
-        String::from("https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl");
-    let output_filename = String::from("wiktionary-es.jsonl");
+    let url = resource_url(Language::EN);
+    let output_filename = String::from("wiktionary-en.jsonl");
     return stream_download(&url, &output_filename);
 }
