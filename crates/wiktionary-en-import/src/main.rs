@@ -56,7 +56,7 @@ fn main() -> Result<()> {
         return generate_identifier_indices(&language, &db_path, args.force);
     }
     if args.download {
-        return wiktionary_en_download::download();
+        return wiktionary_en_download::download(&language, args.force);
     }
     return import_wiktionary_extract(&db_path, &language, args.force);
 }
