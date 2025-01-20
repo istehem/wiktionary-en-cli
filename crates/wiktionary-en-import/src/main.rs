@@ -4,6 +4,7 @@ use utilities::file_utils;
 use utilities::language::*;
 
 use wiktionary_en_db::wiktionary_en_db::*;
+use wiktionary_en_download::download_wiktionary_extract;
 
 use clap::Parser;
 
@@ -24,6 +25,7 @@ struct Cli {
     /// Create identifier indices
     #[clap(long, short = 'i')]
     create_index: bool,
+    /// Download a wiktionary extract from the web
     #[clap(long, short = 'x')]
     download: bool,
 }
@@ -56,7 +58,7 @@ fn main() -> Result<()> {
         return generate_identifier_indices(&language, &db_path, args.force);
     }
     if args.download {
-        return wiktionary_en_download::download(&language, args.force);
+        return download_wiktionary_extract(&language, args.force);
     }
     return import_wiktionary_extract(&db_path, &language, args.force);
 }

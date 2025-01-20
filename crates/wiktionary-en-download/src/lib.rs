@@ -34,7 +34,7 @@ fn resource_url(language: &Language) -> String {
     return String::from(url);
 }
 
-pub fn download(language: &Language, force: bool) -> Result<()> {
+pub fn download_wiktionary_extract(language: &Language, force: bool) -> Result<()> {
     let url = resource_url(language);
     let output_filename = String::from(utilities::DICTIONARY_DB_PATH!(language.value()));
     if Path::new(&output_filename).exists() && !force {
