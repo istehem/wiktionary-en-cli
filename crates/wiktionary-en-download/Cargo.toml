@@ -10,4 +10,5 @@ utilities = { path = "../utilities" }
 anyhow = { workspace = true }
 reqwest = { version = "0.10.7", features = ["stream"] }
 futures-util = "0.3.31"
+indicatif = "0.17.9"
 tokio = { version = "0.2.25", features = ["full"] }

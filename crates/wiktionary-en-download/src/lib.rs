@@ -6,20 +6,28 @@ use std::path::Path;
 use futures_util::StreamExt;
 use std::io::BufWriter;
 
+use indicatif::ProgressBar;
 use utilities::language::*;
 
 #[tokio::main]
 async fn stream_download(url: &String, output_filename: &String) -> Result<()> {
     let client = reqwest::Client::new();
 
-    let mut bytes = client.get(url).send().await?.bytes_stream();
+    let response = client.get(url).send().await?;
+    let content_length: Option<u64> = response.content_length();
+    let progress_bar = ProgressBar::new(content_length.unwrap());
+
+    let mut bytes = response.bytes_stream();
 
     let file = File::create(output_filename)?;
     let mut writer: BufWriter<File> = BufWriter::new(file);
 
-    while let Some(item) = bytes.next().await {
-        writer.write(&item?)?;
+    while let Some(chunk) = bytes.next().await {
+        let data = chunk?;
+        writer.write(&data)?;
+        progress_bar.inc(data.len() as u64);
     }
+    progress_bar.finish();
     return writer.flush().map_err(|err| anyhow::Error::new(err));
 }
 
