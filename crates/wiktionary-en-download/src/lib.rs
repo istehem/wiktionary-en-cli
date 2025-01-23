@@ -6,7 +6,7 @@ use std::path::Path;
 use futures_util::StreamExt;
 use std::io::BufWriter;
 
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
 use utilities::language::*;
 
 #[tokio::main]
@@ -15,7 +15,8 @@ async fn stream_download(url: &String, output_filename: &String) -> Result<()> {
 
     let response = client.get(url).send().await?;
     let content_length: Option<u64> = response.content_length();
-    let progress_bar = ProgressBar::new(content_length.unwrap());
+    let progress_bar = ProgressBar::new(content_length.unwrap())
+        .with_style(ProgressStyle::default_bar().template("{wide_bar} {bytes}/{total_bytes}")?);
 
     let mut bytes = response.bytes_stream();
 
