@@ -9,27 +9,64 @@ use std::io::BufWriter;
 use indicatif::{ProgressBar, ProgressStyle};
 use utilities::language::*;
 
+struct Writer {
+    writer: BufWriter<File>,
+    progress_bar: Option<ProgressBar>,
+}
+
+impl Writer {
+    pub fn init(buf_writer: BufWriter<File>, content_length: Option<u64>) -> Result<Self> {
+        let progress_bar = match content_length {
+            Some(content_length) => Some(Self::init_progress_bar(content_length)?),
+            _ => None,
+        };
+        let writer = Self {
+            writer: buf_writer,
+            progress_bar: progress_bar,
+        };
+        return Ok(writer);
+    }
+
+    fn init_progress_bar(content_length: u64) -> Result<ProgressBar> {
+        let progress_bar = ProgressBar::new(content_length)
+            .with_style(ProgressStyle::default_bar().template("{wide_bar} {bytes}/{total_bytes}")?);
+        return Ok(progress_bar);
+    }
+
+    pub fn write(&mut self, data: &[u8]) -> Result<()> {
+        self.writer.write(&data)?;
+        self.progress_bar
+            .as_ref()
+            .map(|progress_bar| progress_bar.inc(data.len() as u64));
+        return Ok(());
+    }
+
+    pub fn flush(&mut self) -> Result<()> {
+        let result = self.writer.flush().map_err(|err| anyhow::Error::new(err));
+        self.progress_bar
+            .as_ref()
+            .map(|progress_bar| progress_bar.finish());
+        return result;
+    }
+}
+
 #[tokio::main]
 async fn stream_download(url: &String, output_filename: &String) -> Result<()> {
     let client = reqwest::Client::new();
 
     let response = client.get(url).send().await?;
     let content_length: Option<u64> = response.content_length();
-    let progress_bar = ProgressBar::new(content_length.unwrap())
-        .with_style(ProgressStyle::default_bar().template("{wide_bar} {bytes}/{total_bytes}")?);
 
     let mut bytes = response.bytes_stream();
 
     let file = File::create(output_filename)?;
-    let mut writer: BufWriter<File> = BufWriter::new(file);
+    let buf_writer: BufWriter<File> = BufWriter::new(file);
+    let mut writer = Writer::init(buf_writer, content_length)?;
 
     while let Some(chunk) = bytes.next().await {
-        let data = chunk?;
-        writer.write(&data)?;
-        progress_bar.inc(data.len() as u64);
+        writer.write(&chunk?)?;
     }
-    progress_bar.finish();
-    return writer.flush().map_err(|err| anyhow::Error::new(err));
+    return writer.flush();
 }
 
 fn resource_url(language: &Language) -> String {
