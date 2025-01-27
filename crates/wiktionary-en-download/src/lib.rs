@@ -9,6 +9,8 @@ use std::io::BufWriter;
 use indicatif::{ProgressBar, ProgressStyle};
 use utilities::language::*;
 
+const PROGRESS_BAR_TEMPLATE: &str = "{wide_bar} {bytes}/{total_bytes}";
+
 struct Writer {
     writer: BufWriter<File>,
     progress_bar: Option<ProgressBar>,
@@ -29,7 +31,7 @@ impl Writer {
 
     fn init_progress_bar(content_length: u64) -> Result<ProgressBar> {
         let progress_bar = ProgressBar::new(content_length)
-            .with_style(ProgressStyle::default_bar().template("{wide_bar} {bytes}/{total_bytes}")?);
+            .with_style(ProgressStyle::default_bar().template(PROGRESS_BAR_TEMPLATE)?);
         return Ok(progress_bar);
     }
 
