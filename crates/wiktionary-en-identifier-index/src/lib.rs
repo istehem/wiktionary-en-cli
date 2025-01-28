@@ -1,7 +1,7 @@
 use anyhow::{bail, Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::io::{prelude::*, BufReader};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use utilities::file_utils;
 use utilities::language::*;
 
@@ -92,13 +92,6 @@ fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Resul
     return result;
 }
 
-pub fn do_import(path: &Path, language: &Language) -> Result<()> {
-    match file_utils::get_file_reader(path) {
-        Ok(path) => return parse_and_persist(path, language),
-        _ => bail!("No such DB file: '{}'", path.display()),
-    }
-}
-
 pub fn statistics(language: &Language) -> Result<()> {
     let ingest_channel = start_sonic_ingest_channel()?;
     let bucket_count = ingest_channel.count(CountRequest::buckets("wiktionary"))?;
@@ -162,9 +155,23 @@ pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<
     return Ok(best_result);
 }
 
+fn count_objects(language: &Language) -> Result<u64> {
+    let ingest_channel = start_sonic_ingest_channel()?;
+    let number_of_objects =
+        ingest_channel.count(CountRequest::objects("wiktionary", language.value()))?;
+    return Ok(number_of_objects as u64);
+}
+
 pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {
-    if force {
-        return do_import(db_path, language);
+    let number_of_objects = count_objects(language)?;
+    if number_of_objects > 0 && !force {
+        bail!(
+            "{} indices already exists, use force to override",
+            number_of_objects
+        );
     }
-    return Ok(());
+    match file_utils::get_file_reader(db_path) {
+        Ok(path) => return parse_and_persist(path, language),
+        _ => bail!("No such DB file: '{}'", db_path.display()),
+    }
 }
