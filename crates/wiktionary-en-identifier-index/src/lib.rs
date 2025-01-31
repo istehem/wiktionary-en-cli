@@ -15,6 +15,58 @@ use edit_distance::edit_distance;
 
 const CANNOT_OPEN_SONIC_DB_ERROR_MSG: &str = "Couldn't open sonic db, please start it";
 
+const WIKTIONARY_COLLECTION: &str = "wiktionary";
+
+struct WiktionaryIngestChannel<'a> {
+    language: &'a Language,
+    ingest_channel: IngestChannel,
+}
+
+impl WiktionaryIngestChannel<'_> {
+    pub fn init(language: &Language) -> Result<WiktionaryIngestChannel> {
+        return Ok(WiktionaryIngestChannel {
+            language: language,
+            ingest_channel: start_sonic_ingest_channel()?,
+        });
+    }
+
+    fn count(&self) -> Result<u64> {
+        let number_of_objects = self.ingest_channel.count(CountRequest::objects(
+            WIKTIONARY_COLLECTION,
+            self.language.value(),
+        ))?;
+        return Ok(number_of_objects as u64);
+    }
+
+    pub fn statistics(&self) -> Result<()> {
+        let bucket_count = self
+            .ingest_channel
+            .count(CountRequest::buckets(WIKTIONARY_COLLECTION))?;
+        dbg!(bucket_count);
+
+        let object_count = Self::count(self)?;
+        dbg!(object_count);
+        return Ok(());
+    }
+
+    pub fn flush(&self) -> Result<u64> {
+        let flushdb_count = self.ingest_channel.flush(FlushRequest::bucket(
+            WIKTIONARY_COLLECTION,
+            self.language.value(),
+        ))?;
+        return Ok(flushdb_count as u64);
+    }
+
+    pub fn push(&self, word: &String) -> Result<()> {
+        let obj = STANDARD.encode(word);
+        let dest = Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()).obj(&obj);
+        let push_result = self
+            .ingest_channel
+            .push(PushRequest::new(dest, word).lang(to_sonic_language(self.language)))?;
+        return Ok(push_result);
+    }
+}
+
 fn sonic_host() -> String {
     return env!("SONIC_HOST").to_string();
 }
@@ -53,43 +105,35 @@ fn to_sonic_language(language: &Language) -> Lang {
     };
 }
 
-fn parse_and_persist(file_reader: BufReader<File>, language: &Language) -> Result<()> {
-    let channel = start_sonic_ingest_channel();
+fn parse_and_persist(
+    channel: &WiktionaryIngestChannel,
+    file_reader: BufReader<File>,
+) -> Result<()> {
+    let flushb_count = channel.flush()?;
+    dbg!(flushb_count);
+    let mut count = 0;
+    for (i, line) in file_reader.lines().enumerate() {
+        let pushed = check_line(line, i).and_then(|line| {
+            let dictionary_entry: DictionaryEntry = parse_line(&line, i)?;
 
-    let result = channel.and_then(|channel| {
-        let flushb_count = channel.flush(FlushRequest::bucket("wiktionary", &language.value()))?;
-        dbg!(flushb_count);
-        let mut count = 0;
-        for (i, line) in file_reader.lines().enumerate() {
-            let pushed = check_line(line, i).and_then(|line| {
-                let dictionary_entry: DictionaryEntry = parse_line(&line, i)?;
-                let obj = STANDARD.encode(&dictionary_entry.word);
-                let dest = Dest::col_buc("wiktionary", &language.value()).obj(&obj);
-
-                let push_result = channel.push(
-                    PushRequest::new(dest, &dictionary_entry.word)
-                        .lang(to_sonic_language(language)),
+            let push_result = channel.push(&dictionary_entry.word);
+            if let Err(err) = push_result {
+                println!(
+                    "failed to index '{}' after {} iterations with error {}",
+                    &dictionary_entry.word,
+                    count,
+                    err.to_string()
                 );
-                if let Err(err) = push_result {
-                    println!(
-                        "failed to index '{}' after {} iterations with error {}",
-                        &dictionary_entry.word,
-                        count,
-                        err.to_string()
-                    );
-                }
-                count = i;
-                return Ok(());
-            });
-            if let Err(e) = pushed {
-                bail!(e);
             }
+            count = i;
+            return Ok(());
+        });
+        if let Err(e) = pushed {
+            bail!(e);
         }
-        println!("iterated over {} entries", count);
-        return Ok(());
-    });
-
-    return result;
+    }
+    println!("iterated over {} entries", count);
+    return Ok(());
 }
 
 pub fn statistics(language: &Language) -> Result<()> {
@@ -155,23 +199,17 @@ pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<
     return Ok(best_result);
 }
 
-fn count_objects(language: &Language) -> Result<u64> {
-    let ingest_channel = start_sonic_ingest_channel()?;
-    let number_of_objects =
-        ingest_channel.count(CountRequest::objects("wiktionary", language.value()))?;
-    return Ok(number_of_objects as u64);
-}
-
 pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {
-    let number_of_objects = count_objects(language)?;
-    if number_of_objects > 0 && !force {
+    let channel = WiktionaryIngestChannel::init(language)?;
+    let number_of_objects = &channel.count()?;
+    if *number_of_objects > 0 && !force {
         bail!(
             "{} indices already exists, use force to override",
             number_of_objects
         );
     }
     match file_utils::get_file_reader(db_path) {
-        Ok(path) => return parse_and_persist(path, language),
+        Ok(path) => return parse_and_persist(&channel, path),
         _ => bail!("No such DB file: '{}'", db_path.display()),
     }
 }
