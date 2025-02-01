@@ -74,8 +74,8 @@ pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<
 
 pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {
     let channel = WiktionaryIngestChannel::init(language)?;
-    let number_of_objects = &channel.count()?;
-    if *number_of_objects > 0 && !force {
+    let number_of_objects = channel.count()?;
+    if number_of_objects > 0 && !force {
         bail!(
             "{} indices already exists, use force to override",
             number_of_objects
