@@ -23,7 +23,7 @@ struct WiktionaryIngestChannel<'a> {
 }
 
 impl WiktionaryIngestChannel<'_> {
-    pub fn init(language: &Language) -> Result<WiktionaryIngestChannel> {
+    fn init(language: &Language) -> Result<WiktionaryIngestChannel> {
         return Ok(WiktionaryIngestChannel {
             language: language,
             ingest_channel: start_sonic_ingest_channel()?,
@@ -38,7 +38,7 @@ impl WiktionaryIngestChannel<'_> {
         return Ok(number_of_objects as u64);
     }
 
-    pub fn statistics(&self) -> Result<()> {
+    fn statistics(&self) -> Result<()> {
         let bucket_count = self
             .ingest_channel
             .count(CountRequest::buckets(WIKTIONARY_COLLECTION))?;
@@ -49,7 +49,7 @@ impl WiktionaryIngestChannel<'_> {
         return Ok(());
     }
 
-    pub fn flush(&self) -> Result<u64> {
+    fn flush(&self) -> Result<u64> {
         let flushdb_count = self.ingest_channel.flush(FlushRequest::bucket(
             WIKTIONARY_COLLECTION,
             self.language.value(),
@@ -57,7 +57,7 @@ impl WiktionaryIngestChannel<'_> {
         return Ok(flushdb_count as u64);
     }
 
-    pub fn push(&self, word: &String) -> Result<()> {
+    fn push(&self, word: &String) -> Result<()> {
         let obj = STANDARD.encode(word);
         let dest = Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()).obj(&obj);
         let push_result = self
