@@ -17,6 +17,72 @@ const CANNOT_OPEN_SONIC_DB_ERROR_MSG: &str = "Couldn't open sonic db, please sta
 
 const WIKTIONARY_COLLECTION: &str = "wiktionary";
 
+struct WiktionarySearchChannel<'a> {
+    language: &'a Language,
+    search_channel: SearchChannel,
+}
+
+impl WiktionarySearchChannel<'_> {
+    fn init(language: &Language) -> Result<WiktionarySearchChannel> {
+        return Ok(WiktionarySearchChannel {
+            language: language,
+            search_channel: start_sonic_search_channel()?,
+        });
+    }
+    pub fn query(&self, search_term: &String) -> Result<Vec<String>> {
+        let objects = self.search_channel.query(
+            QueryRequest::new(
+                Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()),
+                search_term,
+            )
+            .lang(to_sonic_language(self.language)),
+        )?;
+
+        let mut terms: Vec<String> = Vec::new();
+        for object in &objects {
+            let decoded = STANDARD.decode(object)?;
+            let term = String::from_utf8(decoded)?;
+            terms.push(term);
+        }
+        return Ok(terms);
+    }
+    pub fn suggest(&self, search_term: &String) -> Result<Vec<String>> {
+        // suggest queries for a term with spaces will restult in a server side error
+        let first_word: String = search_term
+            .chars()
+            .take_while(|c| c != &' ' && c != &'-')
+            .collect();
+        let suggestions = self.search_channel.suggest(SuggestRequest::new(
+            Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()),
+            &first_word,
+        ))?;
+        return Ok(suggestions);
+    }
+    pub fn did_you_mean(&self, search_term: &String) -> Result<Option<String>> {
+        let mut alternatives = self
+            .query(search_term)
+            .context(format!("could't query for term '{}'", search_term))?;
+        alternatives.append(
+            &mut self
+                .suggest(search_term)
+                .context(format!("could't suggest for term '{}'", search_term))?,
+        );
+        let rated_suggestions = alternatives.iter().map(|suggestion| {
+            let distance = edit_distance(search_term, suggestion);
+            return (
+                /* an exact match, that is distance 0, is not what we are looking for */
+                if distance == 0 { usize::MAX } else { distance },
+                suggestion,
+            );
+        });
+        let best_result = rated_suggestions
+            .min()
+            .map(|rated_result| rated_result.1.to_string());
+
+        return Ok(best_result);
+    }
+}
+
 struct WiktionaryIngestChannel<'a> {
     language: &'a Language,
     ingest_channel: IngestChannel,
@@ -44,7 +110,7 @@ impl WiktionaryIngestChannel<'_> {
             .count(CountRequest::buckets(WIKTIONARY_COLLECTION))?;
         dbg!(bucket_count);
 
-        let object_count = Self::count(self)?;
+        let object_count = self.count()?;
         dbg!(object_count);
         return Ok(());
     }
@@ -142,55 +208,18 @@ pub fn statistics(language: &Language) -> Result<()> {
 }
 
 pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
-    // suggest queries for a term with spaces will restult in a server side error
-    let first_word: String = search_term
-        .chars()
-        .take_while(|c| c != &' ' && c != &'-')
-        .collect();
-    let channel = start_sonic_search_channel()?;
-    let suggestions = channel.suggest(SuggestRequest::new(
-        Dest::col_buc("wiktionary", language.value()),
-        &first_word,
-    ))?;
-    return Ok(suggestions);
+    let search_channel = WiktionarySearchChannel::init(language)?;
+    return search_channel.suggest(search_term);
 }
 
 pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
-    let channel = start_sonic_search_channel()?;
-    let objects = channel.query(
-        QueryRequest::new(Dest::col_buc("wiktionary", language.value()), search_term)
-            .lang(to_sonic_language(language)),
-    )?;
-
-    let mut terms: Vec<String> = Vec::new();
-    for object in &objects {
-        let decoded = STANDARD.decode(object)?;
-        let term = String::from_utf8(decoded)?;
-        terms.push(term);
-    }
-    return Ok(terms);
+    let search_channel = WiktionarySearchChannel::init(language)?;
+    return search_channel.query(search_term);
 }
 
 pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
-    let mut alternatives = query(language, search_term)
-        .context(format!("could't query for term '{}'", search_term))?;
-    alternatives.append(
-        &mut suggest(language, search_term)
-            .context(format!("could't suggest for term '{}'", search_term))?,
-    );
-    let rated_suggestions = alternatives.iter().map(|suggestion| {
-        let distance = edit_distance(search_term, suggestion);
-        return (
-            /* an exact match, that is distance 0, is not what we are looking for */
-            if distance == 0 { usize::MAX } else { distance },
-            suggestion,
-        );
-    });
-    let best_result = rated_suggestions
-        .min()
-        .map(|rated_result| rated_result.1.to_string());
-
-    return Ok(best_result);
+    let search_channel = WiktionarySearchChannel::init(language)?;
+    return search_channel.did_you_mean(search_term);
 }
 
 pub fn generate_indices(language: &Language, db_path: &PathBuf, force: bool) -> Result<()> {
