@@ -137,14 +137,8 @@ fn parse_and_persist(
 }
 
 pub fn statistics(language: &Language) -> Result<()> {
-    let ingest_channel = start_sonic_ingest_channel()?;
-    let bucket_count = ingest_channel.count(CountRequest::buckets("wiktionary"))?;
-    dbg!(bucket_count);
-
-    let object_count =
-        ingest_channel.count(CountRequest::objects("wiktionary", language.value()))?;
-    dbg!(object_count);
-    return Ok(());
+    let ingest_channel = WiktionaryIngestChannel::init(language)?;
+    return ingest_channel.statistics();
 }
 
 pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
