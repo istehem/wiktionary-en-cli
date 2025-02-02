@@ -34,7 +34,7 @@ fn parse_and_persist(
 
             let push_result = channel.push(&dictionary_entry.word);
             if let Err(err) = push_result {
-                println!(
+                eprintln!(
                     "failed to index '{}' after {} iterations with error {}",
                     &dictionary_entry.word,
                     count,
