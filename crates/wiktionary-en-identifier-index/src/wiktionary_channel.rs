@@ -27,7 +27,8 @@ impl WiktionarySearchChannel<'_> {
                 Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()),
                 search_term,
             )
-            .lang(to_sonic_language(self.language)),
+            .lang(to_sonic_language(self.language))
+            .limit(150),
         )?;
 
         let mut terms: Vec<String> = Vec::new();
