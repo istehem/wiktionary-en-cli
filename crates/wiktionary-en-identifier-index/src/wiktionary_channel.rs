@@ -21,6 +21,7 @@ impl WiktionarySearchChannel<'_> {
             search_channel: start_sonic_search_channel()?,
         });
     }
+
     pub fn query(&self, search_term: &String) -> Result<Vec<String>> {
         let objects = self.search_channel.query(
             QueryRequest::new(
@@ -39,6 +40,7 @@ impl WiktionarySearchChannel<'_> {
         }
         return Ok(terms);
     }
+
     pub fn suggest(&self, search_term: &String) -> Result<Vec<String>> {
         // suggest queries for a term with spaces will restult in a server side error
         let first_word: String = search_term
@@ -51,6 +53,7 @@ impl WiktionarySearchChannel<'_> {
         ))?;
         return Ok(suggestions);
     }
+
     pub fn did_you_mean(&self, search_term: &String) -> Result<Option<String>> {
         let mut alternatives = self
             .query(search_term)
