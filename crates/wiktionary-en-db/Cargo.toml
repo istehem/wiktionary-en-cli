@@ -9,5 +9,5 @@ edition = "2021"
 utilities = { path = "../utilities" }
 wiktionary-en-entities = { version = "0.1.0", path = "../wiktionary-en-entities" }
 anyhow = {workspace = true}
-polodb_core = "*"
+polodb_core = "5.1.3"
 rand = "0.7.3"
