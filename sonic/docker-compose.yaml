@@ -1,0 +1,8 @@
+services:
+  wiktionary_sonic:
+    image: valeriansaliou/sonic
+    ports:
+      - 1491:1491
+    volumes:
+      - ./config.cfg:/etc/sonic.cfg
+      - ./store/:/var/lib/sonic/store/
