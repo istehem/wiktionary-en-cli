@@ -22,9 +22,6 @@ use crate::wiktionary_stats::*;
 
 use wiktionary_en_db::wiktionary_en_db::*;
 
-use minus::Pager;
-use std::fmt::Write;
-
 use std::fmt;
 
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
@@ -323,24 +320,6 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
 }
 
-fn print_in_pager<T: std::fmt::Display>(value: &T) -> Result<()> {
-    let mut output = Pager::new();
-    writeln!(output, "{}", value)?;
-    minus::page_all(output)?;
-    return Ok(());
-}
-
-#[cfg(feature = "sonic")]
-fn print_lines_in_pager<T: std::fmt::Display>(entries: &Vec<T>) -> Result<()> {
-    let mut output = Pager::new();
-
-    for entry in entries {
-        writeln!(output, "{}", entry)?;
-    }
-    minus::page_all(output)?;
-    return Ok(());
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
@@ -354,7 +333,7 @@ fn main() -> Result<()> {
             .search_term
             .ok_or(anyhow::anyhow!("a search term is required"))?;
         let result = wiktionary_en_identifier_index::suggest(&language, search_term)?;
-        print_lines_in_pager(&result)?;
+        utilities::pager::print_lines_in_pager(&result)?;
         return Ok(());
     }
     #[cfg(feature = "sonic")]
@@ -363,7 +342,7 @@ fn main() -> Result<()> {
             .search_term
             .ok_or(anyhow::anyhow!("a search term is required"))?;
         let result = wiktionary_en_identifier_index::query(&language, search_term)?;
-        print_lines_in_pager(&result)?;
+        utilities::pager::print_lines_in_pager(&result)?;
         return Ok(());
     }
     let result = run(
@@ -374,5 +353,5 @@ fn main() -> Result<()> {
         get_db_path(args.db_path, &language),
     )?;
 
-    return print_in_pager(&result);
+    return utilities::pager::print_in_pager(&result);
 }

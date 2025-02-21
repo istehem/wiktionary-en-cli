@@ -2138,6 +2138,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "colored",
+ "minus",
  "serde",
  "serde_json",
  "textwrap",
@@ -2296,7 +2297,6 @@ dependencies = [
  "colored",
  "edit-distance",
  "indoc",
- "minus",
  "serde",
  "utilities",
  "wiktionary-en-db",
