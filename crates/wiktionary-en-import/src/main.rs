@@ -30,11 +30,6 @@ struct Cli {
     download: bool,
 }
 
-#[cfg(feature = "sonic")]
-fn generate_identifier_indices(language: &Language, path: &PathBuf, force: bool) -> Result<()> {
-    return wiktionary_en_identifier_index::generate_indices(language, path, force);
-}
-
 fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
     match file_utils::get_file_reader(path) {
         Ok(path) => return insert_wiktionary_file(path, language, force),
@@ -55,7 +50,9 @@ fn main() -> Result<()> {
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
     #[cfg(feature = "sonic")]
     if args.create_index {
-        return generate_identifier_indices(&language, &db_path, args.force);
+        return utilities::pager::print_in_pager(
+            &wiktionary_en_identifier_index::generate_indices(&language, &db_path, args.force)?,
+        );
     }
     if args.download {
         return download_wiktionary_extract(&language, args.force);
