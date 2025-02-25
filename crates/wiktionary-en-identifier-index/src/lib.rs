@@ -12,6 +12,8 @@ use std::fs::File;
 mod wiktionary_channel;
 use crate::wiktionary_channel::*;
 
+use streaming_iterator::*;
+
 pub struct IndexingErrors {
     errors: Vec<IndexingError>,
 }
@@ -42,6 +44,64 @@ impl fmt::Display for IndexingError {
     }
 }
 
+pub struct IndexingStream {
+    lines: std::io::Lines<BufReader<File>>,
+    current: Option<Result<String>>,
+    latest_error: Option<IndexingError>,
+    index: usize,
+}
+
+impl From<BufReader<File>> for IndexingStream {
+    fn from(file_reader: BufReader<File>) -> Self {
+        return Self {
+            lines: file_reader.lines(),
+            current: None,
+            latest_error: None,
+            index: 0,
+        };
+    }
+}
+
+fn parse_and_push(
+    channel: &WiktionaryIngestChannel,
+    line: Option<Result<String>>,
+    index: usize,
+) -> Result<Option<IndexingError>> {
+    if let Some(line) = line {
+        let pushed = line.and_then(|line| {
+            let dictionary_entry: DictionaryEntry = parse_line(&line, index)?;
+            let push_result = channel.push(&dictionary_entry.word);
+            if let Err(err) = push_result {
+                let indexing_error = IndexingError {
+                    iteration: index,
+                    word: dictionary_entry.word.clone(),
+                    msg: err.to_string(),
+                };
+                return Ok(Some(indexing_error));
+            }
+            return Ok(None);
+        });
+        if let Err(e) = pushed {
+            bail!(e);
+        }
+    }
+    bail!("{}", "no data to process");
+}
+
+impl StreamingIterator for IndexingStream {
+    type Item = IndexingError;
+
+    fn advance(&mut self) {
+        self.current = self.lines.next().map(|v| check_line(v, self.index));
+
+        self.index = self.index + 1;
+    }
+
+    fn get(&self) -> Option<&Self::Item> {
+        return self.latest_error.as_ref().map(|v| v);
+    }
+}
+
 fn check_line(line: Result<String, std::io::Error>, i: usize) -> Result<String> {
     return line.map_err(|e| {
         anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i))
@@ -52,10 +112,16 @@ fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
     parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
+fn persist_entry(channel: &WiktionaryIngestChannel, entry: &DictionaryEntry, index: usize) {}
+
 fn parse_and_persist(
     channel: &WiktionaryIngestChannel,
     file_reader: BufReader<File>,
 ) -> Result<Vec<IndexingError>> {
+    let _ = IndexingStream::from(file_reader);
+
+    return Ok(vec![]);
+    /*
     let flushb_count = channel.flush()?;
     dbg!(flushb_count);
     let mut count = 0;
@@ -82,6 +148,7 @@ fn parse_and_persist(
     }
     println!("iterated over {} entries", count);
     return Ok(errors);
+    */
 }
 
 pub fn statistics(language: &Language) -> Result<()> {

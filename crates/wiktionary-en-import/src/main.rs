@@ -7,6 +7,7 @@ use wiktionary_en_db::wiktionary_en_db::*;
 use wiktionary_en_download::download_wiktionary_extract;
 
 use clap::Parser;
+use streaming_iterator::StreamingIterator;
 
 /// Import Dictionary Data into PoloDB
 #[derive(Parser)]
@@ -42,6 +43,18 @@ fn get_language(language: &Option<String>) -> Result<Language> {
         return language.parse();
     }
     return Ok(Language::default());
+}
+
+pub fn consume_errors<T: StreamingIterator>(mut iterator: T) -> Result<()>
+where
+    <T as StreamingIterator>::Item: std::fmt::Display,
+    <T as StreamingIterator>::Item: Sized,
+{
+    while let Some(item) = iterator.next() {
+        utilities::pager::print_in_pager(item)?;
+    }
+
+    return Ok(());
 }
 
 fn main() -> Result<()> {
