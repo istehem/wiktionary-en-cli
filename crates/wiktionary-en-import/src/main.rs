@@ -45,13 +45,20 @@ fn get_language(language: &Option<String>) -> Result<Language> {
     return Ok(Language::default());
 }
 
-pub fn consume_errors<T: StreamingIterator>(mut iterator: T) -> Result<()>
-where
-    <T as StreamingIterator>::Item: std::fmt::Display,
-    <T as StreamingIterator>::Item: Sized,
-{
+#[cfg(feature = "sonic")]
+pub fn consume_errors(mut iterator: wiktionary_en_identifier_index::IndexingStream) -> Result<()> {
     while let Some(item) = iterator.next() {
-        utilities::pager::print_in_pager(item)?;
+        if let Ok(Some(item)) = item {
+            println!("{}", item);
+        }
+        /*
+        match item.clone() {
+            Ok(Some(item)) => utilities::pager::print_in_pager(item)?,
+            Ok(Some(item2)) => (),
+            Ok(None) => (),
+            Err(err) => bail!(err),
+        }
+        */
     }
 
     return Ok(());
@@ -63,9 +70,9 @@ fn main() -> Result<()> {
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
     #[cfg(feature = "sonic")]
     if args.create_index {
-        return utilities::pager::print_in_pager(
-            &wiktionary_en_identifier_index::generate_indices(&language, &db_path, args.force)?,
-        );
+        let stream =
+            wiktionary_en_identifier_index::generate_indices(&language, &db_path, args.force)?;
+        return consume_errors(stream);
     }
     if args.download {
         return download_wiktionary_extract(&language, args.force);

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use utilities::file_utils;
@@ -46,17 +46,17 @@ impl fmt::Display for IndexingError {
 
 type IndexingResponse = Result<Option<IndexingError>>;
 
-pub struct IndexingStream<'a> {
+pub struct IndexingStream {
     lines: std::io::Lines<BufReader<File>>,
-    ingest_channel: WiktionaryIngestChannel<'a>,
+    ingest_channel: WiktionaryIngestChannel,
     current_line: Option<Result<String>>,
     indexing_response: IndexingResponse,
     index: usize,
     done: bool,
 }
 
-impl<'a> IndexingStream<'a> {
-    fn from(file_reader: BufReader<File>, ingest_channel: WiktionaryIngestChannel<'a>) -> Self {
+impl IndexingStream {
+    fn from(file_reader: BufReader<File>, ingest_channel: WiktionaryIngestChannel) -> Self {
         return Self {
             lines: file_reader.lines(),
             ingest_channel: ingest_channel,
@@ -89,8 +89,7 @@ fn parse_and_push(
     bail!("{}", "parse error");
 }
 
-
-impl StreamingIterator for IndexingStream<'_> {
+impl StreamingIterator for IndexingStream {
     type Item = IndexingResponse;
 
     fn advance(&mut self) {
@@ -121,17 +120,17 @@ fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
     parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
-fn persist_entry(channel: &WiktionaryIngestChannel, entry: &DictionaryEntry, index: usize) {}
-
 fn parse_and_persist(
     channel: WiktionaryIngestChannel,
     file_reader: BufReader<File>,
-) -> Result<Vec<IndexingError>> {
-    let _ = IndexingStream::from(file_reader, channel);
-
-    return Ok(vec![]);
-    /*
+) -> Result<IndexingStream> {
     let flushb_count = channel.flush()?;
+    dbg!(flushb_count);
+
+    let stream = IndexingStream::from(file_reader, channel);
+
+    return Ok(stream);
+    /*
     dbg!(flushb_count);
     let mut count = 0;
     let mut errors = Vec::new();
@@ -184,7 +183,7 @@ pub fn generate_indices(
     language: &Language,
     db_path: &PathBuf,
     force: bool,
-) -> Result<IndexingErrors> {
+) -> Result<IndexingStream> {
     let channel = WiktionaryIngestChannel::init(language)?;
     let number_of_objects = channel.count()?;
     if number_of_objects > 0 && !force {
@@ -195,9 +194,7 @@ pub fn generate_indices(
     }
     match file_utils::get_file_reader(db_path) {
         Ok(path) => {
-            return Ok(IndexingErrors {
-                errors: parse_and_persist(channel, path)?,
-            })
+            return parse_and_persist(channel, path);
         }
         _ => bail!("No such DB file: '{}'", db_path.display()),
     }

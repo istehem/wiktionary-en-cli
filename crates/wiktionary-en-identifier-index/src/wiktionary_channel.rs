@@ -9,15 +9,15 @@ const CANNOT_OPEN_SONIC_DB_ERROR_MSG: &str = "Couldn't open sonic db, please sta
 
 const WIKTIONARY_COLLECTION: &str = "wiktionary";
 
-pub struct WiktionarySearchChannel<'a> {
-    language: &'a Language,
+pub struct WiktionarySearchChannel {
+    language: Language,
     search_channel: SearchChannel,
 }
 
-impl WiktionarySearchChannel<'_> {
+impl WiktionarySearchChannel {
     pub fn init(language: &Language) -> Result<WiktionarySearchChannel> {
         return Ok(WiktionarySearchChannel {
-            language: language,
+            language: language.clone(),
             search_channel: start_sonic_search_channel()?,
         });
     }
@@ -28,7 +28,7 @@ impl WiktionarySearchChannel<'_> {
                 Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()),
                 search_term,
             )
-            .lang(to_sonic_language(self.language))
+            .lang(to_sonic_language(&self.language))
             .limit(150),
         )?;
 
@@ -79,15 +79,15 @@ impl WiktionarySearchChannel<'_> {
     }
 }
 
-pub struct WiktionaryIngestChannel<'a> {
-    language: &'a Language,
+pub struct WiktionaryIngestChannel {
+    language: Language,
     ingest_channel: IngestChannel,
 }
 
-impl WiktionaryIngestChannel<'_> {
+impl WiktionaryIngestChannel {
     pub fn init(language: &Language) -> Result<WiktionaryIngestChannel> {
         return Ok(WiktionaryIngestChannel {
-            language: language,
+            language: language.clone(),
             ingest_channel: start_sonic_ingest_channel()?,
         });
     }
@@ -124,7 +124,7 @@ impl WiktionaryIngestChannel<'_> {
         let dest = Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()).obj(&obj);
         let push_result = self
             .ingest_channel
-            .push(PushRequest::new(dest, word).lang(to_sonic_language(self.language)))?;
+            .push(PushRequest::new(dest, word).lang(to_sonic_language(&self.language)))?;
         return Ok(push_result);
     }
 }
