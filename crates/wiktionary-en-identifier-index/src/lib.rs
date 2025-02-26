@@ -62,8 +62,7 @@ impl<'a> IndexingStream<'a> {
             index: 0,
             done: false,
             indexing_response: IndexingResponse {
-                error: None,
-                fatal: None,
+                push_result: Ok(None),
             },
         };
     }
@@ -91,8 +90,7 @@ fn parse_and_push(
 }
 
 pub struct IndexingResponse {
-    error: Option<IndexingError>,
-    fatal: Option<anyhow::Error>,
+    push_result: Result<Option<IndexingError>>,
 }
 
 impl StreamingIterator for IndexingStream<'_> {
@@ -102,16 +100,7 @@ impl StreamingIterator for IndexingStream<'_> {
         self.current_line = self.lines.next().map(|v| check_line(v, self.index));
         if let Some(line) = &self.current_line {
             let push_result = parse_and_push(&self.ingest_channel, &line, self.index);
-            self.indexing_response = match push_result {
-                Ok(error) => IndexingResponse {
-                    error: error,
-                    fatal: None,
-                },
-                Err(err) => IndexingResponse {
-                    error: None,
-                    fatal: Some(anyhow!(err)),
-                },
-            }
+            self.indexing_response = IndexingResponse {push_result: push_result};
         } else {
             self.done = true
         }
