@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use utilities::file_utils;
@@ -44,61 +44,85 @@ impl fmt::Display for IndexingError {
     }
 }
 
-pub struct IndexingStream {
+pub struct IndexingStream<'a> {
     lines: std::io::Lines<BufReader<File>>,
-    current: Option<Result<String>>,
-    latest_error: Option<IndexingError>,
+    ingest_channel: WiktionaryIngestChannel<'a>,
+    current_line: Option<Result<String>>,
+    indexing_response: IndexingResponse,
     index: usize,
+    done: bool,
 }
 
-impl From<BufReader<File>> for IndexingStream {
-    fn from(file_reader: BufReader<File>) -> Self {
+impl<'a> IndexingStream<'a> {
+    fn from(file_reader: BufReader<File>, ingest_channel: WiktionaryIngestChannel<'a>) -> Self {
         return Self {
             lines: file_reader.lines(),
-            current: None,
-            latest_error: None,
+            ingest_channel: ingest_channel,
+            current_line: None,
             index: 0,
+            done: false,
+            indexing_response: IndexingResponse {
+                error: None,
+                fatal: None,
+            },
         };
     }
 }
 
 fn parse_and_push(
     channel: &WiktionaryIngestChannel,
-    line: Option<Result<String>>,
+    line: &Result<String>,
     index: usize,
 ) -> Result<Option<IndexingError>> {
-    if let Some(line) = line {
-        let pushed = line.and_then(|line| {
-            let dictionary_entry: DictionaryEntry = parse_line(&line, index)?;
-            let push_result = channel.push(&dictionary_entry.word);
-            if let Err(err) = push_result {
-                let indexing_error = IndexingError {
-                    iteration: index,
-                    word: dictionary_entry.word.clone(),
-                    msg: err.to_string(),
-                };
-                return Ok(Some(indexing_error));
-            }
-            return Ok(None);
-        });
-        if let Err(e) = pushed {
-            bail!(e);
+    if let Ok(line) = line {
+        let dictionary_entry: DictionaryEntry = parse_line(&line, index)?;
+        let push_result = channel.push(&dictionary_entry.word);
+        if let Err(err) = push_result {
+            let indexing_error = IndexingError {
+                iteration: index,
+                word: dictionary_entry.word.clone(),
+                msg: err.to_string(),
+            };
+            return Ok(Some(indexing_error));
         }
+        return Ok(None);
     }
-    bail!("{}", "no data to process");
+    bail!("{}", "parse error");
 }
 
-impl StreamingIterator for IndexingStream {
-    type Item = IndexingError;
+pub struct IndexingResponse {
+    error: Option<IndexingError>,
+    fatal: Option<anyhow::Error>,
+}
+
+impl StreamingIterator for IndexingStream<'_> {
+    type Item = IndexingResponse;
 
     fn advance(&mut self) {
-        self.current = self.lines.next().map(|v| check_line(v, self.index));
-
+        self.current_line = self.lines.next().map(|v| check_line(v, self.index));
+        if let Some(line) = &self.current_line {
+            let push_result = parse_and_push(&self.ingest_channel, &line, self.index);
+            self.indexing_response = match push_result {
+                Ok(error) => IndexingResponse {
+                    error: error,
+                    fatal: None,
+                },
+                Err(err) => IndexingResponse {
+                    error: None,
+                    fatal: Some(anyhow!(err)),
+                },
+            }
+        } else {
+            self.done = true
+        }
         self.index = self.index + 1;
     }
 
     fn get(&self) -> Option<&Self::Item> {
-        return self.latest_error.as_ref().map(|v| v);
+        if self.done {
+            return None;
+        }
+        return Some(&self.indexing_response);
     }
 }
 
@@ -115,10 +139,10 @@ fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
 fn persist_entry(channel: &WiktionaryIngestChannel, entry: &DictionaryEntry, index: usize) {}
 
 fn parse_and_persist(
-    channel: &WiktionaryIngestChannel,
+    channel: WiktionaryIngestChannel,
     file_reader: BufReader<File>,
 ) -> Result<Vec<IndexingError>> {
-    let _ = IndexingStream::from(file_reader);
+    let _ = IndexingStream::from(file_reader, channel);
 
     return Ok(vec![]);
     /*
@@ -187,7 +211,7 @@ pub fn generate_indices(
     match file_utils::get_file_reader(db_path) {
         Ok(path) => {
             return Ok(IndexingErrors {
-                errors: parse_and_persist(&channel, path)?,
+                errors: parse_and_persist(channel, path)?,
             })
         }
         _ => bail!("No such DB file: '{}'", db_path.display()),
