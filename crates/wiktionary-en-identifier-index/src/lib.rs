@@ -44,6 +44,8 @@ impl fmt::Display for IndexingError {
     }
 }
 
+type IndexingResponse = Result<Option<IndexingError>>;
+
 pub struct IndexingStream<'a> {
     lines: std::io::Lines<BufReader<File>>,
     ingest_channel: WiktionaryIngestChannel<'a>,
@@ -61,9 +63,7 @@ impl<'a> IndexingStream<'a> {
             current_line: None,
             index: 0,
             done: false,
-            indexing_response: IndexingResponse {
-                push_result: Ok(None),
-            },
+            indexing_response: Ok(None),
         };
     }
 }
@@ -89,9 +89,6 @@ fn parse_and_push(
     bail!("{}", "parse error");
 }
 
-pub struct IndexingResponse {
-    push_result: Result<Option<IndexingError>>,
-}
 
 impl StreamingIterator for IndexingStream<'_> {
     type Item = IndexingResponse;
@@ -99,8 +96,7 @@ impl StreamingIterator for IndexingStream<'_> {
     fn advance(&mut self) {
         self.current_line = self.lines.next().map(|v| check_line(v, self.index));
         if let Some(line) = &self.current_line {
-            let push_result = parse_and_push(&self.ingest_channel, &line, self.index);
-            self.indexing_response = IndexingResponse {push_result: push_result};
+            self.indexing_response = parse_and_push(&self.ingest_channel, &line, self.index);
         } else {
             self.done = true
         }
