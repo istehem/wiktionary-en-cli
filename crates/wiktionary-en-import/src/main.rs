@@ -50,15 +50,9 @@ pub fn consume_errors(mut iterator: wiktionary_en_identifier_index::IndexingStre
     while let Some(item) = iterator.next() {
         if let Ok(Some(item)) = item {
             println!("{}", item);
+        } else if let Err(err) = item {
+            bail!(err.to_string());
         }
-        /*
-        match item.clone() {
-            Ok(Some(item)) => utilities::pager::print_in_pager(item)?,
-            Ok(Some(item2)) => (),
-            Ok(None) => (),
-            Err(err) => bail!(err),
-        }
-        */
     }
 
     return Ok(());

@@ -35,12 +35,11 @@ pub struct IndexingError {
 
 impl fmt::Display for IndexingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(
+        return writeln!(
             f,
             "failed to index '{}' after {} iterations with error {}",
             &self.word, &self.iteration, &self.msg
-        )?;
-        return Ok(());
+        );
     }
 }
 
@@ -130,33 +129,6 @@ fn parse_and_persist(
     let stream = IndexingStream::from(file_reader, channel);
 
     return Ok(stream);
-    /*
-    dbg!(flushb_count);
-    let mut count = 0;
-    let mut errors = Vec::new();
-    for (i, line) in file_reader.lines().enumerate() {
-        let pushed = check_line(line, i).and_then(|line| {
-            let dictionary_entry: DictionaryEntry = parse_line(&line, i)?;
-
-            let push_result = channel.push(&dictionary_entry.word);
-            if let Err(err) = push_result {
-                let indexing_error = IndexingError {
-                    iteration: count,
-                    word: dictionary_entry.word.clone(),
-                    msg: err.to_string(),
-                };
-                errors.push(indexing_error);
-            }
-            count = i;
-            return Ok(());
-        });
-        if let Err(e) = pushed {
-            bail!(e);
-        }
-    }
-    println!("iterated over {} entries", count);
-    return Ok(errors);
-    */
 }
 
 pub fn statistics(language: &Language) -> Result<()> {
