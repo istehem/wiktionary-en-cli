@@ -7,6 +7,7 @@ use wiktionary_en_db::wiktionary_en_db::*;
 use wiktionary_en_download::download_wiktionary_extract;
 
 use clap::Parser;
+use minus::Pager;
 use streaming_iterator::StreamingIterator;
 
 /// Import Dictionary Data into PoloDB
@@ -47,11 +48,13 @@ fn get_language(language: &Option<String>) -> Result<Language> {
 
 #[cfg(feature = "sonic")]
 pub fn consume_errors(mut iterator: wiktionary_en_identifier_index::IndexingStream) -> Result<()> {
+    let mut pager = Pager::new();
     while let Some(item) = iterator.next() {
         if let Ok(Some(item)) = item {
-            println!("{}", item);
+            utilities::pager::print_in_existing_pager(&mut pager, item)?;
         } else if let Err(err) = item {
-            bail!(err.to_string());
+            // “{:?}” includes a backtrace if one was captured
+            bail!(format!("{:?}", err));
         }
     }
 

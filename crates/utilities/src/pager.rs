@@ -19,3 +19,9 @@ pub fn print_in_pager<T: std::fmt::Display>(value: &T) -> Result<()> {
     minus::page_all(output)?;
     return Ok(());
 }
+
+pub fn print_in_existing_pager<T: std::fmt::Display>(pager: &mut Pager, value: &T) -> Result<()> {
+    writeln!(pager, "{}", value)?;
+    minus::page_all(pager.clone())?;
+    return Ok(());
+}
