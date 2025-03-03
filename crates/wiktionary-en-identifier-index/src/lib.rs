@@ -9,7 +9,7 @@ use std::fs::File;
 mod wiktionary_channel;
 use crate::wiktionary_channel::*;
 
-mod indexing_stream;
+pub mod indexing_stream;
 use crate::indexing_stream::*;
 
 fn parse_and_persist(

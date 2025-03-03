@@ -47,7 +47,9 @@ fn get_language(language: &Option<String>) -> Result<Language> {
 }
 
 #[cfg(feature = "sonic")]
-pub fn consume_errors(mut iterator: wiktionary_en_identifier_index::IndexingStream) -> Result<()> {
+pub fn consume_errors(
+    mut iterator: wiktionary_en_identifier_index::indexing_stream::IndexingStream,
+) -> Result<()> {
     let mut pager = Pager::new();
     while let Some(item) = iterator.next() {
         if let Ok(Some(item)) = item {

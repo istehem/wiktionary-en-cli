@@ -6,7 +6,7 @@ use wiktionary_en_entities::wiktionary_entity::*;
 use std::fmt;
 use std::fs::File;
 
-use crate::wiktionary_channel::*;
+use crate::wiktionary_channel::WiktionaryIngestChannel;
 
 use streaming_iterator::*;
 
