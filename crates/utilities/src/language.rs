@@ -1,4 +1,5 @@
 use self::Language::*;
+use std::fmt;
 use std::str::FromStr;
 
 #[derive(Copy, Clone)]
@@ -44,5 +45,11 @@ impl FromStr for Language {
         return Language::iterator()
             .find(|l| l.value() == String::from(language))
             .ok_or_else(|| anyhow::anyhow!("unsupported language code: '{}'", language));
+    }
+}
+
+impl fmt::Display for Language {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return write!(f, "{}", self.value());
     }
 }

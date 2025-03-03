@@ -53,8 +53,9 @@ pub fn generate_indices(
     let number_of_objects = channel.count()?;
     if number_of_objects > 0 && !force {
         bail!(
-            "{} indices already exists, use force to override",
-            number_of_objects
+            "{} indices already exists for language '{}', use force to override",
+            number_of_objects,
+            &language
         );
     }
     match file_utils::get_file_reader(db_path) {
