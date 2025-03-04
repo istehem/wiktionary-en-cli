@@ -68,20 +68,22 @@ fn parse_and_push(
     line: &Result<String>,
     index: usize,
 ) -> Result<Option<IndexingError>> {
-    if let Ok(line) = line {
-        let dictionary_entry: DictionaryEntry = parse_line(&line, index)?;
-        let push_result = channel.push(&dictionary_entry.word);
-        if let Err(err) = push_result {
-            let indexing_error = IndexingError {
-                iteration: index,
-                word: dictionary_entry.word.clone(),
-                msg: err.to_string(),
-            };
-            return Ok(Some(indexing_error));
+    match line {
+        Ok(line) => {
+            let dictionary_entry: DictionaryEntry = parse_line(&line, index)?;
+            let push_result = channel.push(&dictionary_entry.word);
+            if let Err(err) = push_result {
+                let indexing_error = IndexingError {
+                    iteration: index,
+                    word: dictionary_entry.word.clone(),
+                    msg: err.to_string(),
+                };
+                return Ok(Some(indexing_error));
+            }
+            return Ok(None);
         }
-        return Ok(None);
+        Err(err) => bail!(err.to_string()),
     }
-    bail!("{}", "parse error");
 }
 
 impl StreamingIterator for IndexingStream {
