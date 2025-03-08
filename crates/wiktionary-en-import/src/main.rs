@@ -7,8 +7,6 @@ use wiktionary_en_db::wiktionary_en_db::*;
 use wiktionary_en_download::download_wiktionary_extract;
 
 use clap::Parser;
-use minus::Pager;
-use streaming_iterator::StreamingIterator;
 
 /// Import Dictionary Data into PoloDB
 #[derive(Parser)]
@@ -46,23 +44,6 @@ fn get_language(language: &Option<String>) -> Result<Language> {
     return Ok(Language::default());
 }
 
-#[cfg(feature = "sonic")]
-pub fn consume_errors(
-    mut iterator: wiktionary_en_identifier_index::indexing_stream::IndexingStream,
-) -> Result<()> {
-    let mut pager = Pager::new();
-    while let Some(item) = iterator.next() {
-        if let Ok(Some(item)) = item {
-            utilities::pager::print_in_existing_pager(&mut pager, item)?;
-        } else if let Err(err) = item {
-            // “{:?}” includes a backtrace if one was captured
-            bail!(format!("{:?}", err));
-        }
-    }
-
-    return Ok(());
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
@@ -71,7 +52,7 @@ fn main() -> Result<()> {
     if args.create_index {
         let stream =
             wiktionary_en_identifier_index::generate_indices(&language, &db_path, args.force)?;
-        return consume_errors(stream);
+        return utilities::pager::print_stream_in_pager(stream);
     }
     if args.download {
         return download_wiktionary_extract(&language, args.force);

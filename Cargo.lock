@@ -2147,6 +2147,7 @@ dependencies = [
  "minus",
  "serde",
  "serde_json",
+ "streaming-iterator",
  "textwrap",
 ]
 
@@ -2368,7 +2369,6 @@ dependencies = [
  "anyhow",
  "clap",
  "minus",
- "streaming-iterator",
  "utilities",
  "wiktionary-en-db",
  "wiktionary-en-download",
