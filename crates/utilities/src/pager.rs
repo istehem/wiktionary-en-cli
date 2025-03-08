@@ -25,32 +25,18 @@ pub fn print_in_pager<T: std::fmt::Display>(value: &T) -> Result<()> {
     return Ok(());
 }
 
-pub fn print_stream_in_pager<X: std::fmt::Display>(
-    mut iterator: impl StreamingIterator<Item = Result<Option<X>>>,
-) -> Result<()> {
-    let mut output = Pager::new();
-    while let Some(item) = iterator.next() {
-        if let Ok(Some(item)) = item {
-            writeln!(output, "{}", item)?;
-        } else if let Err(err) = item {
-            // “{:?}” includes a backtrace if one was captured
-            bail!(format!("{:?}", err));
-        }
-        minus::page_all(output.clone())?;
-    }
-
-    return Ok(());
-}
-
 pub fn execute_with_progress_bar_and_message<X: std::fmt::Display>(
     mut iterator: impl StreamingIterator<Item = Result<Option<X>>>,
-) -> Result<()> {
+) -> Result<Vec<String>> {
+    let mut errors: Vec<String> = Vec::new();
     let progress_bar = ProgressBar::no_length()
         .with_message(NO_LATEST_ERROR)
         .with_style(ProgressStyle::default_spinner().template(PROGRESS_BAR_TEMPLATE)?);
     while let Some(item) = iterator.next() {
         if let Ok(Some(item)) = item {
-            progress_bar.set_message(format!("{}", item));
+            let error_message = format!("{}", item);
+            errors.push(error_message.clone());
+            progress_bar.set_message(error_message);
         } else if let Err(err) = item {
             // “{:?}” includes a backtrace if one was captured
             bail!(format!("{:?}", err));
@@ -58,5 +44,5 @@ pub fn execute_with_progress_bar_and_message<X: std::fmt::Display>(
         progress_bar.tick();
     }
     progress_bar.finish();
-    return Ok(());
+    return Ok(errors);
 }
