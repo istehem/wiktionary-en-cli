@@ -21,12 +21,6 @@ pub fn print_in_pager<T: std::fmt::Display>(value: &T) -> Result<()> {
     return Ok(());
 }
 
-pub fn print_in_existing_pager<T: std::fmt::Display>(pager: &mut Pager, value: &T) -> Result<()> {
-    writeln!(pager, "{}", value)?;
-    minus::page_all(pager.clone())?;
-    return Ok(());
-}
-
 pub fn print_stream_in_pager<X: std::fmt::Display>(
     mut iterator: impl StreamingIterator<Item = Result<Option<X>>>,
 ) -> Result<()> {
