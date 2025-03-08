@@ -10,19 +10,6 @@ use crate::wiktionary_channel::WiktionaryIngestChannel;
 
 use streaming_iterator::*;
 
-pub struct IndexingErrors {
-    errors: Vec<IndexingError>,
-}
-
-impl fmt::Display for IndexingErrors {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for error in &self.errors {
-            writeln!(f, "{}", error)?;
-        }
-        return Ok(());
-    }
-}
-
 pub struct IndexingError {
     iteration: usize,
     word: String,
