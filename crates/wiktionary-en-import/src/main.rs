@@ -52,7 +52,8 @@ fn main() -> Result<()> {
     if args.create_index {
         let stream =
             wiktionary_en_identifier_index::generate_indices(&language, &db_path, args.force)?;
-        return utilities::pager::print_stream_in_pager(stream);
+        return utilities::pager::execute_with_progress_bar_and_message(stream);
+        //return utilities::pager::print_stream_in_pager(stream);
     }
     if args.download {
         return download_wiktionary_extract(&language, args.force);

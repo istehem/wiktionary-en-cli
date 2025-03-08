@@ -18,7 +18,7 @@ pub struct IndexingError {
 
 impl fmt::Display for IndexingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return writeln!(
+        return write!(
             f,
             "failed to index '{}' after {} iterations with error {}",
             &self.word, &self.iteration, &self.msg
