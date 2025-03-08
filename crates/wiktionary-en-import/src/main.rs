@@ -8,6 +8,8 @@ use wiktionary_en_download::download_wiktionary_extract;
 
 use clap::Parser;
 
+mod indexing_executor;
+
 /// Import Dictionary Data into PoloDB
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -52,7 +54,7 @@ fn main() -> Result<()> {
     if args.create_index {
         let stream =
             wiktionary_en_identifier_index::generate_indices(&language, &db_path, args.force)?;
-        let errors = utilities::pager::execute_with_progress_bar_and_message(stream);
+        let errors = indexing_executor::execute_with_progress_bar_and_message(stream);
         return utilities::pager::print_lines_in_pager(&errors?);
     }
     if args.download {

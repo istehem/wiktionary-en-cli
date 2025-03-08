@@ -11,6 +11,8 @@ wiktionary-en-entities = { version = "0.1.0", path = "../wiktionary-en-entities"
 wiktionary-en-download = { version = "0.1.0", path = "../wiktionary-en-download" }
 clap = { version = "3.0", features = ["derive"] }
 anyhow = {workspace = true} 
+indicatif = "0.17.9"
+streaming-iterator = { version = "0.1.9" }
 
 
 [features]

@@ -2369,6 +2369,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "indicatif",
+ "streaming-iterator",
  "utilities",
  "wiktionary-en-db",
  "wiktionary-en-download",
