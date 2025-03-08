@@ -16,12 +16,8 @@ fn parse_and_persist(
     channel: WiktionaryIngestChannel,
     file_reader: BufReader<File>,
 ) -> Result<IndexingStream> {
-    let flushb_count = channel.flush()?;
-    dbg!(flushb_count);
-
-    let stream = IndexingStream::from(file_reader, channel);
-
-    return Ok(stream);
+    channel.flush()?;
+    return Ok(IndexingStream::from(file_reader, channel));
 }
 
 pub fn statistics(language: &Language) -> Result<()> {
