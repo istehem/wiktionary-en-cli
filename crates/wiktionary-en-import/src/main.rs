@@ -8,6 +8,7 @@ use wiktionary_en_download::download_wiktionary_extract;
 
 use clap::Parser;
 
+#[cfg(feature = "sonic")]
 mod indexing_executor;
 
 /// Import Dictionary Data into PoloDB
