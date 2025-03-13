@@ -5,9 +5,10 @@ DICTIONARY_POLD_DB_DIR = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-polo-db/
 USE_SONIC_FEATURE = true
 
 [tasks.install-wiktionary-en-cli]
+condition = { env_true = [ "USE_SONIC_FEATURE" ] }
+dependencies = [ "sonic-host", "sonic-password" ]
 workspace = false
 command = "cargo"
-condition = { env_true = [ "USE_SONIC_FEATURE" ] }
 args = [
 	"install", "--path", "crates/wiktionary-en-cli",
 	"--features", "sonic"
@@ -21,6 +22,7 @@ args = ["install", "--path", "crates/wiktionary-en-cli"]
 
 [tasks.install-wiktionary-en-import]
 condition = { env_true = [ "USE_SONIC_FEATURE" ] }
+dependencies = [ "sonic-host", "sonic-password" ]
 workspace = false
 command = "cargo"
 args = [
@@ -44,9 +46,8 @@ condition = { env_true = [ "USE_SONIC_FEATURE" ], env_not_set = [ "SONIC_PASSWOR
 env = { "SONIC_PASSWORD" = "SecretPassword" }
 
 [tasks.install]
-workspace = false
 dependencies = [
-	"sonic-host", "sonic-password",
 	"install-wiktionary-en-cli", "install-wiktionary-en-import",
 	"install-wiktionary-en-cli-no-sonic", "install-wiktionary-en-import-no-sonic"
 ]
+workspace = false
