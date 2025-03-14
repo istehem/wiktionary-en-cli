@@ -1,24 +1,13 @@
 use anyhow::{bail, Result};
-use std::io::BufReader;
 use std::path::PathBuf;
 use utilities::file_utils;
 use utilities::language::*;
-
-use std::fs::File;
 
 mod wiktionary_channel;
 use crate::wiktionary_channel::*;
 
 pub mod indexing_stream;
 use crate::indexing_stream::*;
-
-fn parse_and_persist(
-    channel: WiktionaryIngestChannel,
-    file_reader: BufReader<File>,
-) -> Result<IndexingStream> {
-    channel.flush()?;
-    return Ok(IndexingStream::from(file_reader, channel));
-}
 
 pub fn statistics(language: &Language) -> Result<()> {
     let ingest_channel = WiktionaryIngestChannel::init(language)?;
@@ -55,8 +44,8 @@ pub fn generate_indices(
         );
     }
     match file_utils::get_file_reader(db_path) {
-        Ok(path) => {
-            return parse_and_persist(channel, path);
+        Ok(file_reader) => {
+            return Ok(IndexingStream::from(file_reader, channel));
         }
         _ => bail!("No such DB file: '{}'", db_path.display()),
     }
