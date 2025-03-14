@@ -3,6 +3,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use streaming_iterator::*;
 
 const PROGRESS_BAR_TEMPLATE: &str = "{spinner} {elapsed}{msg}";
+const EMPTY_STRING: &str = "";
 
 pub fn execute_with_progress_bar_and_message<X: std::fmt::Display>(
     mut iterator: impl StreamingIterator<Item = Result<Option<X>>>,
@@ -22,6 +23,7 @@ pub fn execute_with_progress_bar_and_message<X: std::fmt::Display>(
         }
         progress_bar.tick();
     }
+    progress_bar.set_message(EMPTY_STRING);
     progress_bar.finish();
     return Ok(errors);
 }
