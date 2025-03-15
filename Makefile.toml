@@ -51,3 +51,10 @@ dependencies = [
 	"install-wiktionary-en-cli-no-sonic", "install-wiktionary-en-import-no-sonic"
 ]
 workspace = false
+
+[tasks.test]
+workspace = false
+command = "cargo"
+args = [
+	"test", "-p", "tests",
+]
