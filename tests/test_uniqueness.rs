@@ -1,19 +1,17 @@
-fn sqrt(number: f64) -> Result<f64, String> {
-    if number >= 0.0 {
-        Ok(number.powf(0.5))
-    } else {
-        Err("negative floats don't have square roots".to_owned())
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use anyhow::Result;
+    use std::fs::File;
+    use std::io::BufReader;
+    use std::path::PathBuf;
+    use utilities::file_utils;
+    use utilities::language::*;
 
     #[test]
-    fn test_sqrt() -> Result<(), String> {
-        let x = 4.0;
-        assert_eq!(sqrt(x)?.powf(2.0), x);
+    fn at_least_as_many_unique_entries_as_all_entries() -> Result<()> {
+        let language = Language::EN;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         Ok(())
     }
 }

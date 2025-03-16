@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+[dev-dependencies]
+anyhow = {workspace = true}
+utilities = { path = "../crates/utilities" }
+
 [[test]]
 name = "test_uniqueness"
 path = "test_uniqueness.rs"
