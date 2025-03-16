@@ -56,5 +56,5 @@ workspace = false
 workspace = false
 command = "cargo"
 args = [
-	"test", "-p", "tests",
+	"test", "-p", "tests", "--", "--nocapture"
 ]

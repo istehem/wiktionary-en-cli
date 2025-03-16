@@ -6,7 +6,10 @@ publish = false
 
 [dev-dependencies]
 anyhow = {workspace = true}
+tracing = "0.1"
+tracing-test = "0.2"
 utilities = { path = "../crates/utilities" }
+wiktionary-en-entities = { path = "../crates/wiktionary-en-entities" }
 
 [[test]]
 name = "test_uniqueness"
