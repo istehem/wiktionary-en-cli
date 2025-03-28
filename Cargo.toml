@@ -12,3 +12,5 @@ sonic = [ "wiktionary-en-identifier-index" ]
 
 [workspace.dependencies]
 anyhow = "1.0"
+textwrap = "0.16.2"
+edit-distance = "2.1.3"

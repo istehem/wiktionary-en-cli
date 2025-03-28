@@ -15,10 +15,11 @@ mod tests {
     fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
         parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
     }
+
     #[traced_test]
     #[test]
     fn at_least_as_many_unique_entries_as_all_entries() -> Result<()> {
-        let language = Language::EN;
+        let language = Language::SV;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut unique_entries = HashSet::new();
