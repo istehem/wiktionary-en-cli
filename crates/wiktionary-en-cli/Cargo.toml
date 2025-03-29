@@ -8,10 +8,10 @@ wiktionary-en-entities = { path = "../wiktionary-en-entities" }
 wiktionary-en-db = { path = "../wiktionary-en-db" }
 wiktionary-en-identifier-index = { path = "../wiktionary-en-identifier-index", optional = true }
 utilities = { path = "../utilities" }
-clap = { version = "3.0", features = ["derive"] }
+clap = { version = "3.2", features = ["derive"] }
 anyhow = { workspace = true } 
 serde = { version = "1.0", features = ["derive"] }
-colored = "2.1.0"
+colored = "2.2.0"
 indoc = "1.0"
 edit-distance = { workspace = true }
 
