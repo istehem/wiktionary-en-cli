@@ -1,20 +1,16 @@
-use anyhow::Result;
-use rlua::{Function, Lua};
+use anyhow::{bail, Result};
+use mlua::Lua;
 
-fn rust_function(lua: &Lua) -> rlua::Result<Function> {
-    lua.create_function(|_, arg: String| Ok(format!("Rust received: {}", arg)))
+fn on_plus_one(lua: &Lua) -> mlua::Result<u8> {
+    let result: u8 = lua.load("return 1 + 1").eval()?;
+    println!("lua return the result: {}", result);
+    return Ok(result);
 }
 
-pub fn hello() -> Result<()> {
+pub fn do_one_plus_one() -> Result<u8> {
     let lua = Lua::new();
-    let func = rust_function(&lua)?;
-    lua.globals().set("rustFunc", func)?;
-
-    lua.load(
-        r#"
-        print(rustFunc("Hello from Lua!"))
-    "#,
-    )
-    .exec()?;
-    Ok(())
+    if let Ok(result) = on_plus_one(&lua) {
+        return Ok(result);
+    }
+    bail!("could not execute the lua fuction");
 }

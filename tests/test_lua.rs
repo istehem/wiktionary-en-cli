@@ -7,8 +7,9 @@ mod tests {
 
     #[traced_test]
     #[test]
-    fn can_load_some_lua_code() -> Result<()> {
-        wiktionary_en_lua::hello()?;
-        Ok(())
+    fn test_function() -> Result<()> {
+        let result = wiktionary_en_lua::do_one_plus_one()?;
+        assert!(result == 2);
+        return Ok(());
     }
 }
