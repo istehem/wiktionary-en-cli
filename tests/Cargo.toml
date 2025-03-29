@@ -10,7 +10,12 @@ tracing = "0.1"
 tracing-test = "0.2"
 utilities = { path = "../crates/utilities" }
 wiktionary-en-entities = { path = "../crates/wiktionary-en-entities" }
+wiktionary-en-lua = { path = "../crates/wiktionary-en-lua" }
 
 [[test]]
 name = "test_uniqueness"
 path = "test_uniqueness.rs"
+
+[[test]]
+name = "test_lua"
+path = "test_lua.rs"
