@@ -11,3 +11,10 @@ macro_rules! DICTIONARY_POLO_DB_DIR {
         env!("DICTIONARY_POLD_DB_DIR")
     };
 }
+
+#[macro_export]
+macro_rules! DICTIONARY_CONFIG {
+    () => {
+        env!("DICTIONARY_CONFIG")
+    };
+}
