@@ -6,6 +6,9 @@ fn load_config(lua: &Lua) -> mlua::Result<u8> {
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
     let one_plus_one: mlua::Function = lua.globals().get("one_plus_one")?;
+    let lua_config: mlua::Function = lua.globals().get("config")?;
+    let config: String = lua_config.call(())?;
+    println!("config is: {}", config);
     let result: u8 = one_plus_one.call(())?;
     println!("lua function returned: {}", result);
     return Ok(result);
