@@ -5,7 +5,7 @@ use utilities::language::*;
 
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use wiktionary_en_entities::wiktionary_entity::*;
 
 use std::fs::File;
@@ -64,7 +64,7 @@ pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<Dictionary
 
 fn random_entry_in_collection(collection: &Collection<DictionaryEntry>) -> Result<DictionaryEntry> {
     let n_entries = number_of_entries_in_collection(collection)?;
-    let random_entry_number = thread_rng().gen_range(0, n_entries - 1);
+    let random_entry_number = rng().random_range(0..n_entries - 1);
     let result = collection
         .find(doc! {})
         .skip(random_entry_number)

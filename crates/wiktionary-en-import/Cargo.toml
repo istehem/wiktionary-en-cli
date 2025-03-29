@@ -9,7 +9,7 @@ wiktionary-en-db = { path = "../wiktionary-en-db" }
 wiktionary-en-identifier-index = { path = "../wiktionary-en-identifier-index", optional = true }
 wiktionary-en-entities = { path = "../wiktionary-en-entities" }
 wiktionary-en-download = { path = "../wiktionary-en-download" }
-clap = { version = "3.2", features = ["derive"] }
+clap = { workspace = true }
 anyhow = {workspace = true} 
 indicatif = "0.17.11"
 streaming-iterator = { version = "0.1.9" }

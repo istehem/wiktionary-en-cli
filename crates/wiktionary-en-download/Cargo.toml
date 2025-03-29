@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 utilities = { path = "../utilities" }
 anyhow = { workspace = true }
-reqwest = { version = "0.10.10", features = ["stream"] }
+reqwest = { version = "0.12.15", features = ["stream"] }
 futures-util = "0.3.31"
 indicatif = "0.17.11"
-tokio = { version = "0.2.25", features = ["full"] }
+tokio = { version = "1.44.1", features = ["full"] }
