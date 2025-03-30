@@ -3,5 +3,7 @@ function one_plus_one()
 end
 
 config = function()
-    return "Hello World!"
+    return {
+        message = "Hello World!"
+    }
 end
