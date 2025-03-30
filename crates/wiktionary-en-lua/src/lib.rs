@@ -39,8 +39,13 @@ impl IntoLua for Config {
 fn load_config(lua: &Lua) -> mlua::Result<Config> {
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
-    let config: mlua::Function = lua.globals().get("config")?;
-    return config.call(());
+    let config: mlua::Value = lua.globals().get("config")?;
+    if config.is_function() {
+        if let Some(config) = config.as_function() {
+            return config.call(());
+        }
+    }
+    return Config::from_lua(config, lua);
 }
 
 pub fn do_load_config() -> Result<Config> {
