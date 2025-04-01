@@ -2,7 +2,7 @@ use self::Language::*;
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Language {
     EN,
     DE,

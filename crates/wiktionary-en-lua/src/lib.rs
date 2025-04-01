@@ -1,16 +1,19 @@
 use anyhow::{bail, Result};
 use mlua::{FromLua, IntoLua, Lua, Value};
+use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Clone)]
 pub struct Config {
     pub message: String,
+    pub language: Language,
 }
 
 impl Config {
     fn new() -> Self {
         Self {
             message: String::from("default"),
+            language: Language::default(),
         }
     }
 }
@@ -21,7 +24,11 @@ impl FromLua for Config {
         return match table {
             Some(table) => {
                 let message: String = table.get("message")?;
-                return Ok(Config { message: message });
+                let language_code: String = table.get("language")?;
+                return Ok(Config {
+                    message: message,
+                    language: Language::from_str_or_default(&language_code),
+                });
             }
             None => Ok(Config::new()),
         };

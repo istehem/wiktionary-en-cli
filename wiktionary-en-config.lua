@@ -11,5 +11,6 @@ end
 --]]
 
 config = {
+    language = "sv",
     message = "Hello World!"
 }
