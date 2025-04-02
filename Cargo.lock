@@ -2633,6 +2633,7 @@ dependencies = [
  "anyhow",
  "colored",
  "indoc",
+ "mlua",
  "serde",
  "serde_json",
  "sled",
@@ -2676,6 +2677,7 @@ dependencies = [
  "anyhow",
  "mlua",
  "utilities",
+ "wiktionary-en-entities",
 ]
 
 [[package]]

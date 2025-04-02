@@ -2,6 +2,7 @@ use anyhow::{bail, Result};
 use mlua::{FromLua, IntoLua, Lua, Value};
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
+use wiktionary_en_entities::wiktionary_entity::*;
 
 #[derive(Default, Clone)]
 pub struct Config {
@@ -16,6 +17,27 @@ impl Config {
             language: Language::default(),
         }
     }
+
+    pub fn intercept(dictionary_entry: &DictionaryEntry) -> Result<()> {
+        match intercept_in_lua(dictionary_entry) {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                bail!("{}", err.to_string());
+            }
+        }
+    }
+}
+
+fn intercept_in_lua(dictionary_entry: &DictionaryEntry) -> mlua::Result<()> {
+    let lua = Lua::new();
+    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
+        .exec()?;
+    let intercept: mlua::Value = lua.globals().get("intercept")?;
+    if let Some(intercept) = intercept.as_function() {
+        let _: () = intercept.call(dictionary_entry.clone())?;
+    }
+
+    return Ok(());
 }
 
 impl FromLua for Config {

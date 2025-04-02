@@ -10,6 +10,9 @@ use utilities::anyhow_serde;
 use utilities::colored_string_utils::*;
 use utilities::language::*;
 
+use mlua::IntoLua;
+use mlua::Lua;
+use mlua::Value;
 use std::fmt;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -106,6 +109,14 @@ impl DictionaryEntry {
 impl fmt::Display for DictionaryEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         return write!(f, "{}", self.to_pretty_string());
+    }
+}
+
+impl IntoLua for DictionaryEntry {
+    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+        let dictionary_entry = lua.create_table()?;
+        dictionary_entry.set("word", self.word)?;
+        return Ok(mlua::Value::Table(dictionary_entry));
     }
 }
 
