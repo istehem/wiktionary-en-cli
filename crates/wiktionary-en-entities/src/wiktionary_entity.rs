@@ -116,6 +116,8 @@ impl IntoLua for DictionaryEntry {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
         let dictionary_entry = lua.create_table()?;
         dictionary_entry.set("word", self.word)?;
+        dictionary_entry.set("pos", self.pos)?;
+        dictionary_entry.set("lang_code", self.lang_code)?;
         return Ok(mlua::Value::Table(dictionary_entry));
     }
 }
