@@ -50,4 +50,20 @@ mod tests {
             _ => bail!("couldn't read line"),
         }
     }
+
+    #[traced_test]
+    #[test]
+    fn test_intercept_several() -> Result<()> {
+        let language = Language::FR;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+        let mut results = Vec::new();
+
+        for (_index, line) in file_reader.lines().enumerate().take(10) {
+            let dictionary_entry = parse_line(&line?)?;
+            results.push(dictionary_entry);
+        }
+
+        return wiktionary_en_lua::intercept_witkionary_result(&results);
+    }
 }

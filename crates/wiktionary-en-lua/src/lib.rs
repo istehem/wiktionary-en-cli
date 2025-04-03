@@ -19,7 +19,7 @@ impl Config {
     }
 
     pub fn intercept(dictionary_entry: &DictionaryEntry) -> Result<()> {
-        match intercept_in_lua(dictionary_entry) {
+        match intercept(dictionary_entry) {
             Ok(_) => Ok(()),
             Err(err) => {
                 bail!("{}", err.to_string());
@@ -28,7 +28,14 @@ impl Config {
     }
 }
 
-fn intercept_in_lua(dictionary_entry: &DictionaryEntry) -> mlua::Result<()> {
+pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<()> {
+    for entry in result {
+        Config::intercept(&entry)?
+    }
+    return Ok(());
+}
+
+fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<()> {
     let lua = Lua::new();
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
