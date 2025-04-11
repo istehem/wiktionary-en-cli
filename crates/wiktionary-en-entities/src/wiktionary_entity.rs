@@ -118,7 +118,19 @@ impl IntoLua for DictionaryEntry {
         dictionary_entry.set("word", self.word)?;
         dictionary_entry.set("pos", self.pos)?;
         dictionary_entry.set("lang_code", self.lang_code)?;
+        dictionary_entry.set("etymology", self.etymology_text)?;
+        dictionary_entry.set("translations", self.translations)?;
         return Ok(mlua::Value::Table(dictionary_entry));
+    }
+}
+
+impl IntoLua for Translation {
+    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+        let translation = lua.create_table()?;
+        translation.set("lang", self.lang)?;
+        translation.set("code", self.code)?;
+        translation.set("word", self.word)?;
+        return Ok(mlua::Value::Table(translation));
     }
 }
 

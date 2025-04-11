@@ -54,7 +54,7 @@ mod tests {
     #[traced_test]
     #[test]
     fn test_intercept_several() -> Result<()> {
-        let language = Language::FR;
+        let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut results = Vec::new();
