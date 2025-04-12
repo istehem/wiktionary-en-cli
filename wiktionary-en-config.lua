@@ -18,11 +18,9 @@ config = {
 
 intercept = function(entry)
     for k, v in pairs(entry) do
-	if type(v) == 'table' then
-	    for k2, v2 in pairs(entry) do
-	        print(string.format('found sub key "%s" with sub value "%s"', k2, v2))
-	    end
-	end
 	print(string.format('found key "%s" with value "%s"', k, v))
+	if type(v) == 'table' then
+	    intercept(v)
+	end
     end
 end
