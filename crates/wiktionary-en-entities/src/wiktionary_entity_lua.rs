@@ -13,7 +13,7 @@ impl FromLua for DictionaryEntry {
                 senses: Vec::new(),
                 pos: dictionary_entry.get("pos")?,
                 translations: dictionary_entry.get("translations")?,
-                sounds: Vec::new(),
+                sounds: dictionary_entry.get("sounds")?,
                 etymology_text: None,
             };
             return Ok(entry);
@@ -35,7 +35,23 @@ impl FromLua for Translation {
             return Ok(entry);
         }
         return Err(mlua::Error::RuntimeError(
-            "no translation array found in lua".to_string(),
+            "no translation found in lua".to_string(),
+        ));
+    }
+}
+
+impl FromLua for Sound {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(sound) = value.as_table() {
+            let entry = Sound {
+                ipa: sound.get("ipa")?,
+                enpr: sound.get("enpr")?,
+                tags: sound.get("tags")?,
+            };
+            return Ok(entry);
+        }
+        return Err(mlua::Error::RuntimeError(
+            "no sound found in lua".to_string(),
         ));
     }
 }
