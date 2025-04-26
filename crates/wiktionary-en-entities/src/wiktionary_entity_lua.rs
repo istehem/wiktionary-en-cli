@@ -12,7 +12,7 @@ impl FromLua for DictionaryEntry {
                 word: dictionary_entry.get("word")?,
                 senses: Vec::new(),
                 pos: dictionary_entry.get("pos")?,
-                translations: Vec::new(),
+                translations: dictionary_entry.get("translations")?,
                 sounds: Vec::new(),
                 etymology_text: None,
             };
@@ -20,6 +20,22 @@ impl FromLua for DictionaryEntry {
         }
         return Err(mlua::Error::RuntimeError(
             "no dictionary entry value found in lua".to_string(),
+        ));
+    }
+}
+
+impl FromLua for Translation {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(translation) = value.as_table() {
+            let entry = Translation {
+                lang: translation.get("lang")?,
+                code: translation.get("code")?,
+                word: translation.get("word")?,
+            };
+            return Ok(entry);
+        }
+        return Err(mlua::Error::RuntimeError(
+            "no translation array found in lua".to_string(),
         ));
     }
 }
