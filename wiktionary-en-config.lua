@@ -1,12 +1,12 @@
 function one_plus_one()
-    return 1 + 1
+	return 1 + 1
 end
 
 config = function()
-    return {
-        language = "sv",
-        message = "Hello World!"
-    }
+	return {
+		language = "sv",
+		message = "Hello World!",
+	}
 end
 
 --[[
@@ -16,28 +16,28 @@ config = {
 }
 --]]
 local function is_empty(t)
-    return next(t) == nil
+	return next(t) == nil
 end
 
 intercept = function(entry)
-    translation_1 = {
-	lang = "en",
-	code = "en",
-	word = "Hello"
-    }
-    translation_2 = {
-	lang = "en",
-	code = "en",
-	word = "Word!"
-    }
-    if is_empty(entry.translations) then
-        entry.translations = { translation_1, translation_2 }
-    end
-    for k, v in pairs(entry) do
-	--print(string.format('found key "%s" with value "%s"', k, v))
-	if type(v) == 'table' then
-	    --intercept(v)
+	translation_1 = {
+		lang = "en",
+		code = "en",
+		word = "Hello",
+	}
+	translation_2 = {
+		lang = "en",
+		code = "en",
+		word = "Word!",
+	}
+	if is_empty(entry.translations) then
+		entry.translations = { translation_1, translation_2 }
 	end
-    end
-    return entry
+	for k, v in pairs(entry) do
+		--print(string.format('found key "%s" with value "%s"', k, v))
+		if type(v) == "table" then
+			--intercept(v)
+		end
+	end
+	return entry
 end
