@@ -10,9 +10,9 @@ use utilities::anyhow_serde;
 use utilities::colored_string_utils::*;
 use utilities::language::*;
 
-use mlua::IntoLua;
 use mlua::Lua;
 use mlua::Value;
+use mlua::{FromLua, IntoLua};
 use std::fmt;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -90,11 +90,11 @@ impl DictionaryEntry {
 
         return formatdoc!(
             "
-              {}
-              {} ({})
-              {}
-              {}
-              ",
+            {}
+            {} ({})
+            {}
+            {}
+            ",
             horizontal_line,
             self.word.green().bold(),
             self.pos,
@@ -123,6 +123,21 @@ impl IntoLua for DictionaryEntry {
         dictionary_entry.set("senses", self.senses)?;
         dictionary_entry.set("sounds", self.sounds)?;
         return Ok(mlua::Value::Table(dictionary_entry));
+    }
+}
+impl FromLua for DictionaryEntry {
+    //fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+    fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> {
+        let entry = DictionaryEntry {
+            lang_code: String::from("en"),
+            word: String::from("Hello World!"),
+            senses: Vec::new(),
+            pos: String::new(),
+            translations: Vec::new(),
+            sounds: Vec::new(),
+            etymology_text: None,
+        };
+        return Ok(entry);
     }
 }
 
