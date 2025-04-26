@@ -15,6 +15,9 @@ config = {
     message = "Hello World!"
 }
 --]]
+local function is_empty(t)
+    return next(t) == nil
+end
 
 intercept = function(entry)
     translation_1 = {
@@ -27,7 +30,9 @@ intercept = function(entry)
 	code = "en",
 	word = "Word!"
     }
-    entry["translations"] = { translation_1, translation_2 }
+    if is_empty(entry.translations) then
+        entry.translations = { translation_1, translation_2 }
+    end
     for k, v in pairs(entry) do
 	--print(string.format('found key "%s" with value "%s"', k, v))
 	if type(v) == 'table' then
