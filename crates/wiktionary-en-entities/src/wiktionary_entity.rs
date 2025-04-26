@@ -1,65 +1,61 @@
+use anyhow::Result;
 use colored::ColoredString;
 use colored::Colorize;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::fmt;
 use textwrap::{fill, indent};
 
-use anyhow::Result;
 use utilities::anyhow_serde;
 use utilities::colored_string_utils::*;
 use utilities::language::*;
 
-use mlua::Lua;
-use mlua::Value;
-use mlua::{FromLua, IntoLua};
-use std::fmt;
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
-    lang_code: String,
+    pub lang_code: String,
     #[serde(default)]
     pub word: String,
-    senses: Vec<Sense>,
-    pos: String,
+    pub senses: Vec<Sense>,
+    pub pos: String,
     #[serde(default)]
-    translations: Vec<Translation>,
+    pub translations: Vec<Translation>,
     #[serde(default)]
-    sounds: Vec<Sound>,
-    etymology_text: Option<String>,
+    pub sounds: Vec<Sound>,
+    pub etymology_text: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-struct Sense {
+pub struct Sense {
     #[serde(default)]
-    glosses: Vec<String>,
+    pub glosses: Vec<String>,
     #[serde(default)]
-    examples: Vec<Example>,
+    pub examples: Vec<Example>,
     #[serde(default)]
-    tags: Vec<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-struct Example {
+pub struct Example {
     #[serde(alias = "ref")]
     #[serde(default)]
-    reference: Option<String>,
-    text: Option<String>,
+    pub reference: Option<String>,
+    pub text: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Translation {
-    lang: String,
-    code: Option<String>,
-    word: Option<String>,
+    pub lang: String,
+    pub code: Option<String>,
+    pub word: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-struct Sound {
-    ipa: Option<String>,
-    enpr: Option<String>,
+pub struct Sound {
+    pub ipa: Option<String>,
+    pub enpr: Option<String>,
     #[serde(default)]
-    tags: Vec<String>,
+    pub tags: Vec<String>,
 }
 
 pub fn parse_entry(entry_string: &String) -> Result<DictionaryEntry> {
@@ -109,78 +105,6 @@ impl DictionaryEntry {
 impl fmt::Display for DictionaryEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         return write!(f, "{}", self.to_pretty_string());
-    }
-}
-
-impl IntoLua for DictionaryEntry {
-    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let dictionary_entry = lua.create_table()?;
-        dictionary_entry.set("word", self.word)?;
-        dictionary_entry.set("pos", self.pos)?;
-        dictionary_entry.set("lang_code", self.lang_code)?;
-        dictionary_entry.set("etymology", self.etymology_text)?;
-        dictionary_entry.set("translations", self.translations)?;
-        dictionary_entry.set("senses", self.senses)?;
-        dictionary_entry.set("sounds", self.sounds)?;
-        return Ok(mlua::Value::Table(dictionary_entry));
-    }
-}
-impl FromLua for DictionaryEntry {
-    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-        if let Some(dictionary_entry) = value.as_table() {
-            let entry = DictionaryEntry {
-                lang_code: dictionary_entry.get("lang_code")?,
-                word: dictionary_entry.get("word")?,
-                senses: Vec::new(),
-                pos: dictionary_entry.get("pos")?,
-                translations: Vec::new(),
-                sounds: Vec::new(),
-                etymology_text: None,
-            };
-            return Ok(entry);
-        }
-        return Err(mlua::Error::RuntimeError(
-            "no dictionary entry value found in lua".to_string(),
-        ));
-    }
-}
-
-impl IntoLua for Translation {
-    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let translation = lua.create_table()?;
-        translation.set("lang", self.lang)?;
-        translation.set("code", self.code)?;
-        translation.set("word", self.word)?;
-        return Ok(mlua::Value::Table(translation));
-    }
-}
-
-impl IntoLua for Sense {
-    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let senses = lua.create_table()?;
-        senses.set("glosses", self.glosses)?;
-        senses.set("examples", self.examples)?;
-        senses.set("tags", self.tags)?;
-        return Ok(mlua::Value::Table(senses));
-    }
-}
-
-impl IntoLua for Example {
-    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let examples = lua.create_table()?;
-        examples.set("reference", self.reference)?;
-        examples.set("text", self.text)?;
-        return Ok(mlua::Value::Table(examples));
-    }
-}
-
-impl IntoLua for Sound {
-    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let sounds = lua.create_table()?;
-        sounds.set("ipa", self.ipa)?;
-        sounds.set("enpr", self.enpr)?;
-        sounds.set("tags", self.tags)?;
-        return Ok(mlua::Value::Table(sounds));
     }
 }
 
