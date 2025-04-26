@@ -126,18 +126,22 @@ impl IntoLua for DictionaryEntry {
     }
 }
 impl FromLua for DictionaryEntry {
-    //fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-    fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> {
-        let entry = DictionaryEntry {
-            lang_code: String::from("en"),
-            word: String::from("Hello World!"),
-            senses: Vec::new(),
-            pos: String::new(),
-            translations: Vec::new(),
-            sounds: Vec::new(),
-            etymology_text: None,
-        };
-        return Ok(entry);
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(dictionary_entry) = value.as_table() {
+            let entry = DictionaryEntry {
+                lang_code: dictionary_entry.get("lang_code")?,
+                word: dictionary_entry.get("word")?,
+                senses: Vec::new(),
+                pos: dictionary_entry.get("pos")?,
+                translations: Vec::new(),
+                sounds: Vec::new(),
+                etymology_text: None,
+            };
+            return Ok(entry);
+        }
+        return Err(mlua::Error::RuntimeError(
+            "no dictionary entry value found in lua".to_string(),
+        ));
     }
 }
 

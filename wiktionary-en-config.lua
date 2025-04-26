@@ -18,9 +18,10 @@ config = {
 
 intercept = function(entry)
     for k, v in pairs(entry) do
-	print(string.format('found key "%s" with value "%s"', k, v))
+	--print(string.format('found key "%s" with value "%s"', k, v))
 	if type(v) == 'table' then
 	    intercept(v)
 	end
     end
+    return entry
 end

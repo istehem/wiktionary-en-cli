@@ -38,7 +38,7 @@ mod tests {
     #[traced_test]
     #[test]
     fn test_intercept() -> Result<()> {
-        let language = Language::FR;
+        let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let mut file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut line = String::new();
@@ -67,6 +67,10 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        return wiktionary_en_lua::intercept_witkionary_result(&results);
+        let entries = wiktionary_en_lua::intercept_witkionary_result(&results)?;
+        for entry in entries {
+            println!("{}", entry.to_pretty_string());
+        }
+        return Ok(());
     }
 }

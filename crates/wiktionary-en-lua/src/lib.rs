@@ -28,11 +28,12 @@ impl Config {
     }
 }
 
-pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<()> {
+pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<DictionaryEntry>> {
+    let mut intercepted_result = Vec::new();
     for entry in result {
-        Config::intercept(&entry)?;
+        intercepted_result.push(Config::intercept(&entry)?);
     }
-    return Ok(());
+    return Ok(intercepted_result);
 }
 
 fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry> {
