@@ -18,9 +18,9 @@ impl Config {
         }
     }
 
-    pub fn intercept(dictionary_entry: &DictionaryEntry) -> Result<()> {
+    pub fn intercept(dictionary_entry: &DictionaryEntry) -> Result<DictionaryEntry> {
         match intercept(dictionary_entry) {
-            Ok(_) => Ok(()),
+            Ok(entry) => Ok(entry),
             Err(err) => {
                 bail!("{}", err.to_string());
             }
@@ -30,21 +30,21 @@ impl Config {
 
 pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<()> {
     for entry in result {
-        Config::intercept(&entry)?
+        Config::intercept(&entry)?;
     }
     return Ok(());
 }
 
-fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<()> {
+fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry> {
     let lua = Lua::new();
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
-        let _: () = intercept.call(dictionary_entry.clone())?;
+        return intercept.call(dictionary_entry.clone());
     }
 
-    return Ok(());
+    return Ok(dictionary_entry.clone());
 }
 
 impl FromLua for Config {
