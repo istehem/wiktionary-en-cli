@@ -1,5 +1,6 @@
 use anyhow::{bail, Result};
-use mlua::{FromLua, IntoLua, Lua, Value};
+use colored::Colorize;
+use mlua::{FromLua, Function, IntoLua, Lua, Value};
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 use wiktionary_en_entities::wiktionary_entity::*;
@@ -40,6 +41,10 @@ fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry
     let lua = Lua::new();
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
+
+    let apply_color_fn = apply_color(&lua)?;
+    lua.globals().set("apply_color", apply_color_fn)?;
+
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
         return intercept.call(dictionary_entry.clone());
@@ -106,4 +111,21 @@ pub fn do_one_plus_one() -> Result<u8> {
         Ok(result) => return Ok(result),
         Err(err) => bail!(err.to_string()),
     }
+}
+
+fn apply_color(lua: &Lua) -> mlua::Result<Function> {
+    lua.create_function(|_, (text, color): (String, String)| {
+        let colored_text = match color.to_lowercase().as_str() {
+            "red" => text.red().to_string(),
+            "green" => text.green().to_string(),
+            "blue" => text.blue().to_string(),
+            "yellow" => text.yellow().to_string(),
+            "cyan" => text.cyan().to_string(),
+            "magenta" => text.magenta().to_string(),
+            "white" => text.white().to_string(),
+            "black" => text.black().to_string(),
+            _ => text.to_string(), // Default to the original text if color is unknown
+        };
+        Ok(colored_text)
+    })
 }

@@ -8,3 +8,4 @@ utilities = { path = "../utilities" }
 wiktionary-en-entities = { path = "../wiktionary-en-entities" }
 anyhow = {workspace = true} 
 mlua = { version = "0.10", features = ["lua54", "vendored"] }
+colored = "3.0.0"

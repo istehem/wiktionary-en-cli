@@ -20,6 +20,7 @@ local function is_empty(t)
 end
 
 intercept = function(entry)
+	entry.word = apply_color(entry.word, "red")
 	translation_1 = {
 		lang = "en",
 		code = "en",
