@@ -10,11 +10,11 @@ impl FromLua for DictionaryEntry {
             let entry = DictionaryEntry {
                 lang_code: dictionary_entry.get("lang_code")?,
                 word: dictionary_entry.get("word")?,
-                senses: Vec::new(),
+                senses: dictionary_entry.get("senses")?,
                 pos: dictionary_entry.get("pos")?,
                 translations: dictionary_entry.get("translations")?,
                 sounds: dictionary_entry.get("sounds")?,
-                etymology_text: None,
+                etymology_text: dictionary_entry.get("etymology")?,
             };
             return Ok(entry);
         }
@@ -40,6 +40,22 @@ impl FromLua for Translation {
     }
 }
 
+impl FromLua for Sense {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(sense) = value.as_table() {
+            let entry = Sense {
+                glosses: sense.get("glosses")?,
+                examples: sense.get("examples")?,
+                tags: sense.get("tags")?,
+            };
+            return Ok(entry);
+        }
+        return Err(mlua::Error::RuntimeError(
+            "no sense found in lua".to_string(),
+        ));
+    }
+}
+
 impl FromLua for Sound {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
         if let Some(sound) = value.as_table() {
@@ -52,6 +68,21 @@ impl FromLua for Sound {
         }
         return Err(mlua::Error::RuntimeError(
             "no sound found in lua".to_string(),
+        ));
+    }
+}
+
+impl FromLua for Example {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(sound) = value.as_table() {
+            let entry = Example {
+                reference: sound.get("reference")?,
+                text: sound.get("text")?,
+            };
+            return Ok(entry);
+        }
+        return Err(mlua::Error::RuntimeError(
+            "no example found in lua".to_string(),
         ));
     }
 }
