@@ -56,6 +56,21 @@ impl FromLua for Sense {
     }
 }
 
+impl FromLua for Example {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(sound) = value.as_table() {
+            let entry = Example {
+                reference: sound.get("reference")?,
+                text: sound.get("text")?,
+            };
+            return Ok(entry);
+        }
+        return Err(mlua::Error::RuntimeError(
+            "no example found in lua".to_string(),
+        ));
+    }
+}
+
 impl FromLua for Sound {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
         if let Some(sound) = value.as_table() {
@@ -68,21 +83,6 @@ impl FromLua for Sound {
         }
         return Err(mlua::Error::RuntimeError(
             "no sound found in lua".to_string(),
-        ));
-    }
-}
-
-impl FromLua for Example {
-    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-        if let Some(sound) = value.as_table() {
-            let entry = Example {
-                reference: sound.get("reference")?,
-                text: sound.get("text")?,
-            };
-            return Ok(entry);
-        }
-        return Err(mlua::Error::RuntimeError(
-            "no example found in lua".to_string(),
         ));
     }
 }
