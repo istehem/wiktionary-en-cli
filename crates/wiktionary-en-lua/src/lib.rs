@@ -44,6 +44,8 @@ fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry
 
     let apply_color_fn = apply_color(&lua)?;
     lua.globals().set("apply_color", apply_color_fn)?;
+    let apply_style_fn = apply_style(&lua)?;
+    lua.globals().set("apply_style", apply_style_fn)?;
 
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
@@ -127,5 +129,23 @@ fn apply_color(lua: &Lua) -> mlua::Result<Function> {
             _ => text.to_string(), // Default to the original text if color is unknown
         };
         Ok(colored_text)
+    })
+}
+
+fn apply_style(lua: &Lua) -> mlua::Result<Function> {
+    lua.create_function(|_, (text, style): (String, String)| {
+        let style_text = match style.to_lowercase().as_str() {
+            //"clear" => text.clear().to_string(),
+            "bold" => text.bold().to_string(),
+            "dimmed" => text.dimmed().to_string(),
+            "underline" => text.underline().to_string(),
+            "reversed" => text.reversed().to_string(),
+            "italic" => text.italic().to_string(),
+            "blink" => text.blink().to_string(),
+            "hidden" => text.hidden().to_string(),
+            "strikethrough" => text.strikethrough().to_string(),
+            _ => text.to_string(), // Default to the original text if color is unknown
+        };
+        Ok(style_text)
     })
 }

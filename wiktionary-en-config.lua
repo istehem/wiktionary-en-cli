@@ -24,12 +24,12 @@ intercept = function(entry)
 	translation_1 = {
 		lang = "en",
 		code = "en",
-		word = "Hello",
+		word = apply_style("Hello", "underline"),
 	}
 	translation_2 = {
 		lang = "en",
 		code = "en",
-		word = "Word!",
+		word = apply_style("Word!", "bold"),
 	}
 	if is_empty(entry.translations) then
 		entry.translations = { translation_1, translation_2 }
