@@ -22,14 +22,14 @@ end
 intercept = function(entry)
 	entry.word = apply_color(entry.word, "cyan")
 	translation_1 = {
-		lang = "en",
+		lang = apply_style("en", "dimmed"),
 		code = "en",
-		word = apply_style("Hello", "underline"),
+		word = "Hello",
 	}
 	translation_2 = {
-		lang = "en",
+		lang = apply_style("en", "dimmed"),
 		code = "en",
-		word = apply_style("Word!", "bold"),
+		word = "Word!",
 	}
 	if is_empty(entry.translations) then
 		entry.translations = { translation_1, translation_2 }
