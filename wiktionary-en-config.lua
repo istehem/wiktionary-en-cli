@@ -20,6 +20,7 @@ local function is_empty(t)
 end
 
 intercept = function(entry)
+	--print(to_pretty_string(entry))
 	entry.word = apply_color(entry.word, "cyan")
 	translation_1 = {
 		lang = apply_style("en", "dimmed"),

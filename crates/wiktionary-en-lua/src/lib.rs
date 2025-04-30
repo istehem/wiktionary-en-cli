@@ -120,6 +120,8 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     lua.globals().set("apply_style", apply_style_fn)?;
     let horizontal_line_fn = horizontal_line(lua)?;
     lua.globals().set("horizontal_line", horizontal_line_fn)?;
+    let to_pretty_string_fn = to_pretty_string(lua)?;
+    lua.globals().set("to_pretty_string", to_pretty_string_fn)?;
     return Ok(());
 }
 
@@ -161,5 +163,11 @@ fn apply_style(lua: &Lua) -> mlua::Result<Function> {
 fn horizontal_line(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, ()| {
         return Ok(colored_string_utils::horizontal_line().to_string());
+    })
+}
+
+fn to_pretty_string(lua: &Lua) -> mlua::Result<Function> {
+    lua.create_function(|_, dictionary_entry: DictionaryEntry| {
+        return Ok(dictionary_entry.to_pretty_string());
     })
 }
