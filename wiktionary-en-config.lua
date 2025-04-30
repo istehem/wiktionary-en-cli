@@ -40,5 +40,6 @@ intercept = function(entry)
 			--intercept(v)
 		end
 	end
+	print(horizontal_line())
 	return entry
 end

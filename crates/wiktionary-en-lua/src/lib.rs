@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use colored::Colorize;
 use mlua::{FromLua, Function, IntoLua, Lua, Value};
+use utilities::colored_string_utils;
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 use wiktionary_en_entities::wiktionary_entity::*;
@@ -42,10 +43,7 @@ fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
 
-    let apply_color_fn = apply_color(&lua)?;
-    lua.globals().set("apply_color", apply_color_fn)?;
-    let apply_style_fn = apply_style(&lua)?;
-    lua.globals().set("apply_style", apply_style_fn)?;
+    load_lua_api(&lua)?;
 
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
@@ -115,6 +113,16 @@ pub fn do_one_plus_one() -> Result<u8> {
     }
 }
 
+fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
+    let apply_color_fn = apply_color(lua)?;
+    lua.globals().set("apply_color", apply_color_fn)?;
+    let apply_style_fn = apply_style(lua)?;
+    lua.globals().set("apply_style", apply_style_fn)?;
+    let horizontal_line_fn = horizontal_line(lua)?;
+    lua.globals().set("horizontal_line", horizontal_line_fn)?;
+    return Ok(());
+}
+
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, (text, color): (String, String)| {
         let colored_text = match color.to_lowercase().as_str() {
@@ -147,5 +155,11 @@ fn apply_style(lua: &Lua) -> mlua::Result<Function> {
             _ => text.to_string(), // Default to the original text if color is unknown
         };
         Ok(style_text)
+    })
+}
+
+fn horizontal_line(lua: &Lua) -> mlua::Result<Function> {
+    lua.create_function(|_, ()| {
+        return Ok(colored_string_utils::horizontal_line().to_string());
     })
 }
