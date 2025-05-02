@@ -122,6 +122,8 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     lua.globals().set("horizontal_line", horizontal_line_fn)?;
     let to_pretty_string_fn = to_pretty_string(lua)?;
     lua.globals().set("to_pretty_string", to_pretty_string_fn)?;
+    let wrap_text_at_fn = wrap_text_at(lua)?;
+    lua.globals().set("wrap_text_at", wrap_text_at_fn)?;
     return Ok(());
 }
 
@@ -163,6 +165,12 @@ fn apply_style(lua: &Lua) -> mlua::Result<Function> {
 fn horizontal_line(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, ()| {
         return Ok(colored_string_utils::horizontal_line().to_string());
+    })
+}
+
+fn wrap_text_at(lua: &Lua) -> mlua::Result<Function> {
+    lua.create_function(|_, (text, width): (String, usize)| {
+        return Ok(colored_string_utils::wrap(&text.into(), width).to_string());
     })
 }
 

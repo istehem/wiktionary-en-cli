@@ -35,8 +35,12 @@ impl<T: Display + From<String>> Join for T {
 impl JoinWrap for ColoredString {
     fn joinwrap(&self, list: Vec<ColoredString>, width: usize) -> ColoredString {
         let text = self.join(list);
-        return fill(&text, width).normal();
+        return wrap(&text, width);
     }
+}
+
+pub fn wrap(text: &ColoredString, width: usize) -> ColoredString {
+    return fill(text, width).into();
 }
 
 pub fn format_integer(number: usize) -> ColoredString {
