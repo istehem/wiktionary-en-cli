@@ -45,9 +45,10 @@ mod tests {
         match file_reader.read_line(&mut line) {
             Ok(_) => {
                 let dictionary_entry = parse_line(&line)?;
-                let returned_dictionary_entry =
-                    wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
-                println!("{}", returned_dictionary_entry.to_pretty_string());
+                let _ = wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
+                // let returned_dictionary_entry =
+                //    wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
+                //println!("{}", returned_dictionary_entry.to_pretty_string());
                 return Ok(());
             }
             _ => bail!("couldn't read line"),
@@ -67,10 +68,11 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let entries = wiktionary_en_lua::intercept_witkionary_result(&results)?;
-        for entry in entries {
-            println!("{}", entry.to_pretty_string());
-        }
+        let _ = wiktionary_en_lua::intercept_witkionary_result(&results)?;
+        //let entries = wiktionary_en_lua::intercept_witkionary_result(&results)?;
+        //for entry in entries {
+        //    println!("{}", entry.to_pretty_string());
+        //}
         return Ok(());
     }
 }
