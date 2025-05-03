@@ -33,6 +33,44 @@ local function format_etymology(etymology_text)
 	return table.concat(list, "\n")
 end
 
+local function format_tags(tags)
+	if is_empty(tags) then
+		return ""
+	end
+	local result = {}
+	for _, v in pairs(tags) do
+		table.insert(result, string.format("(%s)", v))
+	end
+	return table.concat(result, ", ")
+end
+
+local function sounds_to_strings(sounds)
+	local result = {}
+	for i, v in ipairs(sounds) do
+		if v.ipa then
+			local formatted = string.format(" %s. IPA: %s %s", apply_style(i, "italic"), v.ipa, format_tags(v.tags))
+			table.insert(result, formatted)
+		end
+		if v.enpr then
+			local formatted = string.format(" %s. enPr: %s %s", apply_style(i, "italic"), v.enpr, format_tags(v.tags))
+			table.insert(result, formatted)
+		end
+	end
+	return result
+end
+
+local function format_sounds(sounds)
+	local result = {}
+	if is_empty(sounds) then
+		return nil
+	end
+
+	table.insert(result, apply_style("Pronunciation", "bold"))
+	table.insert(result, table.concat(sounds_to_strings(sounds), "\n"))
+	return table.concat(result, "\n")
+	--return result
+end
+
 local function translations_to_strings(translations)
 	local result = {}
 
@@ -67,6 +105,9 @@ local function format_entry(entry)
 	end
 	if entry.translations then
 		table.insert(content, format_translations(entry.translations))
+	end
+	if entry.sounds then
+		table.insert(content, format_sounds(entry.sounds))
 	end
 
 	local horizontal_line_str = horizontal_line()
