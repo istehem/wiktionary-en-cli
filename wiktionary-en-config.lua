@@ -175,7 +175,6 @@ local function format_entry(entry)
 			table.concat(content, string.format("\n%s\n", horizontal_line_str))
 		)
 	)
-	print(horizontal_line())
 
 	-- standard formatter
 	--return to_pretty_string(entry)
