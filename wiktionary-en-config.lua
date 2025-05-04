@@ -159,26 +159,23 @@ local function format_entry(entry)
 		table.insert(content, format_translations(entry.translations))
 	end
 
+	-- standard formatter
+	--return to_pretty_string(entry)
+
 	local horizontal_line_str = horizontal_line()
-	print(
-		string.format(
-			[[
+	return string.format(
+		[[
 %s
 %s (%s)
 %s
 %s
 	]],
-			horizontal_line_str,
-			entry.word,
-			entry.pos,
-			horizontal_line_str,
-			table.concat(content, string.format("\n%s\n", horizontal_line_str))
-		)
+		horizontal_line_str,
+		entry.word,
+		entry.pos,
+		horizontal_line_str,
+		table.concat(content, string.format("\n%s\n", horizontal_line_str))
 	)
-
-	-- standard formatter
-	--return to_pretty_string(entry)
-	return ""
 end
 
 intercept = function(entry)
