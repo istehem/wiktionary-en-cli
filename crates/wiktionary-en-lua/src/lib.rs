@@ -114,18 +114,21 @@ pub fn do_one_plus_one() -> Result<u8> {
 }
 
 fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
+    let wiktionary_api = lua.create_table()?;
     let apply_color_fn = apply_color(lua)?;
-    lua.globals().set("apply_color", apply_color_fn)?;
+    wiktionary_api.set("apply_color", apply_color_fn)?;
     let apply_style_fn = apply_style(lua)?;
-    lua.globals().set("apply_style", apply_style_fn)?;
+    wiktionary_api.set("apply_style", apply_style_fn)?;
     let horizontal_line_fn = horizontal_line(lua)?;
-    lua.globals().set("horizontal_line", horizontal_line_fn)?;
+    wiktionary_api.set("horizontal_line", horizontal_line_fn)?;
     let to_pretty_string_fn = to_pretty_string(lua)?;
-    lua.globals().set("to_pretty_string", to_pretty_string_fn)?;
+    wiktionary_api.set("to_pretty_string", to_pretty_string_fn)?;
     let wrap_text_at_fn = wrap_text_at(lua)?;
-    lua.globals().set("wrap_text_at", wrap_text_at_fn)?;
+    wiktionary_api.set("wrap_text_at", wrap_text_at_fn)?;
     let indent_fn = indent(lua)?;
-    lua.globals().set("indent", indent_fn)?;
+    wiktionary_api.set("indent", indent_fn)?;
+
+    lua.globals().set("api", wiktionary_api)?;
     return Ok(());
 }
 

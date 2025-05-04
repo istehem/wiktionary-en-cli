@@ -28,8 +28,8 @@ end
 
 local function format_etymology(etymology_text)
 	local list = {}
-	table.insert(list, apply_style("Etymology:", "bold"))
-	table.insert(list, wrap_text_at(etymology_text, 80))
+	table.insert(list, api.apply_style("Etymology:", "bold"))
+	table.insert(list, api.wrap_text_at(etymology_text, 80))
 	return table.concat(list, "\n")
 end
 
@@ -48,11 +48,12 @@ local function sounds_to_strings(sounds)
 	local result = {}
 	for i, v in ipairs(sounds) do
 		if v.ipa then
-			local formatted = string.format(" %s. IPA: %s %s", apply_style(i, "italic"), v.ipa, format_tags(v.tags))
+			local formatted = string.format(" %s. IPA: %s %s", api.apply_style(i, "italic"), v.ipa, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 		if v.enpr then
-			local formatted = string.format(" %s. enPr: %s %s", apply_style(i, "italic"), v.enpr, format_tags(v.tags))
+			local formatted =
+				string.format(" %s. enPr: %s %s", api.apply_style(i, "italic"), v.enpr, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 	end
@@ -65,7 +66,7 @@ local function format_sounds(sounds)
 		return nil
 	end
 
-	table.insert(result, apply_style("Pronunciation", "bold"))
+	table.insert(result, api.apply_style("Pronunciation", "bold"))
 	table.insert(result, table.concat(sounds_to_strings(sounds), "\n"))
 	return table.concat(result, "\n")
 	--return result
@@ -80,8 +81,8 @@ local function translations_to_strings(translations)
 
 	for _, v in pairs(translations) do
 		local word = v.word and v.word or ""
-		local lang = apply_style(v.lang, "dimmed")
-		lang = apply_style(lang, "italic")
+		local lang = api.apply_style(v.lang, "dimmed")
+		lang = api.apply_style(lang, "italic")
 		local formatted = string.format(" %s) %s", lang, word)
 		table.insert(result, formatted)
 	end
@@ -93,7 +94,7 @@ local function format_translations(translations)
 		return nil
 	end
 	local list = {}
-	table.insert(list, apply_style("Translations:", "bold"))
+	table.insert(list, api.apply_style("Translations:", "bold"))
 	table.insert(list, table.concat(translations_to_strings(translations), "\n"))
 	return table.concat(list, "\n")
 end
@@ -106,8 +107,8 @@ function examples_to_strings(examples)
 	result = {}
 	for i, v in ipairs(examples) do
 		if v.text then
-			local formatted = string.format("%s. %s", apply_style(i, "italic"), wrap_text_at(v.text, 80 - 1))
-			table.insert(result, indent(formatted))
+			local formatted = string.format("%s. %s", api.apply_style(i, "italic"), api.wrap_text_at(v.text, 80 - 1))
+			table.insert(result, api.indent(formatted))
 		end
 	end
 
@@ -120,9 +121,9 @@ end
 
 function format_sense(sense, i)
 	local result = {}
-	local title = string.format("%s. %s", apply_style(i, "bold"), apply_style(format_tags(sense.tags), "bold"))
+	local title = string.format("%s. %s", api.apply_style(i, "bold"), api.apply_style(format_tags(sense.tags), "bold"))
 	table.insert(result, title)
-	table.insert(result, wrap_text_at(format_glosses(sense.glosses), 80))
+	table.insert(result, api.wrap_text_at(format_glosses(sense.glosses), 80))
 	if not is_empty(sense.examples) then
 		table.insert(result, format_examples(sense.examples))
 	end
@@ -160,9 +161,9 @@ local function format_entry(entry)
 	end
 
 	-- standard formatter
-	--return to_pretty_string(entry)
+	--return api.to_pretty_string(entry)
 
-	local horizontal_line_str = horizontal_line()
+	local horizontal_line = api.horizontal_line()
 	return string.format(
 		[[
 %s
@@ -170,16 +171,16 @@ local function format_entry(entry)
 %s
 %s
 	]],
-		horizontal_line_str,
+		horizontal_line,
 		entry.word,
 		entry.pos,
-		horizontal_line_str,
-		table.concat(content, string.format("\n%s\n", horizontal_line_str))
+		horizontal_line,
+		table.concat(content, string.format("\n%s\n", horizontal_line))
 	)
 end
 
 intercept = function(entry)
-	entry.word = apply_color(entry.word, "cyan")
+	entry.word = api.apply_color(entry.word, "cyan")
 	translation_1 = {
 		lang = "en",
 		code = "en",
