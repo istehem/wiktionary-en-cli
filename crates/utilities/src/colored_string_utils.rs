@@ -1,8 +1,8 @@
 use colored::ColoredString;
 use colored::Colorize;
 use std::fmt::Display;
-use textwrap::fill;
 use textwrap;
+use textwrap::fill;
 
 pub const NEWLINE: &str = "\n";
 pub const LINE_WRAP_AT: usize = 80;
