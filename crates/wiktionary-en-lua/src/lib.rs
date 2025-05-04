@@ -124,6 +124,8 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     lua.globals().set("to_pretty_string", to_pretty_string_fn)?;
     let wrap_text_at_fn = wrap_text_at(lua)?;
     lua.globals().set("wrap_text_at", wrap_text_at_fn)?;
+    let indent_fn = indent(lua)?;
+    lua.globals().set("indent", indent_fn)?;
     return Ok(());
 }
 
@@ -171,6 +173,12 @@ fn horizontal_line(lua: &Lua) -> mlua::Result<Function> {
 fn wrap_text_at(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, (text, width): (String, usize)| {
         return Ok(colored_string_utils::wrap(&text.into(), width).to_string());
+    })
+}
+
+fn indent(lua: &Lua) -> mlua::Result<Function> {
+    lua.create_function(|_, text: String| {
+        return Ok(colored_string_utils::indent(&text.into()).to_string());
     })
 }
 

@@ -102,12 +102,30 @@ function format_glosses(glosses)
 	return table.concat(glosses, "\n")
 end
 
+function examples_to_strings(examples)
+	result = {}
+	for i, v in ipairs(examples) do
+		if v.text then
+			local formatted = string.format("%s. %s", apply_style(i, "italic"), wrap_text_at(v.text, 80 - 1))
+			table.insert(result, indent(formatted))
+		end
+	end
+
+	return result
+end
+
+function format_examples(examples)
+	return table.concat(examples_to_strings(examples), "\n")
+end
+
 function format_sense(sense, i)
 	local result = {}
 	local title = string.format("%s. %s", apply_style(i, "bold"), apply_style(format_tags(sense.tags), "bold"))
 	table.insert(result, title)
 	table.insert(result, wrap_text_at(format_glosses(sense.glosses), 80))
-
+	if not is_empty(sense.examples) then
+		table.insert(result, format_examples(sense.examples))
+	end
 	return table.concat(result, "\n")
 end
 
@@ -125,39 +143,6 @@ function format_senses(senses)
 	end
 	return table.concat(senses_to_strings(senses), "\n")
 end
-
---[[
-fn senses_to_strings(senses: &Vec<Sense>) -> Vec<ColoredString> {
-    return senses
-        .into_iter()
-        .enumerate()
-        .map(|(i, sense)| format_sense(sense, i))
-        .collect();
-}
-
-fn format_senses(senses: &Vec<Sense>) -> Option<ColoredString> {
-    if senses.is_empty() {
-        return None;
-    }
-    return Some(NEWLINE.normal().join(senses_to_strings(senses)));
-}
-
-fn format_sense(sense: &Sense, index: usize) -> ColoredString {
-    let mut res: Vec<ColoredString> = Vec::new();
-    let title = format!(
-        "{}. {}",
-        index.to_string().bold(),
-        format_tags(&sense.tags).bold()
-    )
-    .normal();
-    res.push(title);
-    res.push(fill(&format_glosses(&sense.glosses), LINE_WRAP_AT).normal());
-    if !sense.examples.is_empty() {
-        res.push(format_examples(&sense.examples));
-    }
-    return NEWLINE.normal().join(res);
-}
---]]
 
 local function format_entry(entry)
 	local content = {}

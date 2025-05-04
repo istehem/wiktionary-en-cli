@@ -2,6 +2,7 @@ use colored::ColoredString;
 use colored::Colorize;
 use std::fmt::Display;
 use textwrap::fill;
+use textwrap;
 
 pub const NEWLINE: &str = "\n";
 pub const LINE_WRAP_AT: usize = 80;
@@ -41,6 +42,10 @@ impl JoinWrap for ColoredString {
 
 pub fn wrap(text: &ColoredString, width: usize) -> ColoredString {
     return fill(text, width).into();
+}
+
+pub fn indent(text: &ColoredString) -> ColoredString {
+    return textwrap::indent(text, " ").into();
 }
 
 pub fn format_integer(number: usize) -> ColoredString {
