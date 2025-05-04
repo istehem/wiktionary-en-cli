@@ -98,16 +98,80 @@ local function format_translations(translations)
 	return table.concat(list, "\n")
 end
 
+function format_glosses(glosses)
+	return table.concat(glosses, "\n")
+end
+
+function format_sense(sense, i)
+	local result = {}
+	local title = string.format("%s. %s", apply_style(i, "bold"), apply_style(format_tags(sense.tags), "bold"))
+	table.insert(result, title)
+	table.insert(result, wrap_text_at(format_glosses(sense.glosses), 80))
+
+	return table.concat(result, "\n")
+end
+
+function senses_to_strings(senses)
+	local result = {}
+	for i, v in ipairs(senses) do
+		table.insert(result, format_sense(v, i))
+	end
+	return result
+end
+
+function format_senses(senses)
+	if is_empty(senses) then
+		return nil
+	end
+	return table.concat(senses_to_strings(senses), "\n")
+end
+
+--[[
+fn senses_to_strings(senses: &Vec<Sense>) -> Vec<ColoredString> {
+    return senses
+        .into_iter()
+        .enumerate()
+        .map(|(i, sense)| format_sense(sense, i))
+        .collect();
+}
+
+fn format_senses(senses: &Vec<Sense>) -> Option<ColoredString> {
+    if senses.is_empty() {
+        return None;
+    }
+    return Some(NEWLINE.normal().join(senses_to_strings(senses)));
+}
+
+fn format_sense(sense: &Sense, index: usize) -> ColoredString {
+    let mut res: Vec<ColoredString> = Vec::new();
+    let title = format!(
+        "{}. {}",
+        index.to_string().bold(),
+        format_tags(&sense.tags).bold()
+    )
+    .normal();
+    res.push(title);
+    res.push(fill(&format_glosses(&sense.glosses), LINE_WRAP_AT).normal());
+    if !sense.examples.is_empty() {
+        res.push(format_examples(&sense.examples));
+    }
+    return NEWLINE.normal().join(res);
+}
+--]]
+
 local function format_entry(entry)
 	local content = {}
 	if entry.etymology then
 		table.insert(content, format_etymology(entry.etymology))
 	end
-	if entry.translations then
-		table.insert(content, format_translations(entry.translations))
-	end
 	if entry.sounds then
 		table.insert(content, format_sounds(entry.sounds))
+	end
+	if entry.senses then
+		table.insert(content, format_senses(entry.senses))
+	end
+	if entry.translations then
+		table.insert(content, format_translations(entry.translations))
 	end
 
 	local horizontal_line_str = horizontal_line()
