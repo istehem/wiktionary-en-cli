@@ -40,7 +40,7 @@ impl ConfigHandler {
     }
 
     pub fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<DictionaryEntry> {
-        match intercept(dictionary_entry, &self.lua) {
+        match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
                 bail!("{}", err.to_string());
@@ -49,11 +49,20 @@ impl ConfigHandler {
     }
 
     pub fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
-        match format(dictionary_entry) {
+        match format(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
                 bail!("{}", err.to_string());
             }
+        }
+    }
+
+    pub fn load_config(&self) -> Result<Config> {
+        match load_config(&self.lua) {
+            Ok(result) => {
+                return Ok(result);
+            }
+            Err(err) => bail!(err.to_string()),
         }
     }
 }
@@ -73,7 +82,7 @@ pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<
     return Ok(intercepted_result);
 }
 
-fn intercept(dictionary_entry: &DictionaryEntry, lua: &Lua) -> mlua::Result<DictionaryEntry> {
+fn intercept(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry> {
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
         return intercept.call(dictionary_entry.clone());
@@ -93,13 +102,7 @@ pub fn format_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<Str
     return Ok(formatted_entries);
 }
 
-fn format(dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    let lua = Lua::new();
-    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
-        .exec()?;
-
-    load_lua_api(&lua)?;
-
+fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
     let format_fn: mlua::Value = lua.globals().get("format_entry")?;
     if let Some(format_fn) = format_fn.as_function() {
         return Ok(Some(format_fn.call(dictionary_entry.clone())?));
@@ -134,38 +137,11 @@ impl IntoLua for Config {
 }
 
 fn load_config(lua: &Lua) -> mlua::Result<Config> {
-    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
-        .exec()?;
     let config: mlua::Value = lua.globals().get("config")?;
     if let Some(config) = config.as_function() {
         return config.call(());
     }
     return Config::from_lua(config, lua);
-}
-
-pub fn do_load_config() -> Result<Config> {
-    let lua = Lua::new();
-    match load_config(&lua) {
-        Ok(result) => return Ok(result),
-        Err(err) => bail!(err.to_string()),
-    }
-}
-
-fn one_plus_one(lua: &Lua) -> mlua::Result<u8> {
-    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
-        .exec()?;
-    let one_plus_one: mlua::Function = lua.globals().get("one_plus_one")?;
-    let result: u8 = one_plus_one.call(())?;
-    println!("lua function returned: {}", result);
-    return Ok(result);
-}
-
-pub fn do_one_plus_one() -> Result<u8> {
-    let lua = Lua::new();
-    match one_plus_one(&lua) {
-        Ok(result) => return Ok(result),
-        Err(err) => bail!(err.to_string()),
-    }
 }
 
 fn load_lua_api(lua: &Lua) -> mlua::Result<()> {

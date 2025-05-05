@@ -19,16 +19,9 @@ mod tests {
 
     #[traced_test]
     #[test]
-    fn test_function() -> Result<()> {
-        let result = wiktionary_en_lua::do_one_plus_one()?;
-        assert!(result == 2);
-        return Ok(());
-    }
-
-    #[traced_test]
-    #[test]
     fn test_load_config() -> Result<()> {
-        let config = wiktionary_en_lua::do_load_config()?;
+        let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
+        let config = config_handler.load_config()?;
         info!("lua returns a config with message: {}", &config.message);
         assert!(config.message == "Hello World!");
         assert!(config.language == Language::SV);
