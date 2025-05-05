@@ -54,6 +54,17 @@ impl ConfigHandler {
         }
     }
 
+    pub fn intercept_witkionary_result(
+        &self,
+        result: &Vec<DictionaryEntry>,
+    ) -> Result<Vec<DictionaryEntry>> {
+        let mut intercepted_result = Vec::new();
+        for entry in result {
+            intercepted_result.push(self.intercept(&entry)?);
+        }
+        return Ok(intercepted_result);
+    }
+
     pub fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
         match format(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
@@ -61,6 +72,16 @@ impl ConfigHandler {
                 bail!("{}", err.to_string());
             }
         }
+    }
+
+    pub fn format_witkionary_result(&self, result: &Vec<DictionaryEntry>) -> Result<Vec<String>> {
+        let mut formatted_entries = Vec::new();
+        for entry in result {
+            if let Some(formatted_entry) = self.format(&entry)? {
+                formatted_entries.push(formatted_entry);
+            }
+        }
+        return Ok(formatted_entries);
     }
 
     fn load_config(&self) -> Result<Config> {
@@ -79,15 +100,6 @@ fn init_lua(lua: &Lua) -> mlua::Result<()> {
     return load_lua_api(&lua);
 }
 
-pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<DictionaryEntry>> {
-    let config_handler = ConfigHandler::init()?;
-    let mut intercepted_result = Vec::new();
-    for entry in result {
-        intercepted_result.push(config_handler.intercept(&entry)?);
-    }
-    return Ok(intercepted_result);
-}
-
 fn intercept(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry> {
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
@@ -95,17 +107,6 @@ fn intercept(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Dict
     }
 
     return Ok(dictionary_entry.clone());
-}
-
-pub fn format_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<String>> {
-    let config_handler = ConfigHandler::init()?;
-    let mut formatted_entries = Vec::new();
-    for entry in result {
-        if let Some(formatted_entry) = config_handler.format(&entry)? {
-            formatted_entries.push(formatted_entry);
-        }
-    }
-    return Ok(formatted_entries);
 }
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {

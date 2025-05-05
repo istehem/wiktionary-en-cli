@@ -82,7 +82,8 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let formatted_entries = wiktionary_en_lua::format_witkionary_result(&results)?;
+        let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
+        let formatted_entries = config_handler.format_witkionary_result(&results)?;
         for formatted_entry in formatted_entries {
             println!("{}", formatted_entry);
         }
