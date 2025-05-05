@@ -147,6 +147,7 @@ end
 
 function format_entry(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
+	
 	local content = {}
 	if entry.etymology then
 		table.insert(content, format_etymology(entry.etymology))
