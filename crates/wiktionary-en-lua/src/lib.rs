@@ -28,6 +28,15 @@ impl Config {
             }
         }
     }
+
+    pub fn format(dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
+        match format(dictionary_entry) {
+            Ok(entry) => Ok(entry),
+            Err(err) => {
+                bail!("{}", err.to_string());
+            }
+        }
+    }
 }
 
 pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<DictionaryEntry>> {
@@ -51,6 +60,31 @@ fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry
     }
 
     return Ok(dictionary_entry.clone());
+}
+
+pub fn format_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<String>> {
+    let mut formatted_entries = Vec::new();
+    for entry in result {
+        if let Some(formatted_entry) = Config::format(&entry)? {
+            formatted_entries.push(formatted_entry);
+        }
+    }
+    return Ok(formatted_entries);
+}
+
+fn format(dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
+    let lua = Lua::new();
+    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
+        .exec()?;
+
+    load_lua_api(&lua)?;
+
+    let format_fn: mlua::Value = lua.globals().get("format_entry")?;
+    if let Some(format_fn) = format_fn.as_function() {
+        return Ok(Some(format_fn.call(dictionary_entry.clone())?));
+    }
+
+    return Ok(None);
 }
 
 impl FromLua for Config {

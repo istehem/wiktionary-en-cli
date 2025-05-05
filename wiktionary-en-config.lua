@@ -145,7 +145,8 @@ function format_senses(senses)
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
-local function format_entry(entry)
+function format_entry(entry)
+	entry.word = api.apply_color(entry.word, "cyan")
 	local content = {}
 	if entry.etymology then
 		table.insert(content, format_etymology(entry.etymology))

@@ -44,8 +44,8 @@ mod tests {
         let mut line = String::new();
         match file_reader.read_line(&mut line) {
             Ok(_) => {
-                let dictionary_entry = parse_line(&line)?;
-                let _ = wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
+                //let dictionary_entry = parse_line(&line)?;
+                //let _ = wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
                 // let returned_dictionary_entry =
                 //    wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
                 //println!("{}", returned_dictionary_entry.to_pretty_string());
@@ -68,11 +68,31 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let _ = wiktionary_en_lua::intercept_witkionary_result(&results)?;
+        //let _ = wiktionary_en_lua::intercept_witkionary_result(&results)?;
         //let entries = wiktionary_en_lua::intercept_witkionary_result(&results)?;
         //for entry in entries {
         //    println!("{}", entry.to_pretty_string());
         //}
+        return Ok(());
+    }
+
+    #[traced_test]
+    #[test]
+    fn test_format_several() -> Result<()> {
+        let language = Language::EN;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+        let mut results = Vec::new();
+
+        for (_index, line) in file_reader.lines().enumerate().take(10) {
+            let dictionary_entry = parse_line(&line?)?;
+            results.push(dictionary_entry);
+        }
+
+        let formatted_entries = wiktionary_en_lua::format_witkionary_result(&results)?;
+        for formatted_entry in formatted_entries {
+            println!("{}", formatted_entry);
+        }
         return Ok(());
     }
 }
