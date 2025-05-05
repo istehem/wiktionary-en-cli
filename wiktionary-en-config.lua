@@ -182,7 +182,6 @@ function format_entry(entry)
 end
 
 intercept = function(entry)
-	entry.word = api.apply_color(entry.word, "cyan")
 	translation_1 = {
 		lang = "en",
 		code = "en",

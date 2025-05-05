@@ -12,6 +12,11 @@ pub struct Config {
     pub language: Language,
 }
 
+pub struct ConfigHandler {
+    pub lua: Lua,
+    pub config: Config,
+}
+
 impl Config {
     fn new() -> Self {
         Self {
@@ -19,9 +24,23 @@ impl Config {
             language: Language::default(),
         }
     }
+}
 
-    pub fn intercept(dictionary_entry: &DictionaryEntry) -> Result<DictionaryEntry> {
-        match intercept(dictionary_entry) {
+impl ConfigHandler {
+    pub fn init() -> Result<Self> {
+        let lua = Lua::new();
+
+        match init_lua(&lua) {
+            Ok(_) => Ok(Self {
+                lua: lua,
+                config: Config::new(),
+            }),
+            Err(err) => bail!("{}", err.to_string()),
+        }
+    }
+
+    pub fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<DictionaryEntry> {
+        match intercept(dictionary_entry, &self.lua) {
             Ok(entry) => Ok(entry),
             Err(err) => {
                 bail!("{}", err.to_string());
@@ -29,7 +48,7 @@ impl Config {
         }
     }
 
-    pub fn format(dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
+    pub fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
         match format(dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
@@ -39,21 +58,22 @@ impl Config {
     }
 }
 
+fn init_lua(lua: &Lua) -> mlua::Result<()> {
+    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
+        .exec()?;
+    return load_lua_api(&lua);
+}
+
 pub fn intercept_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<DictionaryEntry>> {
+    let config_handler = ConfigHandler::init()?;
     let mut intercepted_result = Vec::new();
     for entry in result {
-        intercepted_result.push(Config::intercept(&entry)?);
+        intercepted_result.push(config_handler.intercept(&entry)?);
     }
     return Ok(intercepted_result);
 }
 
-fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry> {
-    let lua = Lua::new();
-    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
-        .exec()?;
-
-    load_lua_api(&lua)?;
-
+fn intercept(dictionary_entry: &DictionaryEntry, lua: &Lua) -> mlua::Result<DictionaryEntry> {
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
         return intercept.call(dictionary_entry.clone());
@@ -63,9 +83,10 @@ fn intercept(dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry
 }
 
 pub fn format_witkionary_result(result: &Vec<DictionaryEntry>) -> Result<Vec<String>> {
+    let config_handler = ConfigHandler::init()?;
     let mut formatted_entries = Vec::new();
     for entry in result {
-        if let Some(formatted_entry) = Config::format(&entry)? {
+        if let Some(formatted_entry) = config_handler.format(&entry)? {
             formatted_entries.push(formatted_entry);
         }
     }
