@@ -21,7 +21,7 @@ mod tests {
     #[test]
     fn test_load_config() -> Result<()> {
         let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
-        let config = config_handler.load_config()?;
+        let config = config_handler.config;
         info!("lua returns a config with message: {}", &config.message);
         assert!(config.message == "Hello World!");
         assert!(config.language == Language::SV);

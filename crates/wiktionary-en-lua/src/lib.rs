@@ -28,6 +28,12 @@ impl Config {
 
 impl ConfigHandler {
     pub fn init() -> Result<Self> {
+        let mut config_handler = Self::init_lua()?;
+        config_handler.config = config_handler.load_config()?;
+        return Ok(config_handler);
+    }
+
+    fn init_lua() -> Result<Self> {
         let lua = Lua::new();
 
         match init_lua(&lua) {
@@ -57,7 +63,7 @@ impl ConfigHandler {
         }
     }
 
-    pub fn load_config(&self) -> Result<Config> {
+    fn load_config(&self) -> Result<Config> {
         match load_config(&self.lua) {
             Ok(result) => {
                 return Ok(result);
