@@ -9,11 +9,11 @@ use wiktionary_en_entities::wiktionary_entity::*;
 #[derive(Default, Clone)]
 pub struct Config {
     pub message: String,
-    pub language: Language,
+    pub language: Option<Language>,
 }
 
 pub struct ConfigHandler {
-    pub lua: Lua,
+    lua: Lua,
     pub config: Config,
 }
 
@@ -21,7 +21,7 @@ impl Config {
     fn new() -> Self {
         Self {
             message: String::from("default"),
-            language: Language::default(),
+            language: None,
         }
     }
 }
@@ -39,7 +39,7 @@ impl ConfigHandler {
         match init_lua(&lua) {
             Ok(_) => Ok(Self {
                 lua: lua,
-                config: Config::new(),
+                config: Config::default(),
             }),
             Err(err) => bail!("{}", err.to_string()),
         }
@@ -127,7 +127,7 @@ impl FromLua for Config {
                 let language_code: String = table.get("language")?;
                 return Ok(Config {
                     message: message,
-                    language: Language::from_str_or_default(&language_code),
+                    language: Language::from_str(&language_code),
                 });
             }
             None => Ok(Config::new()),

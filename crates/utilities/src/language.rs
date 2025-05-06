@@ -30,6 +30,9 @@ impl Language {
     pub fn from_str_or_default(language: &str) -> Language {
         return language.parse().unwrap_or_default();
     }
+    pub fn from_str(language: &str) -> Option<Language> {
+        return language.parse().ok();
+    }
 }
 
 impl Default for Language {

@@ -1,6 +1,6 @@
 config = function()
 	return {
-		language = "sv",
+		language = "en",
 		message = "Hello World!",
 	}
 end

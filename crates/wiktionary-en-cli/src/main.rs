@@ -306,11 +306,11 @@ fn run(
     };
 }
 
-fn get_language(language: &Option<String>) -> Result<Language> {
+fn get_language(language: &Option<String>) -> Result<Option<Language>> {
     if let Some(language) = language {
-        return language.parse();
+        return Ok(Some(language.parse()?));
     }
-    return Ok(Language::default());
+    return Ok(None);
 }
 
 fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
@@ -322,17 +322,20 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
 
 fn run_with_config(
     term: &Option<String>,
-    language: &Language,
+    language: Option<Language>,
     max_results: usize,
     case_insensitive: bool,
     db_path: Option<String>,
 ) -> Result<WiktionaryEnResult> {
+    let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
+    let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
+
     let result = run(
         term,
-        language,
+        &language_to_use,
         max_results,
         case_insensitive,
-        get_db_path(db_path, language),
+        get_db_path(db_path, &language_to_use),
     )?;
     return Ok(result);
 }
@@ -340,16 +343,20 @@ fn run_with_config(
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
+    let language_to_use = language.unwrap_or_default();
 
     if args.stats {
-        return print_stats(get_db_path(args.db_path, &language), &language);
+        return print_stats(
+            get_db_path(args.db_path, &language_to_use),
+            &language_to_use,
+        );
     }
     #[cfg(feature = "sonic")]
     if args.autocomplete {
         let search_term = &args
             .search_term
             .ok_or(anyhow::anyhow!("a search term is required"))?;
-        let result = wiktionary_en_identifier_index::suggest(&language, search_term)?;
+        let result = wiktionary_en_identifier_index::suggest(&language_to_use, search_term)?;
         utilities::pager::print_lines_in_pager(&result)?;
         return Ok(());
     }
@@ -358,13 +365,13 @@ fn main() -> Result<()> {
         let search_term = &args
             .search_term
             .ok_or(anyhow::anyhow!("a search term is required"))?;
-        let result = wiktionary_en_identifier_index::query(&language, search_term)?;
+        let result = wiktionary_en_identifier_index::query(&language_to_use, search_term)?;
         utilities::pager::print_lines_in_pager(&result)?;
         return Ok(());
     }
     let result = run_with_config(
         &args.search_term,
-        &language,
+        language,
         args.max_results,
         args.case_insensitive,
         args.db_path,
