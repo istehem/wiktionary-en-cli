@@ -7,7 +7,7 @@ edition = "2021"
 wiktionary-en-entities = { path = "../wiktionary-en-entities" }
 wiktionary-en-db = { path = "../wiktionary-en-db" }
 wiktionary-en-identifier-index = { path = "../wiktionary-en-identifier-index", optional = true }
-wiktionary-en-lua = { path = "../wiktionary-en-lua", optional = true }
+wiktionary-en-lua = { path = "../wiktionary-en-lua" }
 utilities = { path = "../utilities" }
 clap = { workspace = true }
 anyhow = { workspace = true } 
@@ -18,4 +18,4 @@ edit-distance = { workspace = true }
 
 [features]
 sonic = [ "wiktionary-en-identifier-index" ]
-lua = [ "wiktionary-en-lua" ]
+#lua = [ "wiktionary-en-lua" ]
