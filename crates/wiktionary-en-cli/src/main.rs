@@ -330,13 +330,15 @@ fn run_with_config(
     let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
     let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
 
-    return run(
+    let mut result = run(
         term,
         &language_to_use,
         max_results,
         case_insensitive,
         get_db_path(db_path, &language_to_use),
-    );
+    )?;
+    result.hits = config_handler.intercept_witkionary_result(&result.hits)?;
+    return Ok(result);
 }
 
 fn main() -> Result<()> {
