@@ -24,7 +24,7 @@ mod tests {
         let config = config_handler.config;
         info!("lua returns a config with message: {}", &config.message);
         assert!(config.message == "Hello World!");
-        assert!(config.language == Language::SV);
+        assert!(config.language == Some(Language::EN));
         return Ok(());
     }
 
