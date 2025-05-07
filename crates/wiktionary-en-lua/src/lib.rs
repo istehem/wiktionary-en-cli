@@ -54,7 +54,7 @@ impl ConfigHandler {
         }
     }
 
-    pub fn intercept_witkionary_result(
+    pub fn intercept_wiktionary_result(
         &self,
         result: &Vec<DictionaryEntry>,
     ) -> Result<Option<Vec<DictionaryEntry>>> {

@@ -358,7 +358,7 @@ fn main() -> Result<()> {
         args.case_insensitive,
         get_db_path(args.db_path, &language_to_use),
     )?;
-    if let Some(hits) = config_handler.intercept_witkionary_result(&result.hits)? {
+    if let Some(hits) = config_handler.intercept_wiktionary_result(&result.hits)? {
         result.hits = hits;
     }
     return utilities::pager::print_in_pager(&result);
