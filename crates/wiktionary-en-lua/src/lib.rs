@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use colored::Colorize;
-use mlua::{FromLua, Function, IntoLua, Lua, Value};
+use mlua::{FromLua, Function, Lua, Value};
 use utilities::colored_string_utils;
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
@@ -45,7 +45,7 @@ impl ConfigHandler {
         }
     }
 
-    pub fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<DictionaryEntry> {
+    pub fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<DictionaryEntry>> {
         match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
@@ -57,12 +57,16 @@ impl ConfigHandler {
     pub fn intercept_witkionary_result(
         &self,
         result: &Vec<DictionaryEntry>,
-    ) -> Result<Vec<DictionaryEntry>> {
+    ) -> Result<Option<Vec<DictionaryEntry>>> {
         let mut intercepted_result = Vec::new();
         for entry in result {
-            intercepted_result.push(self.intercept(&entry)?);
+            if let Some(entry) = self.intercept(&entry)? {
+                intercepted_result.push(entry);
+            } else {
+                return Ok(None);
+            }
         }
-        return Ok(intercepted_result);
+        return Ok(Some(intercepted_result));
     }
 
     pub fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
@@ -100,13 +104,16 @@ fn init_lua(lua: &Lua) -> mlua::Result<()> {
     return load_lua_api(&lua);
 }
 
-fn intercept(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<DictionaryEntry> {
+fn intercept(
+    lua: &Lua,
+    dictionary_entry: &DictionaryEntry,
+) -> mlua::Result<Option<DictionaryEntry>> {
     let intercept: mlua::Value = lua.globals().get("intercept")?;
     if let Some(intercept) = intercept.as_function() {
-        return intercept.call(dictionary_entry.clone());
+        return Ok(Some(intercept.call(dictionary_entry.clone())?));
     }
 
-    return Ok(dictionary_entry.clone());
+    return Ok(None);
 }
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
@@ -132,14 +139,6 @@ impl FromLua for Config {
             }
             None => Ok(Config::new()),
         };
-    }
-}
-
-impl IntoLua for Config {
-    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let config = lua.create_table()?;
-        config.set("message", self.message)?;
-        return Ok(mlua::Value::Table(config));
     }
 }
 

@@ -320,31 +320,11 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
 }
 
-fn run_with_config(
-    term: &Option<String>,
-    language: Option<Language>,
-    max_results: usize,
-    case_insensitive: bool,
-    db_path: Option<String>,
-) -> Result<WiktionaryEnResult> {
-    let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
-    let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
-
-    let mut result = run(
-        term,
-        &language_to_use,
-        max_results,
-        case_insensitive,
-        get_db_path(db_path, &language_to_use),
-    )?;
-    result.hits = config_handler.intercept_witkionary_result(&result.hits)?;
-    return Ok(result);
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
-    let language_to_use = language.unwrap_or_default();
+    let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
+    let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
 
     if args.stats {
         return print_stats(
@@ -370,13 +350,16 @@ fn main() -> Result<()> {
         utilities::pager::print_lines_in_pager(&result)?;
         return Ok(());
     }
-    let result = run_with_config(
+
+    let mut result = run(
         &args.search_term,
-        language,
+        &language_to_use,
         args.max_results,
         args.case_insensitive,
-        args.db_path,
+        get_db_path(args.db_path, &language_to_use),
     )?;
-
+    if let Some(hits) = config_handler.intercept_witkionary_result(&result.hits)? {
+        result.hits = hits;
+    }
     return utilities::pager::print_in_pager(&result);
 }

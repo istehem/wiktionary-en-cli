@@ -143,7 +143,7 @@ end
 
 function format_entry(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
-	
+
 	local content = {}
 	if entry.etymology then
 		table.insert(content, format_etymology(entry.etymology))
@@ -191,7 +191,6 @@ intercept = function(entry)
 	if is_empty(entry.translations) then
 		entry.translations = { translation_1, translation_2 }
 	end
-	print(format_entry(entry))
-
+	entry.word = api.apply_color(entry.word, "cyan")
 	return entry
 end
