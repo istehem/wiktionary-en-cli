@@ -45,7 +45,7 @@ impl ConfigHandler {
         }
     }
 
-    pub fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<DictionaryEntry>> {
+    fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<DictionaryEntry>> {
         match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
@@ -69,7 +69,7 @@ impl ConfigHandler {
         return Ok(Some(intercepted_result));
     }
 
-    pub fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
+    fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
         match format(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
@@ -78,14 +78,19 @@ impl ConfigHandler {
         }
     }
 
-    pub fn format_witkionary_result(&self, result: &Vec<DictionaryEntry>) -> Result<Vec<String>> {
+    pub fn format_witkionary_result(
+        &self,
+        result: &Vec<DictionaryEntry>,
+    ) -> Result<Option<Vec<String>>> {
         let mut formatted_entries = Vec::new();
         for entry in result {
             if let Some(formatted_entry) = self.format(&entry)? {
                 formatted_entries.push(formatted_entry);
+            } else {
+                return Ok(None);
             }
         }
-        return Ok(formatted_entries);
+        return Ok(Some(formatted_entries));
     }
 
     fn load_config(&self) -> Result<Config> {
