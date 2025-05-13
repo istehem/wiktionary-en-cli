@@ -68,6 +68,18 @@ struct WiktionaryEnResult {
     config_handler: wiktionary_en_lua::ConfigHandler,
 }
 
+impl WiktionaryEnResult {
+    pub fn intercept(&mut self) -> Result<()> {
+        if let Some(hits) = self
+            .config_handler
+            .intercept_wiktionary_result(&self.hits)?
+        {
+            self.hits = hits;
+        }
+        return Ok(());
+    }
+}
+
 impl fmt::Display for WiktionaryEnResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(did_you_mean) = &self.did_you_mean {
@@ -370,7 +382,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let result = run(
+    let mut result = run(
         &args.search_term,
         &language_to_use,
         args.max_results,
@@ -378,8 +390,6 @@ fn main() -> Result<()> {
         get_db_path(args.db_path, &language_to_use),
         config_handler,
     )?;
-    //if let Some(hits) = config_handler.intercept_wiktionary_result(&result.hits)? {
-    //    result.hits = hits;
-    //}
+    result.intercept()?;
     return utilities::pager::print_in_pager(&result);
 }
