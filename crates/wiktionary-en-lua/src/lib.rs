@@ -1,10 +1,12 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use colored::Colorize;
 use mlua::{FromLua, Function, Lua, Value};
 use utilities::colored_string_utils;
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 use wiktionary_en_entities::wiktionary_entity::*;
+
+const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 
 #[derive(Default, Clone)]
 pub struct Config {
@@ -41,7 +43,7 @@ impl ConfigHandler {
                 lua: lua,
                 config: Config::default(),
             }),
-            Err(err) => bail!("{}", err.to_string()),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
     }
 
@@ -49,7 +51,7 @@ impl ConfigHandler {
         match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
-                bail!("{}", err.to_string());
+                return Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR));
             }
         }
     }
@@ -73,12 +75,12 @@ impl ConfigHandler {
         match format(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => {
-                bail!("{}", err.to_string());
+                return Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR));
             }
         }
     }
 
-    pub fn format_witkionary_result(
+    pub fn format_wiktionary_result(
         &self,
         result: &Vec<DictionaryEntry>,
     ) -> Result<Option<Vec<String>>> {
@@ -98,7 +100,7 @@ impl ConfigHandler {
             Ok(result) => {
                 return Ok(result);
             }
-            Err(err) => bail!(err.to_string()),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
     }
 }

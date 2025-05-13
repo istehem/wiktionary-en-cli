@@ -65,6 +65,7 @@ struct DidYouMean {
 struct WiktionaryEnResult {
     did_you_mean: Option<DidYouMean>,
     hits: Vec<DictionaryEntry>,
+    config_handler: wiktionary_en_lua::ConfigHandler,
 }
 
 impl fmt::Display for WiktionaryEnResult {
@@ -76,10 +77,22 @@ impl fmt::Display for WiktionaryEnResult {
                 did_you_mean_banner(&did_you_mean.searched_for, &did_you_mean.suggestion)
             )?;
         }
-        for hit in &self.hits {
-            writeln!(f, "{}", &hit)?;
+
+        match self.config_handler.format_wiktionary_result(&self.hits) {
+            Ok(Some(formated_hits)) => {
+                for hit in &formated_hits {
+                    writeln!(f, "{}", &hit)?;
+                }
+                return Ok(());
+            }
+            Ok(None) => {
+                for hit in &self.hits {
+                    writeln!(f, "{}", &hit)?;
+                }
+                return Ok(());
+            }
+            Err(err) => writeln!(f, "{:?}", err),
         }
-        return Ok(());
     }
 }
 
@@ -249,6 +262,7 @@ fn run(
     max_results: usize,
     case_insensitive: bool,
     path: PathBuf,
+    config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryEnResult> {
     match term {
         Some(s) => match find_by_word_in_db(s, language) {
@@ -256,6 +270,7 @@ fn run(
                 return Ok(WiktionaryEnResult {
                     did_you_mean: None,
                     hits: csr,
+                    config_handler: config_handler,
                 });
             }
             Ok(None) => {
@@ -271,6 +286,7 @@ fn run(
                                     suggestion: did_you_mean,
                                 }),
                                 hits: result,
+                                config_handler: config_handler,
                             });
                         }
                     }
@@ -284,11 +300,13 @@ fn run(
                                     suggestion: did_you_mean.word.clone(),
                                 }),
                                 hits: vec![did_you_mean],
+                                config_handler: config_handler,
                             });
                         }
                         return Ok(WiktionaryEnResult {
                             did_you_mean: None,
                             hits: sr.full_matches,
+                            config_handler: config_handler,
                         });
                     }
                     Err(e) => bail!(e),
@@ -301,6 +319,7 @@ fn run(
             return Ok(WiktionaryEnResult {
                 did_you_mean: None,
                 hits: vec![hit],
+                config_handler: config_handler,
             });
         }
     };
@@ -351,15 +370,16 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let mut result = run(
+    let result = run(
         &args.search_term,
         &language_to_use,
         args.max_results,
         args.case_insensitive,
         get_db_path(args.db_path, &language_to_use),
+        config_handler,
     )?;
-    if let Some(hits) = config_handler.intercept_wiktionary_result(&result.hits)? {
-        result.hits = hits;
-    }
+    //if let Some(hits) = config_handler.intercept_wiktionary_result(&result.hits)? {
+    //    result.hits = hits;
+    //}
     return utilities::pager::print_in_pager(&result);
 }
