@@ -124,7 +124,7 @@ fn intercept(
 }
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    let format_fn: mlua::Value = lua.globals().get("format_entry")?;
+    let format_fn: mlua::Value = lua.globals().get("format")?;
     if let Some(format_fn) = format_fn.as_function() {
         return Ok(Some(format_fn.call(dictionary_entry.clone())?));
     }

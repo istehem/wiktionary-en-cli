@@ -1,22 +1,10 @@
+-- the config may also be defined as a simple table
 config = function()
 	return {
 		language = "en",
 		message = "Hello World!",
 	}
 end
-
---[[
-config = {
-    language = "sv",
-    message = "Hello World!"
-}
-	for k, v in pairs(entry) do
-		--print(string.format('found key "%s" with value "%s"', k, v))
-		if type(v) == "table" then
-			--intercept(v)
-		end
-	end
---]]
 
 local function is_empty(t)
 	return next(t) == nil
@@ -85,18 +73,14 @@ local function translations_to_strings(translations)
 	return result
 end
 
-local function filter_inplace(arr, func)
-	local new_index = 1
-	local size_orig = #arr
-	for old_index, v in ipairs(arr) do
-		if func(v, old_index) then
-			arr[new_index] = v
-			new_index = new_index + 1
+local function filter(arr, func)
+	local result = {}
+	for _, v in ipairs(arr) do
+		if func(v) then
+			table.insert(result, v)
 		end
 	end
-	for i = new_index, size_orig do
-		arr[i] = nil
-	end
+	return result
 end
 
 local function has_value(tab, val)
@@ -112,18 +96,14 @@ function translate_to(t)
 	return has_value({ "en", "sv", "de", "fr", "es" }, t.code)
 end
 
-local function filter_translations(translations)
-	filter_inplace(translations, translate_to)
-end
-
 local function format_translations(translations)
-	local filtered_translations = filter_translations(translations)
-	if filtered_translations and is_empty(filtered_translations) then
+	local filtered_translations = filter(translations, translate_to)
+	if is_empty(filtered_translations) then
 		return nil
 	end
 	local list = {}
 	table.insert(list, api.apply_style("Translations:", "bold"))
-	table.insert(list, table.concat(translations_to_strings(translations), "\n"))
+	table.insert(list, table.concat(translations_to_strings(filtered_translations), "\n"))
 	return table.concat(list, "\n")
 end
 
@@ -173,7 +153,8 @@ function format_senses(senses)
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
-function format_entry(entry)
+-- enable custom formatting of results by defining a format function
+function format(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
 
 	local content = {}
@@ -206,6 +187,8 @@ function format_entry(entry)
 	)
 end
 
+-- enable interception by defining an intercept function
+--[[
 intercept = function(entry)
 	translation_1 = {
 		lang = "en",
@@ -220,6 +203,6 @@ intercept = function(entry)
 	if is_empty(entry.translations) then
 		entry.translations = { translation_1, translation_2 }
 	end
-	entry.word = api.apply_color(entry.word, "cyan")
 	return entry
 end
+--]]
