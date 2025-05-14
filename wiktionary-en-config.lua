@@ -1,15 +1,30 @@
--- the config may also be defined as a simple table
-config = function()
-	return {
-		language = "en",
-		message = "Hello World!",
-	}
-end
-
+-- Generic helper functions
+-------------------------------------------------------------------------------
 local function is_empty(t)
 	return next(t) == nil
 end
 
+local function filter(arr, func)
+	local result = {}
+	for _, v in ipairs(arr) do
+		if func(v) then
+			table.insert(result, v)
+		end
+	end
+	return result
+end
+
+local function has_value(tab, val)
+	for _, value in ipairs(tab) do
+		if value == val then
+			return true
+		end
+	end
+	return false
+end
+
+-- Helper functions
+-------------------------------------------------------------------------------
 local function format_etymology(etymology_text)
 	local list = {}
 	table.insert(list, api.apply_style("Etymology:", "bold"))
@@ -70,25 +85,6 @@ local function translations_to_strings(translations)
 		table.insert(result, formatted)
 	end
 	return result
-end
-
-local function filter(arr, func)
-	local result = {}
-	for _, v in ipairs(arr) do
-		if func(v) then
-			table.insert(result, v)
-		end
-	end
-	return result
-end
-
-local function has_value(tab, val)
-	for _, value in ipairs(tab) do
-		if value == val then
-			return true
-		end
-	end
-	return false
 end
 
 function translate_to(t)
@@ -152,7 +148,18 @@ function format_senses(senses)
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
--- enable custom formatting of results by defining a format function
+-- Enable a configuration of standard values by defining a config function.
+-- It may also be defined as a simple table
+-------------------------------------------------------------------------------
+config = function()
+	return {
+		language = "en",
+		message = "Hello World!",
+	}
+end
+
+-- Enable custom formatting of results by defining a format function.
+-------------------------------------------------------------------------------
 function format(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
 
@@ -186,7 +193,8 @@ function format(entry)
 	)
 end
 
--- enable interception by defining an intercept function
+-- Enable interception by defining an intercept function.
+-------------------------------------------------------------------------------
 --[[
 intercept = function(entry)
 	translation_1 = {
