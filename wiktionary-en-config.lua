@@ -53,7 +53,6 @@ local function format_sounds(sounds)
 	table.insert(result, api.apply_style("Pronunciation", "bold"))
 	table.insert(result, table.concat(sounds_to_strings(sounds), "\n"))
 	return table.concat(result, "\n")
-	--return result
 end
 
 local function translations_to_strings(translations)
@@ -93,7 +92,7 @@ local function has_value(tab, val)
 end
 
 function translate_to(t)
-	return has_value({ "en", "sv", "de", "fr", "es" }, t.code)
+	return has_value({ "en", "sv", "de", "fr", "es", "it" }, t.code)
 end
 
 local function format_translations(translations)
