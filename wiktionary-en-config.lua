@@ -85,8 +85,40 @@ local function translations_to_strings(translations)
 	return result
 end
 
+local function filter_inplace(arr, func)
+	local new_index = 1
+	local size_orig = #arr
+	for old_index, v in ipairs(arr) do
+		if func(v, old_index) then
+			arr[new_index] = v
+			new_index = new_index + 1
+		end
+	end
+	for i = new_index, size_orig do
+		arr[i] = nil
+	end
+end
+
+local function has_value(tab, val)
+	for index, value in ipairs(tab) do
+		if value == val then
+			return true
+		end
+	end
+	return false
+end
+
+function translate_to(t)
+	return has_value({ "en", "sv", "de", "fr", "es" }, t.code)
+end
+
+local function filter_translations(translations)
+	filter_inplace(translations, translate_to)
+end
+
 local function format_translations(translations)
-	if is_empty(translations) then
+	local filtered_translations = filter_translations(translations)
+	if filtered_translations and is_empty(filtered_translations) then
 		return nil
 	end
 	local list = {}
@@ -157,9 +189,6 @@ function format_entry(entry)
 	if entry.translations then
 		table.insert(content, format_translations(entry.translations))
 	end
-
-	-- standard formatter
-	--return api.to_pretty_string(entry)
 
 	local horizontal_line = api.horizontal_line()
 	return string.format(
