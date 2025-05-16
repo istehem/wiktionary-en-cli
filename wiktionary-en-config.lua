@@ -110,7 +110,11 @@ function examples_to_strings(examples)
 	result = {}
 	for i, v in ipairs(examples) do
 		if v.text then
-			local formatted = string.format("%s. %s", api.apply_style(i, "italic"), api.wrap_text_at(v.text, 80 - 1))
+			local formatted = string.format(
+				"%s. %s",
+				api.apply_style(api.apply_style(i, "italic"), "dimmed"),
+				api.wrap_text_at(v.text, 80 - 1)
+			)
 			table.insert(result, api.indent(formatted))
 		end
 	end
