@@ -51,8 +51,7 @@ local function sounds_to_strings(sounds)
 			table.insert(result, formatted)
 		end
 		if v.enpr then
-			local formatted =
-				string.format(" %s. enPr: %s %s", api.apply_style(i, "italic"), v.enpr, format_tags(v.tags))
+			local formatted = string.format(" %s. enPr: %s %s", api.apply_style(i, "italic"), v.enpr, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 	end
