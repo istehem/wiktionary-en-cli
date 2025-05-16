@@ -57,6 +57,14 @@ struct Cli {
     query: bool,
 }
 
+struct QueryParameters {
+    search_term: Option<String>,
+    language: Language,
+    max_results: usize,
+    case_insensitive: bool,
+    path: PathBuf,
+}
+
 struct DidYouMean {
     searched_for: String,
     suggestion: String,
@@ -269,15 +277,11 @@ fn find_by_word_in_db(term: &String, language: &Language) -> Result<Option<Vec<D
 }
 
 fn run(
-    term: &Option<String>,
-    language: &Language,
-    max_results: usize,
-    case_insensitive: bool,
-    path: PathBuf,
+    query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryEnResult> {
-    match term {
-        Some(s) => match find_by_word_in_db(s, language) {
+    match query_params.search_term {
+        Some(s) => match find_by_word_in_db(&s, &query_params.language) {
             Ok(Some(csr)) => {
                 return Ok(WiktionaryEnResult {
                     did_you_mean: None,
@@ -288,9 +292,10 @@ fn run(
             Ok(None) => {
                 #[cfg(feature = "sonic")]
                 {
-                    let did_you_mean = wiktionary_en_identifier_index::did_you_mean(language, s)?;
+                    let did_you_mean =
+                        wiktionary_en_identifier_index::did_you_mean(&query_params.language, &s)?;
                     if let Some(did_you_mean) = did_you_mean {
-                        let result = find_by_word_in_db(&did_you_mean, language)?;
+                        let result = find_by_word_in_db(&did_you_mean, &query_params.language)?;
                         if let Some(result) = result {
                             return Ok(WiktionaryEnResult {
                                 did_you_mean: Some(DidYouMean {
@@ -303,7 +308,12 @@ fn run(
                         }
                     }
                 }
-                match search(&path, s.clone(), max_results, case_insensitive) {
+                match search(
+                    &query_params.path,
+                    s.clone(),
+                    query_params.max_results,
+                    query_params.case_insensitive,
+                ) {
                     Ok(sr) => {
                         if let Some(did_you_mean) = sr.did_you_mean {
                             return Ok(WiktionaryEnResult {
@@ -327,7 +337,7 @@ fn run(
             Err(e) => bail!(e),
         },
         None => {
-            let hit = random_entry_for_language(language)?;
+            let hit = random_entry_for_language(&query_params.language)?;
             return Ok(WiktionaryEnResult {
                 did_you_mean: None,
                 hits: vec![hit],
@@ -383,11 +393,13 @@ fn main() -> Result<()> {
     }
 
     let mut result = run(
-        &args.search_term,
-        &language_to_use,
-        args.max_results,
-        args.case_insensitive,
-        get_db_path(args.db_path, &language_to_use),
+        QueryParameters {
+            search_term: args.search_term,
+            language: language_to_use,
+            max_results: args.max_results,
+            case_insensitive: args.case_insensitive,
+            path: get_db_path(args.db_path, &language_to_use),
+        },
         config_handler,
     )?;
     result.intercept()?;
