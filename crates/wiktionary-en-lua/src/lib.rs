@@ -196,7 +196,6 @@ fn apply_color(lua: &Lua) -> mlua::Result<Function> {
 fn apply_style(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, (text, style): (String, String)| {
         let style_text = match style.to_lowercase().as_str() {
-            //"clear" => text.clear().to_string(),
             "bold" => text.bold().to_string(),
             "dimmed" => text.dimmed().to_string(),
             "underline" => text.underline().to_string(),

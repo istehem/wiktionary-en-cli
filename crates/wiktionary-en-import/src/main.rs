@@ -11,7 +11,7 @@ use clap::Parser;
 #[cfg(feature = "sonic")]
 mod indexing_executor;
 
-/// Import Dictionary Data into PoloDB
+/// Import And Download Wiktionary Data
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {

@@ -151,7 +151,7 @@ fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
     let input_path = input_path_buf.as_path();
     if input_path.is_dir() {
         bail!(
-            "specified wiktionary extract file '{}' is directory",
+            "specified wiktionary extract file '{}' is a directory",
             input_path.display()
         );
     }
