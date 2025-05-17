@@ -25,6 +25,10 @@ end
 
 -- Helper functions
 -------------------------------------------------------------------------------
+local function style_italic_dimmed(text)
+	return api.apply_style(api.apply_style(text, "italic"), "dimmed")
+end
+
 local function format_etymology(etymology_text)
 	local list = {}
 	table.insert(list, api.apply_style("Etymology:", "bold"))
@@ -47,11 +51,11 @@ local function sounds_to_strings(sounds)
 	local result = {}
 	for i, v in ipairs(sounds) do
 		if v.ipa then
-			local formatted = string.format(" %s. IPA: %s %s", api.apply_style(i, "italic"), v.ipa, format_tags(v.tags))
+			local formatted = string.format(" %s. IPA: %s %s", style_italic_dimmed(i), v.ipa, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 		if v.enpr then
-			local formatted = string.format(" %s. enPr: %s %s", api.apply_style(i, "italic"), v.enpr, format_tags(v.tags))
+			local formatted = string.format(" %s. enPr: %s %s", style_italic_dimmed(i), v.enpr, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 	end
@@ -78,8 +82,7 @@ local function translations_to_strings(translations)
 
 	for _, v in pairs(translations) do
 		local word = v.word and v.word or ""
-		local lang = api.apply_style(v.lang, "dimmed")
-		lang = api.apply_style(lang, "italic")
+		local lang = style_italic_dimmed(v.lang)
 		local formatted = string.format(" %s) %s", lang, word)
 		table.insert(result, formatted)
 	end
@@ -109,11 +112,7 @@ function examples_to_strings(examples)
 	result = {}
 	for i, v in ipairs(examples) do
 		if v.text then
-			local formatted = string.format(
-				"%s. %s",
-				api.apply_style(api.apply_style(i, "italic"), "dimmed"),
-				api.wrap_text_at(v.text, 80 - 1)
-			)
+			local formatted = string.format("%s. %s", style_italic_dimmed(i), api.wrap_text_at(v.text, 80 - 1))
 			table.insert(result, api.indent(formatted))
 		end
 	end
