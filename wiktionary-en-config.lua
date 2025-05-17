@@ -156,7 +156,6 @@ end
 config = function()
 	return {
 		language = "en",
-		message = "Hello World!",
 	}
 end
 

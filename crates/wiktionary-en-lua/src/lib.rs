@@ -10,7 +10,6 @@ const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 
 #[derive(Default, Clone)]
 pub struct Config {
-    pub message: String,
     pub language: Option<Language>,
 }
 
@@ -21,10 +20,7 @@ pub struct ConfigHandler {
 
 impl Config {
     fn new() -> Self {
-        Self {
-            message: String::from("default"),
-            language: None,
-        }
+        Self { language: None }
     }
 }
 
@@ -137,10 +133,8 @@ impl FromLua for Config {
         let table = value.as_table();
         return match table {
             Some(table) => {
-                let message: String = table.get("message")?;
                 let language_code: String = table.get("language")?;
                 return Ok(Config {
-                    message: message,
                     language: Language::from_str(&language_code),
                 });
             }

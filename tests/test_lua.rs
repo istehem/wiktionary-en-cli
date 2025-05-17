@@ -5,7 +5,6 @@ mod tests {
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
-    use tracing::info;
     use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::*;
@@ -22,8 +21,6 @@ mod tests {
     fn test_load_config() -> Result<()> {
         let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
         let config = config_handler.config;
-        info!("lua returns a config with message: {}", &config.message);
-        assert!(config.message == "Hello World!");
         assert!(config.language == Some(Language::EN));
         return Ok(());
     }
