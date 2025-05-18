@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use anyhow::{bail, Context, Result};
+    use anyhow::{Context, Result};
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
@@ -30,26 +30,6 @@ mod tests {
     fn test_intercept() -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
-        let mut file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
-        let mut line = String::new();
-        match file_reader.read_line(&mut line) {
-            Ok(_) => {
-                //let dictionary_entry = parse_line(&line)?;
-                //let _ = wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
-                // let returned_dictionary_entry =
-                //    wiktionary_en_lua::Config::intercept(&dictionary_entry)?;
-                //println!("{}", returned_dictionary_entry.to_pretty_string());
-                return Ok(());
-            }
-            _ => bail!("couldn't read line"),
-        }
-    }
-
-    #[traced_test]
-    #[test]
-    fn test_intercept_several() -> Result<()> {
-        let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut results = Vec::new();
 
@@ -57,18 +37,18 @@ mod tests {
             let dictionary_entry = parse_line(&line?)?;
             results.push(dictionary_entry);
         }
-
-        //let _ = wiktionary_en_lua::intercept_witkionary_result(&results)?;
-        //let entries = wiktionary_en_lua::intercept_witkionary_result(&results)?;
-        //for entry in entries {
-        //    println!("{}", entry.to_pretty_string());
-        //}
+        let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
+        if let Some(intercepted_results) = config_handler.intercept_wiktionary_result(&results)? {
+            for entry in intercepted_results {
+                println!("{}", entry.to_pretty_string());
+            }
+        }
         return Ok(());
     }
 
     #[traced_test]
     #[test]
-    fn test_format_several() -> Result<()> {
+    fn test_format() -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
