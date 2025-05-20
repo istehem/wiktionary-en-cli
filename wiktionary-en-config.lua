@@ -165,17 +165,22 @@ function format(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
 
 	local content = {}
-	if entry.etymology then
-		table.insert(content, format_etymology(entry.etymology))
+
+	local formatted_etymology = format_etymology(entry.etymology)
+	if formatted_etymology then
+		table.insert(content, formatted_etymology)
 	end
-	if entry.sounds then
-		table.insert(content, format_sounds(entry.sounds))
+	local formatted_sounds = format_sounds(entry.sounds)
+	if formatted_sounds then
+		table.insert(content, formatted_sounds)
 	end
-	if entry.senses then
-		table.insert(content, format_senses(entry.senses))
+	local formatted_senses = format_senses(entry.senses)
+	if formatted_senses then
+		table.insert(content, formatted_senses)
 	end
-	if entry.translations then
-		table.insert(content, format_translations(entry.translations))
+	local formatted_translations = format_translations(entry.translations)
+	if formatted_translations then
+		table.insert(content, formatted_translations)
 	end
 
 	local horizontal_line = api.horizontal_line()
