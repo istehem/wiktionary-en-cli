@@ -17,8 +17,8 @@ name = "test_uniqueness"
 path = "test_uniqueness.rs"
 
 [[test]]
-name = "test_lua"
-path = "test_lua.rs"
+name = "test-config"
+path = "test_config.rs"
 
 [[test]]
 name = "test_data_fields"

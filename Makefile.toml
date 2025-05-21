@@ -60,9 +60,9 @@ args = [
 	"test", "-p", "tests", "--", "--nocapture"
 ]
 
-[tasks.test-lua]
+[tasks.test-config]
 workspace = false
 command = "cargo"
 args = [
-	"test", "-p", "tests", "--test", "test_lua",  "--", "--nocapture"
+	"test", "-p", "tests", "--test", "test-config",  "--", "--nocapture"
 ]
