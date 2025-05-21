@@ -14,7 +14,6 @@ use utilities::language::*;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
     pub lang_code: String,
-    #[serde(default)]
     pub word: String,
     pub senses: Vec<Sense>,
     pub pos: String,

@@ -19,3 +19,7 @@ path = "test_uniqueness.rs"
 [[test]]
 name = "test_lua"
 path = "test_lua.rs"
+
+[[test]]
+name = "test_data_fields"
+path = "test_data_fields.rs"
