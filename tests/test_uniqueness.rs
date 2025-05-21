@@ -16,7 +16,6 @@ mod tests {
         parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
     }
 
-    #[ignore]
     #[traced_test]
     #[test]
     fn at_least_as_many_unique_entries_as_all_entries() -> Result<()> {

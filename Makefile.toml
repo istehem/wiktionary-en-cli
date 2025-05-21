@@ -59,3 +59,10 @@ command = "cargo"
 args = [
 	"test", "-p", "tests", "--", "--nocapture"
 ]
+
+[tasks.test-lua]
+workspace = false
+command = "cargo"
+args = [
+	"test", "-p", "tests", "--test", "test_lua",  "--", "--nocapture"
+]

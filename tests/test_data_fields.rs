@@ -5,7 +5,6 @@ mod tests {
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
-    use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::*;
     use wiktionary_en_entities::wiktionary_entity::*;
@@ -14,7 +13,6 @@ mod tests {
         parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
     }
 
-    #[traced_test]
     #[test]
     fn word_is_always_present() -> Result<()> {
         let language = Language::SV;
