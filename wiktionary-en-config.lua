@@ -30,6 +30,9 @@ local function style_italic_dimmed(text)
 end
 
 local function format_etymology(etymology_text)
+	if not etymology_text then
+		return nil
+	end
 	local list = {}
 	table.insert(list, api.apply_style("Etymology:", "bold"))
 	table.insert(list, api.wrap_text_at(etymology_text, 80))
