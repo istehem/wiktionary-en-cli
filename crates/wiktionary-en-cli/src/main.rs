@@ -111,7 +111,10 @@ impl fmt::Display for WiktionaryEnResult {
                 }
                 return Ok(());
             }
-            Err(err) => writeln!(f, "{:?}", err),
+            Err(err) => {
+                eprintln!("{:?}", err);
+                return Err(fmt::Error);
+            }
         }
     }
 }
