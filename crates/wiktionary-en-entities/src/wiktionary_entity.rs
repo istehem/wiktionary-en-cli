@@ -117,19 +117,19 @@ fn format_etymology(etymology: &Option<String>) -> Option<ColoredString> {
     None
 }
 
-fn senses_to_strings(senses: &Vec<Sense>) -> Vec<ColoredString> {
-    return senses
+fn senses_to_strings(senses: &[Sense]) -> Vec<ColoredString> {
+    senses
         .iter()
         .enumerate()
         .map(|(i, sense)| format_sense(sense, i))
-        .collect();
+        .collect()
 }
 
-fn format_senses(senses: &Vec<Sense>) -> Option<ColoredString> {
+fn format_senses(senses: &[Sense]) -> Option<ColoredString> {
     if senses.is_empty() {
         return None;
     }
-    return Some(NEWLINE.normal().join(senses_to_strings(senses)));
+    Some(NEWLINE.normal().join(senses_to_strings(senses)))
 }
 
 fn format_sense(sense: &Sense, index: usize) -> ColoredString {
@@ -145,20 +145,20 @@ fn format_sense(sense: &Sense, index: usize) -> ColoredString {
     if !sense.examples.is_empty() {
         res.push(format_examples(&sense.examples));
     }
-    return NEWLINE.normal().join(res);
+    NEWLINE.normal().join(res)
 }
 
-fn format_examples(examples: &Vec<Example>) -> ColoredString {
+fn format_examples(examples: &[Example]) -> ColoredString {
     indent(
         &NEWLINE
             .normal()
-            .joinwrap(examples_to_strings(&examples), LINE_WRAP_AT - 1),
+            .joinwrap(examples_to_strings(examples), LINE_WRAP_AT - 1),
         " ",
     )
     .normal()
 }
 
-fn format_sounds(sounds: &Vec<Sound>) -> Option<ColoredString> {
+fn format_sounds(sounds: &[Sound]) -> Option<ColoredString> {
     if sounds.is_empty() {
         return None;
     }
