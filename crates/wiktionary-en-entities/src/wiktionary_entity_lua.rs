@@ -18,9 +18,9 @@ impl FromLua for DictionaryEntry {
             };
             return Ok(entry);
         }
-        return Err(mlua::Error::RuntimeError(
+        Err(mlua::Error::RuntimeError(
             "no dictionary entry value found in lua".to_string(),
-        ));
+        ))
     }
 }
 
@@ -34,9 +34,9 @@ impl FromLua for Translation {
             };
             return Ok(entry);
         }
-        return Err(mlua::Error::RuntimeError(
+        Err(mlua::Error::RuntimeError(
             "no translation found in lua".to_string(),
-        ));
+        ))
     }
 }
 
@@ -50,9 +50,9 @@ impl FromLua for Sense {
             };
             return Ok(entry);
         }
-        return Err(mlua::Error::RuntimeError(
+        Err(mlua::Error::RuntimeError(
             "no sense found in lua".to_string(),
-        ));
+        ))
     }
 }
 
@@ -65,9 +65,9 @@ impl FromLua for Example {
             };
             return Ok(entry);
         }
-        return Err(mlua::Error::RuntimeError(
+        Err(mlua::Error::RuntimeError(
             "no example found in lua".to_string(),
-        ));
+        ))
     }
 }
 
@@ -81,9 +81,9 @@ impl FromLua for Sound {
             };
             return Ok(entry);
         }
-        return Err(mlua::Error::RuntimeError(
+        Err(mlua::Error::RuntimeError(
             "no sound found in lua".to_string(),
-        ));
+        ))
     }
 }
 
@@ -97,7 +97,7 @@ impl IntoLua for DictionaryEntry {
         dictionary_entry.set("translations", self.translations)?;
         dictionary_entry.set("senses", self.senses)?;
         dictionary_entry.set("sounds", self.sounds)?;
-        return Ok(mlua::Value::Table(dictionary_entry));
+        Ok(mlua::Value::Table(dictionary_entry))
     }
 }
 
@@ -107,7 +107,7 @@ impl IntoLua for Translation {
         translation.set("lang", self.lang)?;
         translation.set("code", self.code)?;
         translation.set("word", self.word)?;
-        return Ok(mlua::Value::Table(translation));
+        Ok(mlua::Value::Table(translation))
     }
 }
 
@@ -117,7 +117,7 @@ impl IntoLua for Sense {
         senses.set("glosses", self.glosses)?;
         senses.set("examples", self.examples)?;
         senses.set("tags", self.tags)?;
-        return Ok(mlua::Value::Table(senses));
+        Ok(mlua::Value::Table(senses))
     }
 }
 
@@ -126,7 +126,7 @@ impl IntoLua for Example {
         let examples = lua.create_table()?;
         examples.set("reference", self.reference)?;
         examples.set("text", self.text)?;
-        return Ok(mlua::Value::Table(examples));
+        Ok(mlua::Value::Table(examples))
     }
 }
 
@@ -136,6 +136,6 @@ impl IntoLua for Sound {
         sounds.set("ipa", self.ipa)?;
         sounds.set("enpr", self.enpr)?;
         sounds.set("tags", self.tags)?;
-        return Ok(mlua::Value::Table(sounds));
+        Ok(mlua::Value::Table(sounds))
     }
 }

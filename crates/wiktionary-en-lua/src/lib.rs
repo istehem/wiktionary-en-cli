@@ -134,9 +134,9 @@ impl FromLua for Config {
         return match table {
             Some(table) => {
                 let language_code: String = table.get("language")?;
-                return Ok(Config {
+                Ok(Config {
                     language: language_code.parse().ok(),
-                });
+                })
             }
             None => Ok(Config::new()),
         };
