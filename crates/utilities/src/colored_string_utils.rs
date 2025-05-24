@@ -29,27 +29,27 @@ impl<T: Display + From<String>> Join for T {
                 res = T::from(format!("{}{}", res, self));
             }
         }
-        return res;
+        res
     }
 }
 
 impl JoinWrap for ColoredString {
     fn joinwrap(&self, list: Vec<ColoredString>, width: usize) -> ColoredString {
         let text = self.join(list);
-        return wrap(&text, width);
+        wrap(&text, width)
     }
 }
 
 pub fn wrap(text: &ColoredString, width: usize) -> ColoredString {
-    return fill(text, width).into();
+    fill(text, width).into()
 }
 
 pub fn indent(text: &ColoredString) -> ColoredString {
-    return textwrap::indent(text, " ").into();
+    textwrap::indent(text, " ").into()
 }
 
 pub fn format_integer(number: usize) -> ColoredString {
-    return number
+    number
         .to_string()
         .as_bytes()
         .rchunks(3)
@@ -58,9 +58,9 @@ pub fn format_integer(number: usize) -> ColoredString {
         .collect::<Result<Vec<&str>, _>>()
         .unwrap()
         .join(",")
-        .yellow();
+        .yellow()
 }
 
 pub fn horizontal_line() -> ColoredString {
-    return " ".repeat(LINE_WRAP_AT).strikethrough();
+    " ".repeat(LINE_WRAP_AT).strikethrough()
 }
