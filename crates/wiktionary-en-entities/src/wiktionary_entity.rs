@@ -213,7 +213,7 @@ fn format_glosses(glosses: &Vec<String>) -> String {
 
 fn examples_to_strings(examples: &Vec<Example>) -> Vec<ColoredString> {
     return examples
-        .into_iter()
+        .iter()
         .enumerate()
         .map(|(i, example)| {
             format!(
@@ -226,17 +226,17 @@ fn examples_to_strings(examples: &Vec<Example>) -> Vec<ColoredString> {
         .collect();
 }
 
-fn translations_to_strings(translations: &Vec<Translation>) -> Vec<ColoredString> {
+fn translations_to_strings(translations: &[Translation]) -> Vec<ColoredString> {
     let langs: Vec<Option<String>> = Language::iterator()
         .map(|lang| Some(lang.value()))
         .collect();
     let translations_as_set: HashSet<&Translation> = translations
-        .into_iter()
+        .iter()
         .filter(|translation| langs.contains(&translation.code))
         .collect();
     let mut filtered_translations = Vec::from_iter(translations_as_set);
     filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
-    return filtered_translations
+    filtered_translations
         .into_iter()
         .map(|translation| {
             format!(
@@ -246,15 +246,15 @@ fn translations_to_strings(translations: &Vec<Translation>) -> Vec<ColoredString
             )
             .normal()
         })
-        .collect();
+        .collect()
 }
 
-fn format_translations(translations: &Vec<Translation>) -> Option<ColoredString> {
+fn format_translations(translations: &[Translation]) -> Option<ColoredString> {
     if translations.is_empty() {
         return None;
     }
     let mut res: Vec<ColoredString> = Vec::new();
     res.push("Translations".bold());
     res.push(NEWLINE.normal().join(translations_to_strings(translations)));
-    return Some(NEWLINE.normal().join(res));
+    Some(NEWLINE.normal().join(res))
 }
