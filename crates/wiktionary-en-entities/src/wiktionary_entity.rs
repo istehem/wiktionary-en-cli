@@ -57,8 +57,8 @@ pub struct Sound {
     pub tags: Vec<String>,
 }
 
-pub fn parse_entry(entry_string: &String) -> Result<DictionaryEntry> {
-    return anyhow_serde::from_str(entry_string);
+pub fn parse_entry(entry_string: &str) -> Result<DictionaryEntry> {
+    anyhow_serde::from_str(entry_string)
 }
 
 impl DictionaryEntry {
@@ -83,7 +83,7 @@ impl DictionaryEntry {
         }
         let horizontal_line = horizontal_line();
 
-        return formatdoc!(
+        formatdoc!(
             "
             {}
             {} ({})
@@ -97,13 +97,13 @@ impl DictionaryEntry {
             format!("{}{}{}", NEWLINE, horizontal_line, NEWLINE)
                 .normal()
                 .join(entries)
-        );
+        )
     }
 }
 
 impl fmt::Display for DictionaryEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return write!(f, "{}", self.to_pretty_string());
+        write!(f, "{}", self.to_pretty_string())
     }
 }
 
@@ -114,12 +114,12 @@ fn format_etymology(etymology: &Option<String>) -> Option<ColoredString> {
         res.push(etymology.normal());
         return Some(NEWLINE.normal().joinwrap(res, LINE_WRAP_AT));
     }
-    return None;
+    None
 }
 
 fn senses_to_strings(senses: &Vec<Sense>) -> Vec<ColoredString> {
     return senses
-        .into_iter()
+        .iter()
         .enumerate()
         .map(|(i, sense)| format_sense(sense, i))
         .collect();
@@ -149,13 +149,13 @@ fn format_sense(sense: &Sense, index: usize) -> ColoredString {
 }
 
 fn format_examples(examples: &Vec<Example>) -> ColoredString {
-    return indent(
+    indent(
         &NEWLINE
             .normal()
             .joinwrap(examples_to_strings(&examples), LINE_WRAP_AT - 1),
         " ",
     )
-    .normal();
+    .normal()
 }
 
 fn format_sounds(sounds: &Vec<Sound>) -> Option<ColoredString> {
@@ -165,13 +165,13 @@ fn format_sounds(sounds: &Vec<Sound>) -> Option<ColoredString> {
     let mut res: Vec<ColoredString> = Vec::new();
     res.push("Pronunciation".bold());
     res.push(NEWLINE.normal().join(sounds_to_strings(sounds)));
-    return Some(NEWLINE.normal().join(res));
+    Some(NEWLINE.normal().join(res))
 }
 
-fn sounds_to_strings(sounds: &Vec<Sound>) -> Vec<ColoredString> {
+fn sounds_to_strings(sounds: &[Sound]) -> Vec<ColoredString> {
     let mut results: Vec<ColoredString> = Vec::new();
-    for (i, sound) in sounds.into_iter().enumerate() {
-        sound.ipa.as_ref().map(|s| {
+    for (i, sound) in sounds.iter().enumerate() {
+       if let Some(s) = sound.ipa.as_ref() {
             results.push(
                 format!(
                     " {}. IPA:  {} {}",
@@ -181,8 +181,8 @@ fn sounds_to_strings(sounds: &Vec<Sound>) -> Vec<ColoredString> {
                 )
                 .normal(),
             )
-        });
-        sound.enpr.as_ref().map(|s| {
+       }
+       if let Some(s) = sound.enpr.as_ref() {
             results.push(
                 format!(
                     " {}. enPr: {} {}",
@@ -192,27 +192,27 @@ fn sounds_to_strings(sounds: &Vec<Sound>) -> Vec<ColoredString> {
                 )
                 .normal(),
             )
-        });
+       }
     }
-    return results;
+    results
 }
 
 fn format_tags(tags: &Vec<String>) -> String {
     match tags.as_slice() {
-        [] => return String::new(),
-        xs => return format!("({})", xs.join(", ")),
+        [] => String::new(),
+        xs => format!("({})", xs.join(", ")),
     }
 }
 
 fn format_glosses(glosses: &Vec<String>) -> String {
     match glosses.as_slice() {
-        [gloss] => return gloss.to_string(),
-        _ => return String::new(),
+        [gloss] => gloss.to_string(),
+        _ => String::new(),
     }
 }
 
-fn examples_to_strings(examples: &Vec<Example>) -> Vec<ColoredString> {
-    return examples
+fn examples_to_strings(examples: &[Example]) -> Vec<ColoredString> {
+    examples
         .iter()
         .enumerate()
         .map(|(i, example)| {
@@ -223,7 +223,7 @@ fn examples_to_strings(examples: &Vec<Example>) -> Vec<ColoredString> {
             )
             .normal()
         })
-        .collect();
+        .collect()
 }
 
 fn translations_to_strings(translations: &[Translation]) -> Vec<ColoredString> {
@@ -237,7 +237,7 @@ fn translations_to_strings(translations: &[Translation]) -> Vec<ColoredString> {
     let mut filtered_translations = Vec::from_iter(translations_as_set);
     filtered_translations.sort_by(|t1, t2| t1.lang.cmp(&t2.lang));
     filtered_translations
-        .into_iter()
+        .iter()
         .map(|translation| {
             format!(
                 " {}) {}",
