@@ -135,7 +135,7 @@ impl FromLua for Config {
             Some(table) => {
                 let language_code: String = table.get("language")?;
                 return Ok(Config {
-                    language: Language::from_str(&language_code),
+                    language: language_code.parse().ok(),
                 });
             }
             None => Ok(Config::new()),
