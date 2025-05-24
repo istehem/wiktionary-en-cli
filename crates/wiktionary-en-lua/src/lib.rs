@@ -36,7 +36,7 @@ impl ConfigHandler {
 
         match init_lua(&lua) {
             Ok(_) => Ok(Self {
-                lua: lua,
+                lua,
                 config: Config::default(),
             }),
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
