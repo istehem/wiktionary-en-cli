@@ -1,7 +1,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-pub fn from_str<T: for<'a> Deserialize<'a>>(line: &String) -> Result<T> {
+pub fn from_str<T: for<'a> Deserialize<'a>>(line: &str) -> Result<T> {
     serde_json::from_str(line).map_err(anyhow::Error::new)
 }
 
