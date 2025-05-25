@@ -109,9 +109,7 @@ impl fmt::Display for DictionaryEntry {
 
 fn format_etymology(etymology: &Option<String>) -> Option<ColoredString> {
     if let Some(etymology) = etymology {
-        let mut res: Vec<ColoredString> = Vec::new();
-        res.push("Etymology:".bold());
-        res.push(etymology.normal());
+        let res = vec!["Etymology:".bold(), etymology.normal()];
         return Some(NEWLINE.normal().joinwrap(res, LINE_WRAP_AT));
     }
     None
@@ -162,9 +160,10 @@ fn format_sounds(sounds: &[Sound]) -> Option<ColoredString> {
     if sounds.is_empty() {
         return None;
     }
-    let mut res: Vec<ColoredString> = Vec::new();
-    res.push("Pronunciation".bold());
-    res.push(NEWLINE.normal().join(sounds_to_strings(sounds)));
+    let res = vec![
+        "Pronunciation".bold(),
+        NEWLINE.normal().join(sounds_to_strings(sounds)),
+    ];
     Some(NEWLINE.normal().join(res))
 }
 
@@ -204,7 +203,7 @@ fn format_tags(tags: &Vec<String>) -> String {
     }
 }
 
-fn format_glosses(glosses: &Vec<String>) -> ColoredString {
+fn format_glosses(glosses: &[String]) -> ColoredString {
     NEWLINE
         .normal()
         .join(glosses.iter().map(|gloss| gloss.normal()).collect())
@@ -252,8 +251,9 @@ fn format_translations(translations: &[Translation]) -> Option<ColoredString> {
     if translations.is_empty() {
         return None;
     }
-    let mut res: Vec<ColoredString> = Vec::new();
-    res.push("Translations".bold());
-    res.push(NEWLINE.normal().join(translations_to_strings(translations)));
+    let res = vec![
+        "Translations".bold(),
+        NEWLINE.normal().join(translations_to_strings(translations)),
+    ];
     Some(NEWLINE.normal().join(res))
 }
