@@ -28,7 +28,7 @@ impl ConfigHandler {
     pub fn init() -> Result<Self> {
         let mut config_handler = Self::init_lua()?;
         config_handler.config = config_handler.load_config()?;
-        return Ok(config_handler);
+        Ok(config_handler)
     }
 
     fn init_lua() -> Result<Self> {
@@ -46,9 +46,7 @@ impl ConfigHandler {
     fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<DictionaryEntry>> {
         match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
-            Err(err) => {
-                return Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR));
-            }
+            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
     }
 
@@ -58,21 +56,19 @@ impl ConfigHandler {
     ) -> Result<Option<Vec<DictionaryEntry>>> {
         let mut intercepted_result = Vec::new();
         for entry in result {
-            if let Some(entry) = self.intercept(&entry)? {
+            if let Some(entry) = self.intercept(entry)? {
                 intercepted_result.push(entry);
             } else {
                 return Ok(None);
             }
         }
-        return Ok(Some(intercepted_result));
+        Ok(Some(intercepted_result))
     }
 
     fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
         match format(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
-            Err(err) => {
-                return Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR));
-            }
+            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
     }
 
@@ -82,20 +78,18 @@ impl ConfigHandler {
     ) -> Result<Option<Vec<String>>> {
         let mut formatted_entries = Vec::new();
         for entry in result {
-            if let Some(formatted_entry) = self.format(&entry)? {
+            if let Some(formatted_entry) = self.format(entry)? {
                 formatted_entries.push(formatted_entry);
             } else {
                 return Ok(None);
             }
         }
-        return Ok(Some(formatted_entries));
+        Ok(Some(formatted_entries))
     }
 
     fn load_config(&self) -> Result<Config> {
         match load_config(&self.lua) {
-            Ok(result) => {
-                return Ok(result);
-            }
+            Ok(result) => Ok(result),
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
     }
@@ -104,7 +98,7 @@ impl ConfigHandler {
 fn init_lua(lua: &Lua) -> mlua::Result<()> {
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
-    return load_lua_api(&lua);
+    load_lua_api(lua)
 }
 
 fn intercept(
@@ -116,7 +110,7 @@ fn intercept(
         return Ok(Some(intercept.call(dictionary_entry.clone())?));
     }
 
-    return Ok(None);
+    Ok(None)
 }
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
@@ -125,13 +119,13 @@ fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<
         return Ok(Some(format_fn.call(dictionary_entry.clone())?));
     }
 
-    return Ok(None);
+    Ok(None)
 }
 
 impl FromLua for Config {
     fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
         let table = value.as_table();
-        return match table {
+        match table {
             Some(table) => {
                 let language_code: String = table.get("language")?;
                 Ok(Config {
@@ -139,7 +133,7 @@ impl FromLua for Config {
                 })
             }
             None => Ok(Config::new()),
-        };
+        }
     }
 }
 
@@ -148,7 +142,7 @@ fn load_config(lua: &Lua) -> mlua::Result<Config> {
     if let Some(config) = config.as_function() {
         return config.call(());
     }
-    return Config::from_lua(config, lua);
+    Config::from_lua(config, lua)
 }
 
 fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
@@ -167,7 +161,7 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     wiktionary_api.set("indent", indent_fn)?;
 
     lua.globals().set("api", wiktionary_api)?;
-    return Ok(());
+    Ok(())
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {
@@ -205,25 +199,23 @@ fn apply_style(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn horizontal_line(lua: &Lua) -> mlua::Result<Function> {
-    lua.create_function(|_, ()| {
-        return Ok(colored_string_utils::horizontal_line().to_string());
-    })
+    lua.create_function(|_, ()| Ok(colored_string_utils::horizontal_line().to_string()))
 }
 
 fn wrap_text_at(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, (text, width): (String, usize)| {
-        return Ok(colored_string_utils::wrap(&text.into(), width).to_string());
+        Ok(colored_string_utils::wrap(&text.into(), width).to_string())
     })
 }
 
 fn indent(lua: &Lua) -> mlua::Result<Function> {
-    lua.create_function(|_, text: String| {
-        return Ok(colored_string_utils::indent(&text.into()).to_string());
-    })
+    lua.create_function(
+        |_, text: String| Ok(colored_string_utils::indent(&text.into()).to_string()),
+    )
 }
 
 fn to_pretty_string(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, dictionary_entry: DictionaryEntry| {
-        return Ok(dictionary_entry.to_pretty_string());
+        Ok(dictionary_entry.to_pretty_string())
     })
 }

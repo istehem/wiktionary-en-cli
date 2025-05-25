@@ -24,7 +24,7 @@ impl Writer {
         };
         let writer = Self {
             writer: buf_writer,
-            progress_bar: progress_bar,
+            progress_bar,
         };
         return Ok(writer);
     }
