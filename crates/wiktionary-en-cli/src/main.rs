@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
+use std::path::Path;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -130,7 +131,7 @@ pub struct CachedDbEntry {
     entries: Vec<DictionaryEntry>,
 }
 
-fn did_you_mean_banner(search_term: &String, partial_match: &String) -> String {
+fn did_you_mean_banner(search_term: &str, partial_match: &str) -> String {
     formatdoc!(
         "
         No result for {}.
@@ -166,11 +167,11 @@ fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
     Ok(())
 }
 
-fn levenshtein_distance(search_term: &String, word: &String, case_insensitive: bool) -> usize {
+fn levenshtein_distance(search_term: &str, word: &str, case_insensitive: bool) -> usize {
     if case_insensitive {
         edit_distance(
-            &search_term.as_str().to_uppercase(),
-            &word.as_str().to_uppercase(),
+            &search_term.to_uppercase(),
+            &word.to_uppercase(),
         )
     } else {
         edit_distance(search_term, word)
@@ -194,7 +195,7 @@ fn do_search(
 
 fn evaluate_entry(
     search_result: &mut SearchResult,
-    term: &String,
+    term: &str,
     json: DictionaryEntry,
     case_insensitive: bool,
     min_distance: usize,
@@ -252,12 +253,12 @@ fn search_worker(
 }
 
 fn search(
-    input_path: &PathBuf,
+    input_path: &Path,
     term: String,
     max_results: usize,
     case_insensitive: bool,
 ) -> Result<SearchResult> {
-    match get_file_reader(input_path.as_path()) {
+    match get_file_reader(input_path) {
         Ok(br) => do_search(br, term, max_results, case_insensitive),
         Err(e) => bail!(e),
     }
