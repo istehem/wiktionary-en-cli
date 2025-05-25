@@ -11,22 +11,22 @@ use crate::indexing_stream::*;
 
 pub fn statistics(language: &Language) -> Result<()> {
     let ingest_channel = WiktionaryIngestChannel::init(language)?;
-    return ingest_channel.statistics();
+    ingest_channel.statistics()
 }
 
 pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
     let search_channel = WiktionarySearchChannel::init(language)?;
-    return search_channel.suggest(search_term);
+    search_channel.suggest(search_term)
 }
 
 pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
     let search_channel = WiktionarySearchChannel::init(language)?;
-    return search_channel.query(search_term);
+    search_channel.query(search_term)
 }
 
 pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
     let search_channel = WiktionarySearchChannel::init(language)?;
-    return search_channel.did_you_mean(search_term);
+    search_channel.did_you_mean(search_term)
 }
 
 pub fn generate_indices(
@@ -44,9 +44,7 @@ pub fn generate_indices(
         );
     }
     match file_utils::get_file_reader(db_path) {
-        Ok(file_reader) => {
-            return Ok(IndexingStream::from(file_reader, channel));
-        }
+        Ok(file_reader) => Ok(IndexingStream::from(file_reader, channel)),
         _ => bail!("No such DB file: '{}'", db_path.display()),
     }
 }

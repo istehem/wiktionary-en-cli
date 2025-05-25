@@ -16,10 +16,10 @@ pub struct WiktionarySearchChannel {
 
 impl WiktionarySearchChannel {
     pub fn init(language: &Language) -> Result<WiktionarySearchChannel> {
-        return Ok(WiktionarySearchChannel {
-            language: language.clone(),
+        Ok(WiktionarySearchChannel {
+            language: *language,
             search_channel: start_sonic_search_channel()?,
-        });
+        })
     }
 
     pub fn query(&self, search_term: &String) -> Result<Vec<String>> {
@@ -38,7 +38,7 @@ impl WiktionarySearchChannel {
             let term = String::from_utf8(decoded)?;
             terms.push(term);
         }
-        return Ok(terms);
+        Ok(terms)
     }
 
     pub fn suggest(&self, search_term: &String) -> Result<Vec<String>> {
@@ -51,7 +51,7 @@ impl WiktionarySearchChannel {
             Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()),
             &first_word,
         ))?;
-        return Ok(suggestions);
+        Ok(suggestions)
     }
 
     pub fn did_you_mean(&self, search_term: &String) -> Result<Option<String>> {
@@ -65,17 +65,17 @@ impl WiktionarySearchChannel {
         );
         let rated_suggestions = alternatives.iter().map(|suggestion| {
             let distance = edit_distance(search_term, suggestion);
-            return (
+            (
                 /* an exact match, that is distance 0, is not what we are looking for */
                 if distance == 0 { usize::MAX } else { distance },
                 suggestion,
-            );
+            )
         });
         let best_result = rated_suggestions
             .min()
             .map(|rated_result| rated_result.1.to_string());
 
-        return Ok(best_result);
+        Ok(best_result)
     }
 }
 
@@ -86,10 +86,10 @@ pub struct WiktionaryIngestChannel {
 
 impl WiktionaryIngestChannel {
     pub fn init(language: &Language) -> Result<WiktionaryIngestChannel> {
-        return Ok(WiktionaryIngestChannel {
-            language: language.clone(),
+        Ok(WiktionaryIngestChannel {
+            language: *language,
             ingest_channel: start_sonic_ingest_channel()?,
-        });
+        })
     }
 
     pub fn count(&self) -> Result<u64> {
@@ -97,7 +97,7 @@ impl WiktionaryIngestChannel {
             WIKTIONARY_COLLECTION,
             self.language.value(),
         ))?;
-        return Ok(number_of_objects as u64);
+        Ok(number_of_objects as u64)
     }
 
     pub fn statistics(&self) -> Result<()> {
@@ -108,7 +108,7 @@ impl WiktionaryIngestChannel {
 
         let object_count = self.count()?;
         dbg!(object_count);
-        return Ok(());
+        Ok(())
     }
 
     pub fn flush(&self) -> Result<u64> {
@@ -116,43 +116,42 @@ impl WiktionaryIngestChannel {
             WIKTIONARY_COLLECTION,
             self.language.value(),
         ))?;
-        return Ok(flushdb_count as u64);
+        Ok(flushdb_count as u64)
     }
 
     pub fn push(&self, word: &String) -> Result<()> {
         let obj = STANDARD.encode(word);
         let dest = Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()).obj(&obj);
-        let push_result = self
-            .ingest_channel
+        self.ingest_channel
             .push(PushRequest::new(dest, word).lang(to_sonic_language(&self.language)))?;
-        return Ok(push_result);
+        Ok(())
     }
 }
 
 fn to_sonic_language(language: &Language) -> Lang {
-    return match language {
+    match language {
         Language::EN => Lang::Eng,
         Language::DE => Lang::Deu,
         Language::SV => Lang::Swe,
         Language::FR => Lang::Fra,
         Language::ES => Lang::Spa,
-    };
+    }
 }
 
 fn sonic_host() -> String {
-    return env!("SONIC_HOST").to_string();
+    env!("SONIC_HOST").to_string()
 }
 
 fn sonic_password() -> String {
-    return env!("SONIC_PASSWORD").to_string();
+    env!("SONIC_PASSWORD").to_string()
 }
 
 fn start_sonic_search_channel() -> Result<SearchChannel> {
     let channel = SearchChannel::start(sonic_host(), sonic_password());
-    return channel.map_err(|e| anyhow::Error::new(e).context(CANNOT_OPEN_SONIC_DB_ERROR_MSG));
+    channel.map_err(|e| anyhow::Error::new(e).context(CANNOT_OPEN_SONIC_DB_ERROR_MSG))
 }
 
 fn start_sonic_ingest_channel() -> Result<IngestChannel> {
     let channel = IngestChannel::start(sonic_host(), sonic_password());
-    return channel.map_err(|e| anyhow::Error::new(e).context(CANNOT_OPEN_SONIC_DB_ERROR_MSG));
+    channel.map_err(|e| anyhow::Error::new(e).context(CANNOT_OPEN_SONIC_DB_ERROR_MSG))
 }
