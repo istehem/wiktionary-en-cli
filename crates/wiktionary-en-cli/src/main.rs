@@ -84,7 +84,7 @@ impl WiktionaryEnResult {
         {
             self.hits = hits;
         }
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -103,17 +103,17 @@ impl fmt::Display for WiktionaryEnResult {
                 for hit in &formated_hits {
                     writeln!(f, "{}", &hit)?;
                 }
-                return Ok(());
+                Ok(())
             }
             Ok(None) => {
                 for hit in &self.hits {
                     writeln!(f, "{}", &hit)?;
                 }
-                return Ok(());
+                Ok(())
             }
             Err(err) => {
                 eprintln!("{:?}", err);
-                return Err(fmt::Error);
+                Err(fmt::Error)
             }
         }
     }
@@ -131,23 +131,22 @@ pub struct CachedDbEntry {
 }
 
 fn did_you_mean_banner(search_term: &String, partial_match: &String) -> String {
-    return formatdoc!(
+    formatdoc!(
         "
         No result for {}.
         Did you mean  {}?
         ",
         search_term.red(),
         partial_match.yellow()
-    );
+    )
 }
 
 fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
-    return line
-        .map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
+    line.map_err(|e| anyhow::Error::new(e).context(format!("Couldn't read line {} in DB file.", i)))
         .and_then(|line| {
             anyhow_serde::from_str(&line)
                 .with_context(|| format!("Couldn't parse line {} in DB file.", i))
-        });
+        })
 }
 
 fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
@@ -161,20 +160,20 @@ fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
 
     println!(
         "{}",
-        calculate_stats(input_path, &language).to_pretty_string()
+        calculate_stats(input_path, language).to_pretty_string()
     );
 
-    return Ok(());
+    Ok(())
 }
 
 fn levenshtein_distance(search_term: &String, word: &String, case_insensitive: bool) -> usize {
     if case_insensitive {
-        return edit_distance(
+        edit_distance(
             &search_term.as_str().to_uppercase(),
             &word.as_str().to_uppercase(),
-        );
+        )
     } else {
-        return edit_distance(search_term, word);
+        edit_distance(search_term, word)
     }
 }
 
@@ -184,14 +183,13 @@ fn do_search(
     max_results: usize,
     case_insensitive: bool,
 ) -> Result<SearchResult> {
-    let search_result = search_worker(
+    search_worker(
         file_reader,
         term.clone(),
         max_results,
         case_insensitive,
         Arc::new(AtomicBool::new(false)),
-    );
-    return search_result;
+    )
 }
 
 fn evaluate_entry(
@@ -201,7 +199,7 @@ fn evaluate_entry(
     case_insensitive: bool,
     min_distance: usize,
 ) -> usize {
-    let distance = levenshtein_distance(&json.word, &term, case_insensitive);
+    let distance = levenshtein_distance(&json.word, term, case_insensitive);
     if distance == 0 {
         search_result.full_matches.push(json.clone());
     }
@@ -210,7 +208,7 @@ fn evaluate_entry(
         search_result.distance = distance;
         return distance;
     }
-    return min_distance;
+    min_distance
 }
 
 fn search_worker(
@@ -250,7 +248,7 @@ fn search_worker(
             break;
         }
     }
-    return Ok(search_result);
+    Ok(search_result)
 }
 
 fn search(
@@ -260,7 +258,7 @@ fn search(
     case_insensitive: bool,
 ) -> Result<SearchResult> {
     match get_file_reader(input_path.as_path()) {
-        Ok(br) => return do_search(br, term, max_results, case_insensitive),
+        Ok(br) => do_search(br, term, max_results, case_insensitive),
         Err(e) => bail!(e),
     }
 }
@@ -270,9 +268,9 @@ fn find_by_word_in_db(term: &String, language: &Language) -> Result<Option<Vec<D
     match db_hits {
         Ok(result) => {
             if result.is_empty() {
-                return Ok(None);
+                Ok(None)
             } else {
-                return Ok(Some(result));
+                Ok(Some(result))
             }
         }
         Err(err) => bail!(err),
@@ -285,13 +283,11 @@ fn run(
 ) -> Result<WiktionaryEnResult> {
     match query_params.search_term {
         Some(s) => match find_by_word_in_db(&s, &query_params.language) {
-            Ok(Some(csr)) => {
-                return Ok(WiktionaryEnResult {
-                    did_you_mean: None,
-                    hits: csr,
-                    config_handler: config_handler,
-                });
-            }
+            Ok(Some(csr)) => Ok(WiktionaryEnResult {
+                did_you_mean: None,
+                hits: csr,
+                config_handler,
+            }),
             Ok(None) => {
                 #[cfg(feature = "sonic")]
                 {
@@ -325,14 +321,14 @@ fn run(
                                     suggestion: did_you_mean.word.clone(),
                                 }),
                                 hits: vec![did_you_mean],
-                                config_handler: config_handler,
+                                config_handler,
                             });
                         }
-                        return Ok(WiktionaryEnResult {
+                        Ok(WiktionaryEnResult {
                             did_you_mean: None,
                             hits: sr.full_matches,
-                            config_handler: config_handler,
-                        });
+                            config_handler,
+                        })
                     }
                     Err(e) => bail!(e),
                 }
@@ -341,27 +337,27 @@ fn run(
         },
         None => {
             let hit = random_entry_for_language(&query_params.language)?;
-            return Ok(WiktionaryEnResult {
+            Ok(WiktionaryEnResult {
                 did_you_mean: None,
                 hits: vec![hit],
-                config_handler: config_handler,
-            });
+                config_handler,
+            })
         }
-    };
+    }
 }
 
 fn get_language(language: &Option<String>) -> Result<Option<Language>> {
     if let Some(language) = language {
         return Ok(Some(language.parse()?));
     }
-    return Ok(None);
+    Ok(None)
 }
 
 fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     if let Some(path) = path {
         return PathBuf::from(path);
     }
-    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+    PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()))
 }
 
 fn main() -> Result<()> {
@@ -406,5 +402,5 @@ fn main() -> Result<()> {
         config_handler,
     )?;
     result.intercept()?;
-    return utilities::pager::print_in_pager(&result);
+    utilities::pager::print_in_pager(&result)
 }

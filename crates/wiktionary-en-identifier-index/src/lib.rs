@@ -14,7 +14,7 @@ pub fn statistics(language: &Language) -> Result<()> {
     ingest_channel.statistics()
 }
 
-pub fn suggest(language: &Language, search_term: &String) -> Result<Vec<String>> {
+pub fn suggest(language: &Language, search_term: &str) -> Result<Vec<String>> {
     let search_channel = WiktionarySearchChannel::init(language)?;
     search_channel.suggest(search_term)
 }

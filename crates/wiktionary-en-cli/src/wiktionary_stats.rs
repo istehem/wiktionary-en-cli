@@ -50,25 +50,25 @@ impl Stats {
                 format!("{} {}", format_float!(s), "M")
             ));
         }
-        return NEWLINE.normal().join(res);
+        NEWLINE.normal().join(res)
     }
 }
 
 pub fn calculate_stats(dictionary_path: &Path, language: &Language) -> Stats {
-    return Stats {
+    Stats {
         path: dictionary_path.display().to_string(),
         database_dir: String::from(DICTIONARY_POLO_DB_DIR!()),
         database_entries: number_of_database_entries(language),
         file_size: file_size_in_megabytes(dictionary_path),
         number_of_entries: number_of_entries(dictionary_path),
-    };
+    }
 }
 
 fn number_of_database_entries(language: &Language) -> Option<usize> {
     if let Ok(number) = wiktionary_en_db::number_of_entries_for_language(language) {
         return Some(number as usize);
     }
-    return None;
+    None
 }
 
 fn file_size_in_megabytes(input_path: &Path) -> Option<f64> {
@@ -78,7 +78,7 @@ fn file_size_in_megabytes(input_path: &Path) -> Option<f64> {
     if let Ok(metadata) = input_path.metadata() {
         return Some(metadata.len() as f64 / MEGABYTE);
     }
-    return None;
+    None
 }
 
 fn number_of_entries(input_path: &Path) -> Option<usize> {
@@ -88,5 +88,5 @@ fn number_of_entries(input_path: &Path) -> Option<usize> {
     if let Ok(br) = get_file_reader(input_path) {
         return Some(br.lines().count());
     }
-    return None;
+    None
 }
