@@ -35,7 +35,7 @@ struct Cli {
 
 fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
     match file_utils::get_file_reader(path) {
-        Ok(path) => return insert_wiktionary_file(path, language, force),
+        Ok(path) => insert_wiktionary_file(path, language, force),
         Err(err) => bail!(err),
     }
 }
@@ -44,7 +44,7 @@ fn get_language(language: &Option<String>) -> Result<Language> {
     if let Some(language) = language {
         return language.parse();
     }
-    return Ok(Language::default());
+    Ok(Language::default())
 }
 
 fn main() -> Result<()> {
@@ -61,5 +61,5 @@ fn main() -> Result<()> {
     if args.download {
         return download_wiktionary_extract(&language, args.force);
     }
-    return import_wiktionary_extract(&db_path, &language, args.force);
+    import_wiktionary_extract(&db_path, &language, args.force)
 }

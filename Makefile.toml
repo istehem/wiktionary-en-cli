@@ -53,6 +53,14 @@ dependencies = [
 ]
 workspace = false
 
+[tasks.clippy]
+condition = { env_true = [ "USE_SONIC_FEATURE" ] }
+dependencies = [ "sonic-host", "sonic-password" ]
+command = "cargo"
+args = [
+	"clippy"
+]
+
 [tasks.test]
 workspace = false
 command = "cargo"

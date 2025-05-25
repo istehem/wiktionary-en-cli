@@ -11,16 +11,16 @@ use wiktionary_en_entities::wiktionary_entity::*;
 use std::fs::File;
 
 pub fn get_polo_db_path() -> PathBuf {
-    return PathBuf::from(utilities::DICTIONARY_POLO_DB_DIR!());
+    PathBuf::from(utilities::DICTIONARY_POLO_DB_DIR!())
 }
 
 pub fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf {
     if let Some(path) = path {
         return PathBuf::from(path);
     }
-    return PathBuf::from(utilities::DICTIONARY_DB_PATH!(language
+    PathBuf::from(utilities::DICTIONARY_DB_PATH!(language
         .unwrap_or_default()
-        .value()));
+        .value()))
 }
 
 fn delete_all_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
@@ -39,12 +39,10 @@ fn find_by_word_in_collection(
     let search_result = collection.find(doc! { "word" : term}).run();
     match search_result {
         Ok(entries) => {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    result.push(entry);
-                }
+            for entry in entries.flatten() {
+                result.push(entry);
             }
-            return Ok(result);
+            Ok(result)
         }
         Err(err) => bail!(err),
     }
@@ -56,7 +54,7 @@ pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<Dictionary
         Ok(db) => {
             let collection = db.collection::<DictionaryEntry>(&language.value());
             let result = find_by_word_in_collection(term, collection)?;
-            return Ok(result);
+            Ok(result)
         }
         Err(err) => bail!(err),
     }
@@ -86,7 +84,7 @@ pub fn random_entry_for_language(language: &Language) -> Result<DictionaryEntry>
     match db_result {
         Ok(db) => {
             let collection = db.collection::<DictionaryEntry>(&language.value());
-            return Ok(random_entry_in_collection(&collection)?);
+            Ok(random_entry_in_collection(&collection)?)
         }
         Err(err) => bail!(err),
     }
@@ -97,7 +95,7 @@ pub fn number_of_entries_for_language(language: &Language) -> Result<u64> {
     match db_result {
         Ok(db) => {
             let collection = db.collection::<DictionaryEntry>(&language.value());
-            return number_of_entries_in_collection(&collection);
+            number_of_entries_in_collection(&collection)
         }
         Err(err) => bail!(err),
     }
@@ -105,10 +103,10 @@ pub fn number_of_entries_for_language(language: &Language) -> Result<u64> {
 
 fn number_of_entries_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
     let count: Result<u64, polodb_core::Error> = collection.count_documents();
-    return match count {
+    match count {
         Ok(count) => Ok(count),
         Err(err) => bail!(err),
-    };
+    }
 }
 
 fn insert_wiktionary_file_into_db(
@@ -143,7 +141,7 @@ fn insert_wiktionary_file_into_db(
             }
             _ => bail!("couldn't read line {}", i),
         }
-        count = count + 1;
+        count += 1;
     }
     let batch_insert = collection.insert_many(all_entries);
     if let Err(err) = batch_insert {
@@ -155,7 +153,7 @@ fn insert_wiktionary_file_into_db(
         count,
         &language.value()
     );
-    return Ok(());
+    Ok(())
 }
 
 pub fn insert_wiktionary_file(
@@ -166,12 +164,12 @@ pub fn insert_wiktionary_file(
     let db_result = Database::open_path(get_polo_db_path());
 
     match db_result {
-        Ok(db) => return insert_wiktionary_file_into_db(db, file_reader, language, force),
+        Ok(db) => insert_wiktionary_file_into_db(db, file_reader, language, force),
         Err(err) => bail!(err),
     }
 }
 
-fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
+fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {
     parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
@@ -186,5 +184,5 @@ fn create_index_on_word(collection: &Collection<DictionaryEntry>) -> Result<()> 
         bail!(err);
     }
 
-    return Ok(());
+    Ok(())
 }

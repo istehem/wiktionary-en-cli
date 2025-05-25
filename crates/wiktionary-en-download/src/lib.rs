@@ -26,29 +26,29 @@ impl Writer {
             writer: buf_writer,
             progress_bar,
         };
-        return Ok(writer);
+        Ok(writer)
     }
 
     fn init_progress_bar(content_length: u64) -> Result<ProgressBar> {
         let progress_bar = ProgressBar::new(content_length)
             .with_style(ProgressStyle::default_bar().template(PROGRESS_BAR_TEMPLATE)?);
-        return Ok(progress_bar);
+        Ok(progress_bar)
     }
 
     pub fn write(&mut self, data: &[u8]) -> Result<()> {
-        self.writer.write(&data)?;
-        self.progress_bar
-            .as_ref()
-            .map(|progress_bar| progress_bar.inc(data.len() as u64));
-        return Ok(());
+        self.writer.write_all(data)?;
+        if let Some(progress_bar) = self.progress_bar.as_ref() {
+            progress_bar.inc(data.len() as u64);
+        }
+        Ok(())
     }
 
     pub fn flush(&mut self) -> Result<()> {
-        let result = self.writer.flush().map_err(|err| anyhow::Error::new(err));
-        self.progress_bar
-            .as_ref()
-            .map(|progress_bar| progress_bar.finish());
-        return result;
+        let result = self.writer.flush().map_err(anyhow::Error::new);
+        if let Some(progress_bar) = self.progress_bar.as_ref() {
+            progress_bar.finish();
+        }
+        result
     }
 }
 
@@ -79,12 +79,12 @@ fn resource_url(language: &Language) -> String {
         Language::ES => "https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl",
         Language::SV => "https://kaikki.org/dictionary/Swedish/kaikki.org-dictionary-Swedish.jsonl",
     };
-    return String::from(url);
+    String::from(url)
 }
 
 pub fn download_wiktionary_extract(language: &Language, force: bool) -> Result<()> {
     let url = resource_url(language);
-    let output_filename = String::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+    let output_filename = utilities::DICTIONARY_DB_PATH!(language.value());
     if Path::new(&output_filename).exists() && !force {
         bail!(
             "file {} already exists, use force to override",
@@ -92,5 +92,5 @@ pub fn download_wiktionary_extract(language: &Language, force: bool) -> Result<(
         );
     }
 
-    return stream_download(&url, &output_filename);
+    stream_download(&url, &output_filename)
 }

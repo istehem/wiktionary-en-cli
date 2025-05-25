@@ -41,7 +41,7 @@ impl IndexingStream {
     pub fn from(file_reader: BufReader<File>, ingest_channel: WiktionaryIngestChannel) -> Self {
         return Self {
             lines: file_reader.lines(),
-            ingest_channel: ingest_channel,
+            ingest_channel,
             current_line: None,
             index: 0,
             done: false,
