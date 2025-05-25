@@ -171,7 +171,7 @@ fn format_sounds(sounds: &[Sound]) -> Option<ColoredString> {
 fn sounds_to_strings(sounds: &[Sound]) -> Vec<ColoredString> {
     let mut results: Vec<ColoredString> = Vec::new();
     for (i, sound) in sounds.iter().enumerate() {
-       if let Some(s) = sound.ipa.as_ref() {
+        if let Some(s) = sound.ipa.as_ref() {
             results.push(
                 format!(
                     " {}. IPA:  {} {}",
@@ -181,8 +181,8 @@ fn sounds_to_strings(sounds: &[Sound]) -> Vec<ColoredString> {
                 )
                 .normal(),
             )
-       }
-       if let Some(s) = sound.enpr.as_ref() {
+        }
+        if let Some(s) = sound.enpr.as_ref() {
             results.push(
                 format!(
                     " {}. enPr: {} {}",
@@ -192,7 +192,7 @@ fn sounds_to_strings(sounds: &[Sound]) -> Vec<ColoredString> {
                 )
                 .normal(),
             )
-       }
+        }
     }
     results
 }
@@ -204,11 +204,10 @@ fn format_tags(tags: &Vec<String>) -> String {
     }
 }
 
-fn format_glosses(glosses: &Vec<String>) -> String {
-    match glosses.as_slice() {
-        [gloss] => gloss.to_string(),
-        _ => String::new(),
-    }
+fn format_glosses(glosses: &Vec<String>) -> ColoredString {
+    NEWLINE
+        .normal()
+        .join(glosses.iter().map(|gloss| gloss.normal()).collect())
 }
 
 fn examples_to_strings(examples: &[Example]) -> Vec<ColoredString> {
