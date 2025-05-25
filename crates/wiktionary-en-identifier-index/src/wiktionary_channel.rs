@@ -41,7 +41,7 @@ impl WiktionarySearchChannel {
         Ok(terms)
     }
 
-    pub fn suggest(&self, search_term: &String) -> Result<Vec<String>> {
+    pub fn suggest(&self, search_term: &str) -> Result<Vec<String>> {
         // suggest queries for a term with spaces will restult in a server side error
         let first_word: String = search_term
             .chars()

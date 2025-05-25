@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use std::path::PathBuf;
+use std::path::Path;
 use utilities::file_utils;
 use utilities::language::*;
 
@@ -31,7 +31,7 @@ pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<
 
 pub fn generate_indices(
     language: &Language,
-    db_path: &PathBuf,
+    db_path: &Path,
     force: bool,
 ) -> Result<IndexingStream> {
     let channel = WiktionaryIngestChannel::init(language)?;
