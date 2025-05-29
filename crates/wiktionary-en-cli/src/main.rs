@@ -6,8 +6,8 @@ use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
-use std::path::PathBuf;
 use std::path::Path;
+use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -169,10 +169,7 @@ fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
 
 fn levenshtein_distance(search_term: &str, word: &str, case_insensitive: bool) -> usize {
     if case_insensitive {
-        edit_distance(
-            &search_term.to_uppercase(),
-            &word.to_uppercase(),
-        )
+        edit_distance(&search_term.to_uppercase(), &word.to_uppercase())
     } else {
         edit_distance(search_term, word)
     }

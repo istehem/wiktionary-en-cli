@@ -38,9 +38,9 @@ fn find_by_word_in_collection(
     let mut result = Vec::new();
     let search_result = collection.find(doc! { "word" : term}).run();
     match search_result {
-        Ok(entries) => {
-            for entry in entries.flatten() {
-                result.push(entry);
+        Ok(mut entries) => {
+            while let Some(entry) = entries.next() {
+                result.push(entry?);
             }
             Ok(result)
         }
@@ -60,6 +60,9 @@ pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<Dictionary
     }
 }
 
+/// This is very inefficient.
+/// In MongoDB we could use the $sample aggregate, however this is lacking in PoloDB.
+/// db.collectionName.aggregate([{$sample: {size: 1}}]);
 fn random_entry_in_collection(collection: &Collection<DictionaryEntry>) -> Result<DictionaryEntry> {
     let n_entries = number_of_entries_in_collection(collection)?;
     let random_entry_number = rng().random_range(0..n_entries - 1);
