@@ -38,8 +38,8 @@ fn find_by_word_in_collection(
     let mut result = Vec::new();
     let search_result = collection.find(doc! { "word" : term}).run();
     match search_result {
-        Ok(mut entries) => {
-            while let Some(entry) = entries.next() {
+        Ok(entries) => {
+            for entry in entries {
                 result.push(entry?);
             }
             Ok(result)
