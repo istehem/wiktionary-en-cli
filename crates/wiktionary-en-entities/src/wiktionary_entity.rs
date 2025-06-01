@@ -22,6 +22,8 @@ pub struct DictionaryEntry {
     #[serde(default)]
     pub sounds: Vec<Sound>,
     pub etymology_text: Option<String>,
+    #[serde(default)]
+    pub synonyms: Vec<Synonym>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -55,6 +57,11 @@ pub struct Sound {
     pub enpr: Option<String>,
     #[serde(default)]
     pub tags: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Synonym {
+    pub word: String,
 }
 
 pub fn parse_entry(entry_string: &str) -> Result<DictionaryEntry> {

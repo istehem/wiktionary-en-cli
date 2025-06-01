@@ -2,7 +2,7 @@ use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
 
-use crate::wiktionary_entity::{DictionaryEntry, Example, Sense, Sound, Translation};
+use crate::wiktionary_entity::{DictionaryEntry, Example, Sense, Sound, Synonym, Translation};
 
 impl FromLua for DictionaryEntry {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
@@ -15,6 +15,7 @@ impl FromLua for DictionaryEntry {
                 translations: dictionary_entry.get("translations")?,
                 sounds: dictionary_entry.get("sounds")?,
                 etymology_text: dictionary_entry.get("etymology")?,
+                synonyms: dictionary_entry.get("synonyms")?,
             };
             return Ok(entry);
         }
@@ -87,6 +88,20 @@ impl FromLua for Sound {
     }
 }
 
+impl FromLua for Synonym {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(synonym) = value.as_table() {
+            let entry = Synonym {
+                word: synonym.get("word")?,
+            };
+            return Ok(entry);
+        }
+        Err(mlua::Error::RuntimeError(
+            "no synonym found in lua".to_string(),
+        ))
+    }
+}
+
 impl IntoLua for DictionaryEntry {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
         let dictionary_entry = lua.create_table()?;
@@ -97,6 +112,7 @@ impl IntoLua for DictionaryEntry {
         dictionary_entry.set("translations", self.translations)?;
         dictionary_entry.set("senses", self.senses)?;
         dictionary_entry.set("sounds", self.sounds)?;
+        dictionary_entry.set("synonyms", self.synonyms)?;
         Ok(mlua::Value::Table(dictionary_entry))
     }
 }
@@ -137,5 +153,13 @@ impl IntoLua for Sound {
         sounds.set("enpr", self.enpr)?;
         sounds.set("tags", self.tags)?;
         Ok(mlua::Value::Table(sounds))
+    }
+}
+
+impl IntoLua for Synonym {
+    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+        let synonym = lua.create_table()?;
+        synonym.set("word", self.word)?;
+        Ok(mlua::Value::Table(synonym))
     }
 }
