@@ -11,9 +11,11 @@ tracing-test = "0.2"
 utilities = { path = "../crates/utilities" }
 wiktionary-en-entities = { path = "../crates/wiktionary-en-entities" }
 wiktionary-en-lua = { path = "../crates/wiktionary-en-lua" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [[test]]
-name = "test_uniqueness"
+name = "test-uniqueness"
 path = "test_uniqueness.rs"
 
 [[test]]
@@ -21,5 +23,5 @@ name = "test-config"
 path = "test_config.rs"
 
 [[test]]
-name = "test_data_fields"
+name = "test-data-fields"
 path = "test_data_fields.rs"
