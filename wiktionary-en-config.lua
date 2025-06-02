@@ -153,6 +153,24 @@ function format_senses(senses)
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
+function synonyms_to_strings(synonyms)
+	local result = {}
+	for i, v in ipairs(synonyms) do
+		table.insert(result, v.word)
+	end
+	return result
+end
+
+function format_synonyms(synonyms)
+	if is_empty(synonyms) then
+		return nil
+	end
+	local list = {}
+	table.insert(list, api.apply_style("Synonyms:", "bold"))
+	table.insert(list, table.concat(synonyms_to_strings(synonyms), "\n"))
+	return table.concat(list, "\n")
+end
+
 -- Enable a configuration of standard values by defining a config function.
 -- It may also be defined as a simple table
 -------------------------------------------------------------------------------
@@ -181,11 +199,14 @@ function format(entry)
 	if formatted_senses then
 		table.insert(content, formatted_senses)
 	end
+	local formatted_synonyms = format_synonyms(entry.synonyms)
+	if formatted_synonyms then
+		table.insert(content, formatted_synonyms)
+	end
 	local formatted_translations = format_translations(entry.translations)
 	if formatted_translations then
 		table.insert(content, formatted_translations)
 	end
-
 	local horizontal_line = api.horizontal_line()
 	return string.format(
 		[[
