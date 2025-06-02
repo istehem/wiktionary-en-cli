@@ -93,6 +93,7 @@ impl FromLua for Synonym {
         if let Some(synonym) = value.as_table() {
             let entry = Synonym {
                 word: synonym.get("word")?,
+                tags: synonym.get("tags")?,
             };
             return Ok(entry);
         }
@@ -160,6 +161,7 @@ impl IntoLua for Synonym {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
         let synonym = lua.create_table()?;
         synonym.set("word", self.word)?;
+        synonym.set("tags", self.tags)?;
         Ok(mlua::Value::Table(synonym))
     }
 }

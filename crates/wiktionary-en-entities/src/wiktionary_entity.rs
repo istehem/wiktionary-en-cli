@@ -62,6 +62,8 @@ pub struct Sound {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Synonym {
     pub word: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
 }
 
 pub fn parse_entry(entry_string: &str) -> Result<DictionaryEntry> {

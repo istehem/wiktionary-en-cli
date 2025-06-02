@@ -156,7 +156,8 @@ end
 function synonyms_to_strings(synonyms)
 	local result = {}
 	for i, v in ipairs(synonyms) do
-		table.insert(result, v.word)
+		local formatted = string.format(" %s. %s %s", style_italic_dimmed(i), v.word, format_tags(v.tags))
+		table.insert(result, formatted)
 	end
 	return result
 end
