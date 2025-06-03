@@ -94,6 +94,7 @@ impl FromLua for Synonym {
             let entry = Synonym {
                 word: synonym.get("word")?,
                 tags: synonym.get("tags")?,
+                sense: synonym.get("sense")?,
             };
             return Ok(entry);
         }
@@ -162,6 +163,7 @@ impl IntoLua for Synonym {
         let synonym = lua.create_table()?;
         synonym.set("word", self.word)?;
         synonym.set("tags", self.tags)?;
+        synonym.set("sense", self.sense)?;
         Ok(mlua::Value::Table(synonym))
     }
 }

@@ -64,6 +64,7 @@ pub struct Synonym {
     pub word: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    pub sense: Option<String>,
 }
 
 pub fn parse_entry(entry_string: &str) -> Result<DictionaryEntry> {

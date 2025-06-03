@@ -38,7 +38,7 @@ mod tests {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut unique_keys = HashSet::new();
-        for (i, line) in file_reader.lines().enumerate().take(10) {
+        for (i, line) in file_reader.lines().enumerate().take(100) {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
@@ -58,7 +58,79 @@ mod tests {
     }
 
     #[test]
-    fn lookup_wikipedia_fields() -> Result<()> {
+    fn lookup_synonym_fields() -> Result<()> {
+        let language = Language::EN;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+        let mut unique_keys = HashSet::new();
+        for (i, line) in file_reader.lines().enumerate().take(100) {
+            match line {
+                Ok(ok_line) => {
+                    let value: Value = serde_json::from_str(&ok_line)?;
+                    if let Some(obj) = value.as_object() {
+                        for key in obj.keys() {
+                            if key == "synonyms" {
+                                if let Some(synonyms) = obj[key].as_array() {
+                                    for synonym in synonyms {
+                                        if let Some(obj) = synonym.as_object() {
+                                            for key in obj.keys() {
+                                                unique_keys.insert(key.clone());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => bail!("couldn't read line {}", i),
+            }
+        }
+        for key in unique_keys {
+            println!("found key in synonyms: {}", key);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn explore_field_content_of_sense_in_a_synonym_using_first_occurrence() -> Result<()> {
+        let language = Language::EN;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+        for (i, line) in file_reader.lines().enumerate().take(100) {
+            match line {
+                Ok(ok_line) => {
+                    let value: Value = serde_json::from_str(&ok_line)?;
+                    if let Some(obj) = value.as_object() {
+                        for key in obj.keys() {
+                            let word = &obj["word"];
+                            if key == "synonyms" {
+                                if let Some(synonyms) = obj[key].as_array() {
+                                    for synonym in synonyms {
+                                        if let Some(obj) = synonym.as_object() {
+                                            for key in obj.keys() {
+                                                if key == "sense" {
+                                                    println!("for word {}", word);
+                                                    println!("synonym is {}", obj["word"]);
+                                                    println!("field value {}", obj[key]);
+                                                    return Ok(());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => bail!("couldn't read line {}", i),
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn explore_field_content_of_synonyms_using_first_occurrence() -> Result<()> {
         let language = Language::SV;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
