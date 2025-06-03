@@ -156,13 +156,14 @@ end
 function synonyms_to_strings(synonyms)
 	local result = {}
 	for i, v in ipairs(synonyms) do
-		local formatted = string.format(
-			" %s. %s %s%s",
-			style_italic_dimmed(i),
-			v.word,
-			format_synonym_sense(v.sense),
-			format_tags(v.tags)
-		)
+		local clarifications = {}
+		if not is_empty(v.tags) then
+			table.insert(clarifications, format_tags(v.tags))
+		end
+		if v.sense then
+			table.insert(clarifications, format_synonym_sense(v.sense))
+		end
+		local formatted = string.format(" %s. %s %s", style_italic_dimmed(i), v.word, table.concat(clarifications, " "))
 		table.insert(result, formatted)
 	end
 	return result
