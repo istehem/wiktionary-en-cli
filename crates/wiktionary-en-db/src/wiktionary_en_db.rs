@@ -124,7 +124,7 @@ fn insert_wiktionary_file_into_db(
         let count = number_of_entries_in_collection(&collection)?;
         if count > 0 {
             bail!(
-                "dictionary already contains {} entries for language {}",
+                "dictionary already contains {} entries for language {}, use force to override",
                 count,
                 language.value()
             );
