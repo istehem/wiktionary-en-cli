@@ -67,12 +67,13 @@ end
 
 local function format_sounds(sounds)
 	local result = {}
-	if is_empty(sounds) then
+	local as_strings = sounds_to_strings(sounds)
+	if is_empty(as_strings) then
 		return nil
 	end
 
 	table.insert(result, api.apply_style("Pronunciation", "bold"))
-	table.insert(result, table.concat(sounds_to_strings(sounds), "\n"))
+	table.insert(result, table.concat(as_strings, "\n"))
 	return table.concat(result, "\n")
 end
 
