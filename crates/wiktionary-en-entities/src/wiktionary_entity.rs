@@ -167,13 +167,11 @@ fn format_examples(examples: &[Example]) -> ColoredString {
 }
 
 fn format_sounds(sounds: &[Sound]) -> Option<ColoredString> {
-    if sounds.is_empty() {
+    let as_strings = sounds_to_strings(sounds);
+    if as_strings.is_empty() {
         return None;
     }
-    let res = vec![
-        "Pronunciation".bold(),
-        NEWLINE.normal().join(sounds_to_strings(sounds)),
-    ];
+    let res = vec!["Pronunciation".bold(), NEWLINE.normal().join(as_strings)];
     Some(NEWLINE.normal().join(res))
 }
 
