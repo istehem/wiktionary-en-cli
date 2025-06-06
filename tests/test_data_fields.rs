@@ -103,22 +103,14 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
-                    if let Some(obj) = value.as_object() {
-                        for key in obj.keys() {
-                            let word = &obj["word"];
-                            if key == "synonyms" {
-                                if let Some(synonyms) = obj[key].as_array() {
-                                    for synonym in synonyms {
-                                        if let Some(obj) = synonym.as_object() {
-                                            for key in obj.keys() {
-                                                if key == "sense" {
-                                                    println!("for word {}", word);
-                                                    println!("synonym is {}", obj["word"]);
-                                                    println!("field value {}", obj[key]);
-                                                    return Ok(());
-                                                }
-                                            }
-                                        }
+                    if let Some(synonyms) = find_array_value_by(value, "synonyms") {
+                        for synonym in synonyms {
+                            if let Some(obj) = synonym.as_object() {
+                                for key in obj.keys() {
+                                    if key == "sense" {
+                                        info!("first synonym with a sence is {}", obj["word"]);
+                                        info!("and sense is {}", obj[key]);
+                                        return Ok(());
                                     }
                                 }
                             }
