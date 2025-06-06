@@ -7,6 +7,8 @@ mod tests {
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
+    use tracing::info;
+    use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::*;
     use wiktionary_en_entities::wiktionary_entity::*;
@@ -129,6 +131,7 @@ mod tests {
         Ok(())
     }
 
+    #[traced_test]
     #[test]
     fn explore_field_content_of_synonyms_using_first_occurrence() -> Result<()> {
         let language = Language::SV;
@@ -138,13 +141,11 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
-                    if let Some(obj) = value.as_object() {
-                        for key in obj.keys() {
-                            if key == "synonyms" {
-                                println!("for word: {}", obj["word"]);
-                                println!("field value is: {}", obj[key]);
-                                return Ok(());
-                            }
+
+                    if let Some(synonyms) = find_array_value_by(value, "synonyms") {
+                        for synonym in synonyms.into_iter().take(10) {
+                            info!("synonym is: {}", synonym);
+                            return Ok(());
                         }
                     }
                 }
@@ -152,5 +153,17 @@ mod tests {
             }
         }
         Ok(())
+    }
+
+    fn find_array_value_by(value: Value, field: &str) -> Option<Vec<Value>> {
+        if let Some(obj) = value.as_object() {
+            for key in obj.keys() {
+                if key == field {
+                    info!("found an array \'{}\' for word {}", key, obj["word"]);
+                    return obj[key].as_array().cloned();
+                }
+            }
+        }
+        None
     }
 }
