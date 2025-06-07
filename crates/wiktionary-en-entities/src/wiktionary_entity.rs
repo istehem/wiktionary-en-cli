@@ -23,7 +23,9 @@ pub struct DictionaryEntry {
     pub sounds: Vec<Sound>,
     pub etymology_text: Option<String>,
     #[serde(default)]
-    pub synonyms: Vec<Synonym>,
+    pub synonyms: Vec<RelatedWord>,
+    #[serde(default)]
+    pub antonyms: Vec<RelatedWord>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -60,7 +62,7 @@ pub struct Sound {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Synonym {
+pub struct RelatedWord {
     pub word: String,
     #[serde(default)]
     pub tags: Vec<String>,

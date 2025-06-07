@@ -2,7 +2,7 @@ use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
 
-use crate::wiktionary_entity::{DictionaryEntry, Example, Sense, Sound, Synonym, Translation};
+use crate::wiktionary_entity::{DictionaryEntry, Example, RelatedWord, Sense, Sound, Translation};
 
 impl FromLua for DictionaryEntry {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
@@ -16,6 +16,7 @@ impl FromLua for DictionaryEntry {
                 sounds: dictionary_entry.get("sounds")?,
                 etymology_text: dictionary_entry.get("etymology")?,
                 synonyms: dictionary_entry.get("synonyms")?,
+                antonyms: dictionary_entry.get("antonyms")?,
             };
             return Ok(entry);
         }
@@ -88,13 +89,13 @@ impl FromLua for Sound {
     }
 }
 
-impl FromLua for Synonym {
+impl FromLua for RelatedWord {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-        if let Some(synonym) = value.as_table() {
-            let entry = Synonym {
-                word: synonym.get("word")?,
-                tags: synonym.get("tags")?,
-                sense: synonym.get("sense")?,
+        if let Some(related_word) = value.as_table() {
+            let entry = RelatedWord {
+                word: related_word.get("word")?,
+                tags: related_word.get("tags")?,
+                sense: related_word.get("sense")?,
             };
             return Ok(entry);
         }
@@ -115,6 +116,7 @@ impl IntoLua for DictionaryEntry {
         dictionary_entry.set("senses", self.senses)?;
         dictionary_entry.set("sounds", self.sounds)?;
         dictionary_entry.set("synonyms", self.synonyms)?;
+        dictionary_entry.set("antonyms", self.antonyms)?;
         Ok(mlua::Value::Table(dictionary_entry))
     }
 }
@@ -158,12 +160,12 @@ impl IntoLua for Sound {
     }
 }
 
-impl IntoLua for Synonym {
+impl IntoLua for RelatedWord {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let synonym = lua.create_table()?;
-        synonym.set("word", self.word)?;
-        synonym.set("tags", self.tags)?;
-        synonym.set("sense", self.sense)?;
-        Ok(mlua::Value::Table(synonym))
+        let related_word = lua.create_table()?;
+        related_word.set("word", self.word)?;
+        related_word.set("tags", self.tags)?;
+        related_word.set("sense", self.sense)?;
+        Ok(mlua::Value::Table(related_word))
     }
 }

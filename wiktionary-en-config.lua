@@ -154,15 +154,15 @@ function format_senses(senses)
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
-function synonyms_to_strings(synonyms)
+function related_words_to_strings(related_words)
 	local result = {}
-	for i, v in ipairs(synonyms) do
+	for i, v in ipairs(related_words) do
 		local clarifications = {}
 		if not is_empty(v.tags) then
 			table.insert(clarifications, format_tags(v.tags))
 		end
 		if v.sense then
-			table.insert(clarifications, format_synonym_sense(v.sense))
+			table.insert(clarifications, format_related_word_sense(v.sense))
 		end
 		local formatted = string.format(" %s. %s %s", style_italic_dimmed(i), v.word, table.concat(clarifications, " "))
 		table.insert(result, formatted)
@@ -170,20 +170,20 @@ function synonyms_to_strings(synonyms)
 	return result
 end
 
-function format_synonym_sense(sense)
+function format_related_word_sense(sense)
 	if not sense then
 		return ""
 	end
 	return string.format("(%s) ", sense)
 end
 
-function format_synonyms(synonyms)
-	if is_empty(synonyms) then
+function format_related_words(related_words, category_title)
+	if is_empty(related_words) then
 		return nil
 	end
 	local list = {}
-	table.insert(list, api.apply_style("Synonyms:", "bold"))
-	table.insert(list, table.concat(synonyms_to_strings(synonyms), "\n"))
+	table.insert(list, api.apply_style(category_title, "bold"))
+	table.insert(list, table.concat(related_words_to_strings(related_words), "\n"))
 	return table.concat(list, "\n")
 end
 
@@ -215,9 +215,13 @@ function format(entry)
 	if formatted_senses then
 		table.insert(content, formatted_senses)
 	end
-	local formatted_synonyms = format_synonyms(entry.synonyms)
+	local formatted_synonyms = format_related_words(entry.synonyms, "Synonyms:")
 	if formatted_synonyms then
 		table.insert(content, formatted_synonyms)
+	end
+	local formatted_antonyms = format_related_words(entry.antonyms, "Antonyms:")
+	if formatted_antonyms then
+		table.insert(content, formatted_antonyms)
 	end
 	local formatted_translations = format_translations(entry.translations)
 	if formatted_translations then
