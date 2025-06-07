@@ -34,6 +34,7 @@ mod tests {
         Ok(())
     }
 
+    #[traced_test]
     #[test]
     fn lookup_fields() -> Result<()> {
         let language = Language::EN;
