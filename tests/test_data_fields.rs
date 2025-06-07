@@ -100,10 +100,17 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
+                    let original_word =
+                        find_string_value_by(&value, "word").unwrap_or("<unknown>".to_string());
                     if let Some(synonyms) = find_array_value_by(value, "synonyms") {
                         for synonym in synonyms {
-                            if let Some(sense) = find_string_value_by(synonym, "sense") {
-                                info!("and sense is '{}'", sense);
+                            let word = find_string_value_by(&synonym, "word")
+                                .unwrap_or("<unknown>".to_string());
+                            if let Some(sense) = find_string_value_by(&synonym, "sense") {
+                                info!(
+                                    "found word {} with synonym '{}' with a sense '{}'",
+                                    original_word, word, sense
+                                );
                                 return Ok(());
                             }
                         }
@@ -142,7 +149,6 @@ mod tests {
         if let Some(obj) = value.as_object() {
             for key in obj.keys() {
                 if key == field {
-                    info!("found an array \'{}\' for word {}", key, obj["word"]);
                     return obj[key].as_array().cloned();
                 }
             }
@@ -150,11 +156,10 @@ mod tests {
         None
     }
 
-    fn find_string_value_by(value: Value, field: &str) -> Option<String> {
+    fn find_string_value_by(value: &Value, field: &str) -> Option<String> {
         if let Some(obj) = value.as_object() {
             for key in obj.keys() {
                 if key == field {
-                    info!("found an object \'{}\' for word {}", key, obj["word"]);
                     return obj[key].as_str().map(|s| s.to_string());
                 }
             }
