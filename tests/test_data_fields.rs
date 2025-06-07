@@ -130,9 +130,13 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
+                    let original_word = find_string_value_by_or_default(&value, "word");
                     if let Some(synonyms) = find_array_value_by(value, "synonyms") {
                         for synonym in synonyms.into_iter().take(10) {
-                            info!("synonym is: {}", synonym);
+                            info!(
+                                "found word '{}' with a synonym defined as: {}",
+                                original_word, synonym
+                            );
                             return Ok(());
                         }
                     }
