@@ -22,7 +22,7 @@ mod tests {
         let language = Language::SV;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
-        for (i, line) in file_reader.lines().enumerate().take(10) {
+        for (i, line) in file_reader.lines().enumerate().take(100) {
             match line {
                 Ok(ok_line) => {
                     let dictionary_entry = parse_line(&ok_line, i)?;
@@ -100,24 +100,25 @@ mod tests {
         lookup_fields_for("antonyms")
     }
 
-    #[traced_test]
-    #[test]
-    fn explore_field_content_of_sense_in_a_synonym_using_first_occurrence() -> Result<()> {
+    fn explore_field_content_of_array_using_first_occurrence(
+        array_field: &str,
+        inner_field: &str,
+    ) -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
-        for (i, line) in file_reader.lines().enumerate().take(100) {
+        for (i, line) in file_reader.lines().enumerate() {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
                     let original_word = find_string_value_by_or_default(&value, "word");
-                    if let Some(synonyms) = find_array_value_by(value, "synonyms") {
+                    if let Some(synonyms) = find_array_value_by(value, array_field) {
                         for synonym in synonyms {
                             let word = find_string_value_by_or_default(&synonym, "word");
-                            if let Some(sense) = find_string_value_by(&synonym, "sense") {
+                            if let Some(field_value) = find_string_value_by(&synonym, inner_field) {
                                 info!(
-                                    "found word {} with synonym '{}' with a sense '{}'",
-                                    original_word, word, sense
+                                    "found word {} with field '{}' having an element '{}' with value '{}' reflecting '{}'",
+                                    original_word, array_field, inner_field, field_value, word
                                 );
                                 return Ok(());
                             }
@@ -128,6 +129,18 @@ mod tests {
             }
         }
         Ok(())
+    }
+
+    #[traced_test]
+    #[test]
+    fn explore_field_content_of_sense_in_a_synonym_using_first_occurrence() -> Result<()> {
+        explore_field_content_of_array_using_first_occurrence("synonyms", "sense")
+    }
+
+    #[traced_test]
+    #[test]
+    fn explore_field_content_of_sense_in_an_antonym_using_first_occurrence() -> Result<()> {
+        explore_field_content_of_array_using_first_occurrence("antonyms", "sense")
     }
 
     #[traced_test]
