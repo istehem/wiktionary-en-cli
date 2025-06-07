@@ -54,11 +54,12 @@ mod tests {
             }
         }
         for key in unique_keys {
-            println!("found key: {}", key);
+            info!("found key: {}", key);
         }
         Ok(())
     }
 
+    #[traced_test]
     #[test]
     fn lookup_synonym_fields() -> Result<()> {
         let language = Language::EN;
@@ -69,17 +70,11 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
-                    if let Some(obj) = value.as_object() {
-                        for key in obj.keys() {
-                            if key == "synonyms" {
-                                if let Some(synonyms) = obj[key].as_array() {
-                                    for synonym in synonyms {
-                                        if let Some(obj) = synonym.as_object() {
-                                            for key in obj.keys() {
-                                                unique_keys.insert(key.clone());
-                                            }
-                                        }
-                                    }
+                    if let Some(synonyms) = find_array_value_by(value, "synonyms") {
+                        for synonym in synonyms {
+                            if let Some(obj) = synonym.as_object() {
+                                for key in obj.keys() {
+                                    unique_keys.insert(key.clone());
                                 }
                             }
                         }
@@ -89,11 +84,12 @@ mod tests {
             }
         }
         for key in unique_keys {
-            println!("found key in synonyms: {}", key);
+            info!("found key in synonyms: {}", key);
         }
         Ok(())
     }
 
+    #[traced_test]
     #[test]
     fn explore_field_content_of_sense_in_a_synonym_using_first_occurrence() -> Result<()> {
         let language = Language::EN;
