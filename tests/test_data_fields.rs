@@ -100,12 +100,10 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
-                    let original_word =
-                        find_string_value_by(&value, "word").unwrap_or("<unknown>".to_string());
+                    let original_word = find_string_value_by_or_default(&value, "word");
                     if let Some(synonyms) = find_array_value_by(value, "synonyms") {
                         for synonym in synonyms {
-                            let word = find_string_value_by(&synonym, "word")
-                                .unwrap_or("<unknown>".to_string());
+                            let word = find_string_value_by_or_default(&synonym, "word");
                             if let Some(sense) = find_string_value_by(&synonym, "sense") {
                                 info!(
                                     "found word {} with synonym '{}' with a sense '{}'",
@@ -165,5 +163,9 @@ mod tests {
             }
         }
         None
+    }
+
+    fn find_string_value_by_or_default(value: &Value, field: &str) -> String {
+        find_string_value_by(value, field).unwrap_or("<unknown>".to_string())
     }
 }
