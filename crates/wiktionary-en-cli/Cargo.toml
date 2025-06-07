@@ -18,4 +18,3 @@ edit-distance = { workspace = true }
 
 [features]
 sonic = [ "wiktionary-en-identifier-index" ]
-#lua = [ "wiktionary-en-lua" ]
