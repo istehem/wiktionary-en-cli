@@ -105,14 +105,9 @@ mod tests {
                     let value: Value = serde_json::from_str(&ok_line)?;
                     if let Some(synonyms) = find_array_value_by(value, "synonyms") {
                         for synonym in synonyms {
-                            if let Some(obj) = synonym.as_object() {
-                                for key in obj.keys() {
-                                    if key == "sense" {
-                                        info!("first synonym with a sence is {}", obj["word"]);
-                                        info!("and sense is {}", obj[key]);
-                                        return Ok(());
-                                    }
-                                }
+                            if let Some(sense) = find_string_value_by(synonym, "sense") {
+                                info!("and sense is '{}'", sense);
+                                return Ok(());
                             }
                         }
                     }
@@ -125,15 +120,14 @@ mod tests {
 
     #[traced_test]
     #[test]
-    fn explore_field_content_of_synonyms_using_first_occurrence() -> Result<()> {
-        let language = Language::SV;
+    fn explore_field_content_of_synonym_using_first_occurrence() -> Result<()> {
+        let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate() {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
-
                     if let Some(synonyms) = find_array_value_by(value, "synonyms") {
                         for synonym in synonyms.into_iter().take(10) {
                             info!("synonym is: {}", synonym);
@@ -153,6 +147,18 @@ mod tests {
                 if key == field {
                     info!("found an array \'{}\' for word {}", key, obj["word"]);
                     return obj[key].as_array().cloned();
+                }
+            }
+        }
+        None
+    }
+
+    fn find_string_value_by(value: Value, field: &str) -> Option<String> {
+        if let Some(obj) = value.as_object() {
+            for key in obj.keys() {
+                if key == field {
+                    info!("found an object \'{}\' for word {}", key, obj["word"]);
+                    return obj[key].as_str().map(|s| s.to_string());
                 }
             }
         }
