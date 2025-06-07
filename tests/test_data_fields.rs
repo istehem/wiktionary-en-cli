@@ -60,7 +60,7 @@ mod tests {
         Ok(())
     }
 
-    fn lookup_fields_for(field: &str) -> Result<()> {
+    fn lookup_array_item_fields_for(field: &str) -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -69,9 +69,9 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
-                    if let Some(synonyms) = find_array_value_by(value, field) {
-                        for synonym in synonyms {
-                            if let Some(obj) = synonym.as_object() {
+                    if let Some(xs) = find_array_value_by(value, field) {
+                        for x in xs {
+                            if let Some(obj) = x.as_object() {
                                 for key in obj.keys() {
                                     unique_keys.insert(key.clone());
                                 }
@@ -91,13 +91,13 @@ mod tests {
     #[traced_test]
     #[test]
     fn lookup_synonym_fields() -> Result<()> {
-        lookup_fields_for("synonyms")
+        lookup_array_item_fields_for("synonyms")
     }
 
     #[traced_test]
     #[test]
     fn lookup_antonyms_fields() -> Result<()> {
-        lookup_fields_for("antonyms")
+        lookup_array_item_fields_for("antonyms")
     }
 
     fn explore_field_content_of_array_using_first_occurrence(
