@@ -5,6 +5,7 @@ mod tests {
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
+    use tracing::info;
     use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::*;
@@ -22,7 +23,7 @@ mod tests {
         let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
         let config = config_handler.config;
         if let Some(language) = config.language {
-            println!("language configured: {}", language);
+            info!("language configured: {}", language);
         }
         return Ok(());
     }
