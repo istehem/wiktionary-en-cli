@@ -143,33 +143,6 @@ mod tests {
         explore_field_content_of_array_using_first_occurrence("antonyms", "sense")
     }
 
-    #[traced_test]
-    #[test]
-    fn explore_field_content_of_synonym_using_first_occurrence() -> Result<()> {
-        let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
-        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
-        for (i, line) in file_reader.lines().enumerate() {
-            match line {
-                Ok(ok_line) => {
-                    let value: Value = serde_json::from_str(&ok_line)?;
-                    let original_word = find_string_value_by_or_default(&value, "word");
-                    if let Some(synonyms) = find_array_value_by(value, "synonyms") {
-                        for synonym in synonyms.into_iter().take(10) {
-                            info!(
-                                "found word '{}' with a synonym defined as: {}",
-                                original_word, synonym
-                            );
-                            return Ok(());
-                        }
-                    }
-                }
-                _ => bail!("couldn't read line {}", i),
-            }
-        }
-        Ok(())
-    }
-
     fn find_array_value_by(value: Value, field: &str) -> Option<Vec<Value>> {
         if let Some(obj) = value.as_object() {
             for key in obj.keys() {
