@@ -100,7 +100,7 @@ impl FromLua for RelatedWord {
             return Ok(entry);
         }
         Err(mlua::Error::RuntimeError(
-            "no synonym found in lua".to_string(),
+            "no related word found in lua".to_string(),
         ))
     }
 }
