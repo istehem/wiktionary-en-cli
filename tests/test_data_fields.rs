@@ -118,16 +118,14 @@ mod tests {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
                     let original_word = find_string_value_by_or_default(&value, "word");
-                    if let Some(synonyms) = find_array_value_by(value, array_field) {
-                        for synonym in synonyms {
-                            let word = find_string_value_by_or_default(&synonym, "word");
-                            if let Some(field_value) = find_string_value_by(&synonym, inner_field) {
-                                info!(
+                    if let Some(elem) = find_first_elem_in_array_by(value, array_field) {
+                        let word = find_string_value_by_or_default(&elem, "word");
+                        if let Some(field_value) = find_string_value_by(&elem, inner_field) {
+                            info!(
                                     "found word {} with field '{}' having an element '{}' with value '{}' reflecting '{}'",
                                     original_word, array_field, inner_field, field_value, word
                                 );
-                                return Ok(());
-                            }
+                            return Ok(());
                         }
                     }
                 }
