@@ -136,7 +136,7 @@ mod tests {
     }
 
     fn explore_definition_of_first_elem_in_an_array(field_name: &str) -> Result<()> {
-        let language = Language::SV;
+        let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate() {
