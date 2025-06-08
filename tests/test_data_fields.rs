@@ -69,7 +69,7 @@ mod tests {
             match line {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
-                    if let Some(xs) = find_array_value_by(value, field) {
+                    if let Some(xs) = find_array_value_by(&value, field) {
                         for x in xs {
                             if let Some(obj) = x.as_object() {
                                 for key in obj.keys() {
@@ -118,7 +118,7 @@ mod tests {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
                     let original_word = find_string_value_by_or_default(&value, "word");
-                    if let Some(elem) = find_first_elem_in_array_by(value, array_field) {
+                    if let Some(elem) = find_first_elem_in_array_by(&value, array_field) {
                         let word = find_string_value_by_or_default(&elem, "word");
                         if let Some(field_value) = find_string_value_by(&elem, inner_field) {
                             info!(
@@ -144,7 +144,7 @@ mod tests {
                 Ok(ok_line) => {
                     let value: Value = serde_json::from_str(&ok_line)?;
                     let word = find_string_value_by_or_default(&value, "word");
-                    if let Some(elem) = find_first_elem_in_array_by(value, field_name) {
+                    if let Some(elem) = find_first_elem_in_array_by(&value, field_name) {
                         info!(
                             "for word '{}', found an elem in the array {}, defined as: '{}'",
                             word, field_name, elem
@@ -176,7 +176,7 @@ mod tests {
         explore_field_content_of_array_using_first_occurrence("antonyms", "sense")
     }
 
-    fn find_array_value_by(value: Value, field: &str) -> Option<Vec<Value>> {
+    fn find_array_value_by(value: &Value, field: &str) -> Option<Vec<Value>> {
         if let Some(obj) = value.as_object() {
             for key in obj.keys() {
                 if key == field {
@@ -187,7 +187,7 @@ mod tests {
         None
     }
 
-    fn find_first_elem_in_array_by(value: Value, field: &str) -> Option<Value> {
+    fn find_first_elem_in_array_by(value: &Value, field: &str) -> Option<Value> {
         if let Some(array) = find_array_value_by(value, field) {
             return array.get(0).cloned();
         }
