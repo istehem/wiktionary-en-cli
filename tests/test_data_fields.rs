@@ -100,6 +100,12 @@ mod tests {
         lookup_array_item_fields_for("antonyms")
     }
 
+    #[traced_test]
+    #[test]
+    fn lookup_descendants_fields() -> Result<()> {
+        lookup_array_item_fields_for("descendants")
+    }
+
     fn explore_field_content_of_array_using_first_occurrence(
         array_field: &str,
         inner_field: &str,
@@ -131,6 +137,35 @@ mod tests {
         Ok(())
     }
 
+    fn explore_definition_of_first_elem_in_an_array(field_name: &str) -> Result<()> {
+        let language = Language::SV;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+        for (i, line) in file_reader.lines().enumerate() {
+            match line {
+                Ok(ok_line) => {
+                    let value: Value = serde_json::from_str(&ok_line)?;
+                    let word = find_string_value_by_or_default(&value, "word");
+                    if let Some(elem) = find_first_elem_in_array_by(value, field_name) {
+                        info!(
+                            "for word '{}', found an elem in the array {}, defined as: '{}'",
+                            word, field_name, elem
+                        );
+                        return Ok(());
+                    }
+                }
+                _ => bail!("couldn't read line {}", i),
+            }
+        }
+        Ok(())
+    }
+
+    #[traced_test]
+    #[test]
+    fn explore_first_descendant_found() -> Result<()> {
+        explore_definition_of_first_elem_in_an_array("descendants")
+    }
+
     #[traced_test]
     #[test]
     fn explore_field_content_of_sense_in_a_synonym_using_first_occurrence() -> Result<()> {
@@ -150,6 +185,13 @@ mod tests {
                     return obj[key].as_array().cloned();
                 }
             }
+        }
+        None
+    }
+
+    fn find_first_elem_in_array_by(value: Value, field: &str) -> Option<Value> {
+        if let Some(array) = find_array_value_by(value, field) {
+            return array.get(0).cloned();
         }
         None
     }
