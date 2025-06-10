@@ -26,7 +26,7 @@ end
 -- Helper functions
 -------------------------------------------------------------------------------
 local function style_italic_dimmed(text, length)
-	return api.apply_style(api.apply_style(text, "italic"), "dimmed", length)
+	return api.apply_style(api.apply_style(text, "italic", length), "dimmed")
 end
 
 local function format_etymology(etymology_text)
@@ -164,7 +164,8 @@ function related_words_to_strings(related_words)
 		if v.sense then
 			table.insert(clarifications, format_related_word_sense(v.sense))
 		end
-		local formatted = string.format(" %s. %s %s", style_italic_dimmed(i, 10), v.word, table.concat(clarifications, " "))
+		local formatted =
+			string.format(" %s. %s %s", style_italic_dimmed(i, 2), v.word, table.concat(clarifications, " "))
 		table.insert(result, formatted)
 	end
 	return result
