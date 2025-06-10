@@ -25,7 +25,7 @@ end
 
 local function leftpad(text, length, pad_char)
 	local assure_text = tostring(text)
-	return length and string.rep(pad_char or " ", length - #assure_text) .. assure_text or assure_text
+	return length and string.rep(pad_char or ' ', length - #assure_text) .. assure_text or assure_text
 end
 
 -- Helper functions
