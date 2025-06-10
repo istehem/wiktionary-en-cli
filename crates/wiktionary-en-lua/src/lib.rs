@@ -167,34 +167,39 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, (text, color): (String, String)| {
         let colored_text = match color.to_lowercase().as_str() {
-            "red" => text.red().to_string(),
-            "green" => text.green().to_string(),
-            "blue" => text.blue().to_string(),
-            "yellow" => text.yellow().to_string(),
-            "cyan" => text.cyan().to_string(),
-            "magenta" => text.magenta().to_string(),
-            "white" => text.white().to_string(),
-            "black" => text.black().to_string(),
-            _ => text.to_string(), // Default to the original text if color is unknown
+            "red" => text.red(),
+            "green" => text.green(),
+            "blue" => text.blue(),
+            "yellow" => text.yellow(),
+            "cyan" => text.cyan(),
+            "magenta" => text.magenta(),
+            "white" => text.white(),
+            "black" => text.black(),
+            _ => text.into(), // Default to the original text if color is unknown
         };
-        Ok(colored_text)
+        Ok(colored_text.to_string())
     })
 }
 
 fn apply_style(lua: &Lua) -> mlua::Result<Function> {
-    lua.create_function(|_, (text, style): (String, String)| {
-        let style_text = match style.to_lowercase().as_str() {
-            "bold" => text.bold().to_string(),
-            "dimmed" => text.dimmed().to_string(),
-            "underline" => text.underline().to_string(),
-            "reversed" => text.reversed().to_string(),
-            "italic" => text.italic().to_string(),
-            "blink" => text.blink().to_string(),
-            "hidden" => text.hidden().to_string(),
-            "strikethrough" => text.strikethrough().to_string(),
-            _ => text.to_string(), // Default to the original text if color is unknown
+    lua.create_function(|_, (text, style, width): (String, String, Option<usize>)| {
+        let padded_text = match width {
+            Some(width) => format!("{:>width$}", text, width = width),
+            _ => text,
         };
-        Ok(style_text)
+
+        let style_text = match style.to_lowercase().as_str() {
+            "bold" => padded_text.bold(),
+            "dimmed" => padded_text.dimmed(),
+            "underline" => padded_text.underline(),
+            "reversed" => padded_text.reversed(),
+            "italic" => padded_text.italic(),
+            "blink" => padded_text.blink(),
+            "hidden" => padded_text.hidden(),
+            "strikethrough" => padded_text.strikethrough(),
+            _ => padded_text.into(), // Default to the original text if color is unknown
+        };
+        Ok(style_text.to_string())
     })
 }
 
