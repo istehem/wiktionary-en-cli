@@ -182,22 +182,17 @@ fn apply_color(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn apply_style(lua: &Lua) -> mlua::Result<Function> {
-    lua.create_function(|_, (text, style, width): (String, String, Option<usize>)| {
-        let padded_text = match width {
-            Some(width) => format!("{:>width$}", text, width = width),
-            _ => text,
-        };
-
+    lua.create_function(|_, (text, style): (String, String)| {
         let style_text = match style.to_lowercase().as_str() {
-            "bold" => padded_text.bold(),
-            "dimmed" => padded_text.dimmed(),
-            "underline" => padded_text.underline(),
-            "reversed" => padded_text.reversed(),
-            "italic" => padded_text.italic(),
-            "blink" => padded_text.blink(),
-            "hidden" => padded_text.hidden(),
-            "strikethrough" => padded_text.strikethrough(),
-            _ => padded_text.into(), // Default to the original text if color is unknown
+            "bold" => text.bold(),
+            "dimmed" => text.dimmed(),
+            "underline" => text.underline(),
+            "reversed" => text.reversed(),
+            "italic" => text.italic(),
+            "blink" => text.blink(),
+            "hidden" => text.hidden(),
+            "strikethrough" => text.strikethrough(),
+            _ => text.into(), // Default to the original text if color is unknown
         };
         Ok(style_text.to_string())
     })
