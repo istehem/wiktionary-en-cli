@@ -25,7 +25,7 @@ end
 
 local function leftpad(text, length, pad_char)
 	local assure_text = tostring(text)
-	return length and string.rep(pad_char or ' ', length - #assure_text) .. assure_text or assure_text
+	return length and string.rep(pad_char or " ", length - #assure_text) .. assure_text or assure_text
 end
 
 -- Helper functions
@@ -159,7 +159,7 @@ function format_senses(senses)
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
-function related_words_to_strings(related_words)
+function related_words_to_strings(related_words, padding)
 	local result = {}
 	for i, v in ipairs(related_words) do
 		local clarifications = {}
@@ -170,7 +170,7 @@ function related_words_to_strings(related_words)
 			table.insert(clarifications, format_related_word_sense(v.sense))
 		end
 		local formatted =
-			string.format(" %s. %s %s", style_italic_dimmed(i, 2), v.word, table.concat(clarifications, " "))
+			string.format(" %s. %s %s", style_italic_dimmed(i, padding), v.word, table.concat(clarifications, " "))
 		table.insert(result, formatted)
 	end
 	return result
@@ -189,7 +189,7 @@ function format_related_words(related_words, category_title)
 	end
 	local list = {}
 	table.insert(list, api.apply_style(category_title, "bold"))
-	table.insert(list, table.concat(related_words_to_strings(related_words), "\n"))
+	table.insert(list, table.concat(related_words_to_strings(related_words, #tostring(#related_words)), "\n"))
 	return table.concat(list, "\n")
 end
 
