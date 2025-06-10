@@ -23,12 +23,15 @@ local function has_value(tab, val)
 	return false
 end
 
+local function leftpad(text, length, pad_char)
+	local assure_text = tostring(text)
+	return length and string.rep(pad_char or " ", length - #assure_text) .. assure_text or assure_text
+end
+
 -- Helper functions
 -------------------------------------------------------------------------------
 local function style_italic_dimmed(text, length)
-	local assure_text = tostring(text)
-	local padded_text = length and string.rep(" ", length - #assure_text) .. assure_text or assure_text
-	return api.apply_style(api.apply_style(padded_text, "italic"), "dimmed")
+	return api.apply_style(api.apply_style(leftpad(text, length), "italic"), "dimmed")
 end
 
 local function format_etymology(etymology_text)
