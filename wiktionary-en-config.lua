@@ -102,7 +102,7 @@ local function translations_to_strings(translations)
 	return result
 end
 
-function translate_to(t)
+local function translate_to(t)
 	return has_value({ "en", "sv", "de", "fr", "es", "it" }, t.code)
 end
 
@@ -117,11 +117,11 @@ local function format_translations(translations)
 	return table.concat(list, "\n")
 end
 
-function format_glosses(glosses)
+local function format_glosses(glosses)
 	return table.concat(glosses, "\n")
 end
 
-function examples_to_strings(examples)
+local function examples_to_strings(examples)
 	result = {}
 	for i, v in ipairs(examples) do
 		if v.text then
@@ -133,11 +133,11 @@ function examples_to_strings(examples)
 	return result
 end
 
-function format_examples(examples)
+local function format_examples(examples)
 	return table.concat(examples_to_strings(examples), "\n")
 end
 
-function format_sense(sense, i)
+local function format_sense(sense, i)
 	local result = {}
 	local title = string.format("%s. %s", api.apply_style(i, "bold"), api.apply_style(format_tags(sense.tags), "bold"))
 	table.insert(result, title)
@@ -148,7 +148,7 @@ function format_sense(sense, i)
 	return table.concat(result, "\n")
 end
 
-function senses_to_strings(senses)
+local function senses_to_strings(senses)
 	local result = {}
 	for i, v in ipairs(senses) do
 		table.insert(result, format_sense(v, i))
@@ -156,14 +156,14 @@ function senses_to_strings(senses)
 	return result
 end
 
-function format_senses(senses)
+local function format_senses(senses)
 	if is_empty(senses) then
 		return nil
 	end
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
-function related_words_to_strings(related_words, padding)
+local function related_words_to_strings(related_words, padding)
 	local result = {}
 	for i, v in ipairs(related_words) do
 		local clarifications = {}
@@ -180,14 +180,14 @@ function related_words_to_strings(related_words, padding)
 	return result
 end
 
-function format_related_word_sense(sense)
+local function format_related_word_sense(sense)
 	if not sense then
 		return ""
 	end
 	return string.format("(%s) ", sense)
 end
 
-function format_related_words(related_words, category_title)
+local function format_related_words(related_words, category_title)
 	if is_empty(related_words) then
 		return nil
 	end
