@@ -30,6 +30,10 @@ end
 
 -- Helper functions
 -------------------------------------------------------------------------------
+local function calculate_pad_size(xs)
+	return #tostring(#xs)
+end
+
 local function style_italic_dimmed(text, length)
 	return api.apply_style(api.apply_style(leftpad(text, length), "italic"), "dimmed")
 end
@@ -189,7 +193,7 @@ function format_related_words(related_words, category_title)
 	end
 	local list = {}
 	table.insert(list, api.apply_style(category_title, "bold"))
-	table.insert(list, table.concat(related_words_to_strings(related_words, #tostring(#related_words)), "\n"))
+	table.insert(list, table.concat(related_words_to_strings(related_words, calculate_pad_size(related_words)), "\n"))
 	return table.concat(list, "\n")
 end
 
