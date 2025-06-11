@@ -59,15 +59,17 @@ local function format_tags(tags)
 	return table.concat(result, ", ")
 end
 
-local function sounds_to_strings(sounds)
+local function sounds_to_strings(sounds, padding)
 	local result = {}
 	for i, v in ipairs(sounds) do
 		if v.ipa then
-			local formatted = string.format(" %s. IPA: %s %s", style_italic_dimmed(i), v.ipa, format_tags(v.tags))
+			local formatted =
+				string.format(" %s. IPA: %s %s", style_italic_dimmed(i, padding), v.ipa, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 		if v.enpr then
-			local formatted = string.format(" %s. enPr: %s %s", style_italic_dimmed(i), v.enpr, format_tags(v.tags))
+			local formatted =
+				string.format(" %s. enPr: %s %s", style_italic_dimmed(i, padding), v.enpr, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 	end
@@ -76,7 +78,7 @@ end
 
 local function format_sounds(sounds)
 	local result = {}
-	local as_strings = sounds_to_strings(sounds)
+	local as_strings = sounds_to_strings(sounds, calculate_pad_size(sounds))
 	if is_empty(as_strings) then
 		return nil
 	end
@@ -163,6 +165,13 @@ local function format_senses(senses)
 	return table.concat(senses_to_strings(senses), "\n")
 end
 
+local function format_related_word_sense(sense)
+	if not sense then
+		return ""
+	end
+	return string.format("(%s) ", sense)
+end
+
 local function related_words_to_strings(related_words, padding)
 	local result = {}
 	for i, v in ipairs(related_words) do
@@ -178,13 +187,6 @@ local function related_words_to_strings(related_words, padding)
 		table.insert(result, formatted)
 	end
 	return result
-end
-
-local function format_related_word_sense(sense)
-	if not sense then
-		return ""
-	end
-	return string.format("(%s) ", sense)
 end
 
 local function format_related_words(related_words, category_title)
