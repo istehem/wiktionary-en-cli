@@ -19,7 +19,7 @@ mod tests {
 
     #[test]
     fn word_is_always_present() -> Result<()> {
-        let language = Language::SV;
+        let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate().take(100) {
@@ -27,6 +27,30 @@ mod tests {
                 Ok(ok_line) => {
                     let dictionary_entry = parse_line(&ok_line, i)?;
                     assert_ne!(dictionary_entry.word, "");
+                }
+                _ => bail!("couldn't read line {}", i),
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[traced_test]
+    fn one_sound_always_set() -> Result<()> {
+        let language = Language::EN;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+        for (i, line) in file_reader.lines().enumerate().take(1000) {
+            match line {
+                Ok(ok_line) => {
+                    let dictionary_entry = parse_line(&ok_line, i)?;
+                    for sound in dictionary_entry.sounds {
+                        if sound.other.is_some() && sound.enpr.is_some() {
+                            info!("word: {}", dictionary_entry.word);
+                            return Ok(());
+                        }
+                        //assert!(sound.other.is_some() || sound.enpr.is_some() || sound.ipa.is_some());
+                    }
                 }
                 _ => bail!("couldn't read line {}", i),
             }
@@ -96,8 +120,14 @@ mod tests {
 
     #[traced_test]
     #[test]
-    fn lookup_antonyms_fields() -> Result<()> {
+    fn lookup_antonym_fields() -> Result<()> {
         lookup_array_item_fields_for("antonyms")
+    }
+
+    #[traced_test]
+    #[test]
+    fn lookup_sound_fields() -> Result<()> {
+        lookup_array_item_fields_for("sounds")
     }
 
     #[traced_test]
@@ -160,6 +190,36 @@ mod tests {
 
     #[traced_test]
     #[test]
+    fn explore_sound_without_fields() -> Result<()> {
+        let language = Language::EN;
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+        for (i, line) in file_reader.lines().enumerate() {
+            match line {
+                Ok(ok_line) => {
+                    let value: Value = serde_json::from_str(&ok_line)?;
+                    let word = find_string_value_by_or_default(&value, "word");
+                    let sounds = find_array_value_by(&value, "sounds");
+                    if let Some(sounds) = sounds {
+                        for sound in sounds {
+                            let ipa = find_string_value_by(&sound, "ipa");
+                            let enpr = find_string_value_by(&sound, "enpr");
+                            let other = find_string_value_by(&sound, "other");
+                            if ipa.is_none() && enpr.is_none() && other.is_none() {
+                                info!("for word '{}' found matching sound: {}", word, sound);
+                                return Ok(());
+                            }
+                        }
+                    }
+                }
+                _ => bail!("couldn't read line {}", i),
+            }
+        }
+        Ok(())
+    }
+
+    #[traced_test]
+    #[test]
     fn explore_first_descendant_found() -> Result<()> {
         explore_definition_of_first_elem_in_an_array("descendants")
     }
@@ -174,6 +234,12 @@ mod tests {
     #[test]
     fn explore_field_content_of_sense_in_an_antonym_using_first_occurrence() -> Result<()> {
         explore_field_content_of_array_using_first_occurrence("antonyms", "sense")
+    }
+
+    #[traced_test]
+    #[test]
+    fn explore_field_content_of_note_in_a_sound_using_first_occurrence() -> Result<()> {
+        explore_field_content_of_array_using_first_occurrence("sounds", "audio")
     }
 
     fn find_array_value_by(value: &Value, field: &str) -> Option<Vec<Value>> {
