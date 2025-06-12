@@ -79,6 +79,7 @@ impl FromLua for Sound {
             let entry = Sound {
                 ipa: sound.get("ipa")?,
                 enpr: sound.get("enpr")?,
+                other: sound.get("other")?,
                 tags: sound.get("tags")?,
             };
             return Ok(entry);
@@ -155,6 +156,7 @@ impl IntoLua for Sound {
         let sounds = lua.create_table()?;
         sounds.set("ipa", self.ipa)?;
         sounds.set("enpr", self.enpr)?;
+        sounds.set("other", self.other)?;
         sounds.set("tags", self.tags)?;
         Ok(mlua::Value::Table(sounds))
     }

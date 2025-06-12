@@ -62,6 +62,12 @@ end
 local function sounds_to_strings(sounds, padding)
 	local result = {}
 	for i, v in ipairs(sounds) do
+		if v.other then
+			print("here")
+			local formatted =
+				string.format(" %s. other: %s %s", style_italic_dimmed(i, padding), v.other, format_tags(v.tags))
+			table.insert(result, formatted)
+		end
 		if v.ipa then
 			local formatted =
 				string.format(" %s. IPA: %s %s", style_italic_dimmed(i, padding), v.ipa, format_tags(v.tags))

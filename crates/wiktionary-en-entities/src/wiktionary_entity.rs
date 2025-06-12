@@ -57,6 +57,7 @@ pub struct Translation {
 pub struct Sound {
     pub ipa: Option<String>,
     pub enpr: Option<String>,
+    pub other: Option<String>,
     #[serde(default)]
     pub tags: Vec<String>,
 }
