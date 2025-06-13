@@ -62,6 +62,7 @@ end
 local function sounds_to_strings(sounds, padding)
 	local result = {}
 	for _, v in pairs(sounds) do
+		-- some sounds may not contain a pronunciation
 		local index = #result + 1
 		if v.ipa then
 			local formatted =
