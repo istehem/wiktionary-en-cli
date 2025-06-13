@@ -190,7 +190,7 @@ mod tests {
 
     #[traced_test]
     #[test]
-    fn explore_sound_without_fields() -> Result<()> {
+    fn explore_sound_without_pronunciation_fields() -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
