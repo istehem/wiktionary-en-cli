@@ -1,9 +1,10 @@
-require("config")
 require("formatter")
 
+-- format Wiktionary results
 format = formatter.format
+-- intercept Wiktionary results
 intercept = nil
 
--- Enable a configuration of standard values
--------------------------------------------------------------------------------
+config = {}
+-- set a default language
 config.language = "en"

@@ -178,8 +178,8 @@ local function format_related_words(related_words, category_title)
 	return table.concat(list, "\n")
 end
 
--- Enable custom formatting of results by defining a format function.
 -------------------------------------------------------------------------------
+
 function format(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
 
