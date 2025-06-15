@@ -1,6 +1,6 @@
 -- Generic helper functions
 -------------------------------------------------------------------------------
-utils = {}
+local utils = {}
 
 utils.is_empty = function(t)
 	return next(t) == nil
@@ -29,3 +29,5 @@ utils.leftpad = function(text, length, pad_char)
 	local assure_text = tostring(text)
 	return length and string.rep(pad_char or " ", length - #assure_text) .. assure_text or assure_text
 end
+
+return utils

@@ -1,6 +1,6 @@
-require("utils")
+local utils = require("utils")
 
-interceptor = {}
+local interceptor = {}
 
 interceptor.intercept = function(entry)
 	translation_1 = {
@@ -18,3 +18,5 @@ interceptor.intercept = function(entry)
 	end
 	return entry
 end
+
+return interceptor

@@ -91,10 +91,10 @@ impl ConfigHandler {
 }
 
 fn init_lua(lua: &Lua) -> mlua::Result<()> {
+    load_lua_api(lua)?;
     load_lua_library(lua)?;
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
-        .exec()?;
-    load_lua_api(lua)
+        .exec()
 }
 
 fn get_config_value(lua: &Lua) -> mlua::Result<mlua::Value> {
@@ -176,8 +176,9 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     let indent_fn = indent(lua)?;
     wiktionary_api.set("indent", indent_fn)?;
 
-    lua.globals().set("api", wiktionary_api)?;
-    Ok(())
+    let package: mlua::Table = lua.globals().get("package")?;
+    let loaded: mlua::Table = package.get("loaded")?;
+    loaded.set("api", wiktionary_api)
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {

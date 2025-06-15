@@ -1,4 +1,5 @@
-require("utils")
+local utils = require("utils")
+local api = require("api")
 
 -- Helper functions
 -------------------------------------------------------------------------------
@@ -225,5 +226,6 @@ local function format(entry)
 	)
 end
 
-formatter = {}
+local formatter = {}
 formatter.format = format
+return formatter
