@@ -4,6 +4,7 @@ DICTIONARY_DB_PATH_PLACEHOLDER = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-
 DICTIONARY_POLD_DB_DIR = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-polo-db/"
 USE_SONIC_FEATURE = true
 DICTIONARY_CONFIG = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-config.lua"
+LUA_DIR = "${CARGO_MAKE_WORKING_DIRECTORY}/lua"
 
 [tasks.install-wiktionary-en-cli]
 condition = { env_true = [ "USE_SONIC_FEATURE" ] }

@@ -4,6 +4,7 @@ use mlua::{FromLua, Function, Lua, Value};
 use utilities::colored_string_utils;
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
+use utilities::LUA_DIR;
 use wiktionary_en_entities::wiktionary_entity::*;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
@@ -96,6 +97,7 @@ impl ConfigHandler {
 }
 
 fn init_lua(lua: &Lua) -> mlua::Result<()> {
+    load_lua_library(lua)?;
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()?;
     load_lua_api(lua)
@@ -143,6 +145,13 @@ fn load_config(lua: &Lua) -> mlua::Result<Config> {
         return config.call(());
     }
     Config::from_lua(config, lua)
+}
+
+fn load_lua_library(lua: &Lua) -> mlua::Result<()> {
+    let package: mlua::Table = lua.globals().get("package")?;
+    let path: String = package.get("path")?;
+    package.set("path", format!("{};{}/?.lua", path, LUA_DIR!()))?;
+    Ok(())
 }
 
 fn load_lua_api(lua: &Lua) -> mlua::Result<()> {

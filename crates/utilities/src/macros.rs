@@ -18,3 +18,10 @@ macro_rules! DICTIONARY_CONFIG {
         env!("DICTIONARY_CONFIG")
     };
 }
+
+#[macro_export]
+macro_rules! LUA_DIR {
+    () => {
+        env!("LUA_DIR")
+    };
+}
