@@ -178,7 +178,7 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
 
     let package: mlua::Table = lua.globals().get("package")?;
     let loaded: mlua::Table = package.get("loaded")?;
-    loaded.set("api", wiktionary_api)
+    loaded.set("wiktionary_api", wiktionary_api)
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {

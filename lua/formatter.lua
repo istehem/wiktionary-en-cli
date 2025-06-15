@@ -1,5 +1,5 @@
 local utils = require("utils")
-local api = require("api")
+local api = require("wiktionary_api")
 
 -- Helper functions
 -------------------------------------------------------------------------------
