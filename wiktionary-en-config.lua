@@ -1,6 +1,7 @@
 require("config")
+require("formatter")
 
-format = config.format
+format = formatter.format
 intercept = nil
 
 -- Enable a configuration of standard values
