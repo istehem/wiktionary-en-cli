@@ -19,12 +19,6 @@ pub struct ConfigHandler {
     pub config: Config,
 }
 
-impl Config {
-    fn new() -> Self {
-        Self { language: None }
-    }
-}
-
 impl ConfigHandler {
     pub fn init() -> Result<Self> {
         let mut config_handler = Self::init_lua()?;
@@ -147,7 +141,7 @@ impl FromLua for Config {
                     language: language_code.parse().ok(),
                 })
             }
-            None => Ok(Config::new()),
+            None => Ok(Config::default()),
         }
     }
 }
