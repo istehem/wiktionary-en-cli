@@ -107,20 +107,25 @@ fn intercept(
     lua: &Lua,
     dictionary_entry: &DictionaryEntry,
 ) -> mlua::Result<Option<DictionaryEntry>> {
-    let intercept: mlua::Value = lua.globals().get("intercept")?;
-    if let Some(intercept) = intercept.as_function() {
-        return Ok(Some(intercept.call(dictionary_entry.clone())?));
+    let config: mlua::Value = lua.globals().get("config")?;
+    if let Some(config) = config.as_table() {
+        let intercept: mlua::Value = config.get("intercept")?;
+        if let Some(intercept) = intercept.as_function() {
+            return Ok(Some(intercept.call(dictionary_entry.clone())?));
+        }
     }
 
     Ok(None)
 }
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    let format_fn: mlua::Value = lua.globals().get("format")?;
-    if let Some(format_fn) = format_fn.as_function() {
-        return Ok(Some(format_fn.call(dictionary_entry.clone())?));
+    let config: mlua::Value = lua.globals().get("config")?;
+    if let Some(config) = config.as_table() {
+        let format_fn: mlua::Value = config.get("format")?;
+        if let Some(format_fn) = format_fn.as_function() {
+            return Ok(Some(format_fn.call(dictionary_entry.clone())?));
+        }
     }
-
     Ok(None)
 }
 

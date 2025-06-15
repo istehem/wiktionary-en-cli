@@ -1,10 +1,9 @@
 require("formatter")
 
--- format Wiktionary results
-format = formatter.format
--- intercept Wiktionary results
-intercept = nil
-
 config = {}
 -- set a default language
 config.language = "en"
+-- format Wiktionary results
+config.format = formatter.format
+-- intercept Wiktionary results
+config.intercept = nil

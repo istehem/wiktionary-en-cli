@@ -180,7 +180,7 @@ end
 
 -------------------------------------------------------------------------------
 
-function format(entry)
+local function format(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
 
 	local content = {}
