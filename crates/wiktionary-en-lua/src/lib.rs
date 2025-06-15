@@ -107,28 +107,34 @@ fn get_config_value(lua: &Lua) -> mlua::Result<mlua::Value> {
     lua.globals().get("config")
 }
 
-fn intercept(
+fn call_configured_lua_function<A, B>(
     lua: &Lua,
-    dictionary_entry: &DictionaryEntry,
-) -> mlua::Result<Option<DictionaryEntry>> {
+    function_name: &str,
+    argument: &A,
+) -> mlua::Result<Option<B>>
+where
+    A: mlua::IntoLua + Clone,
+    B: mlua::FromLua,
+{
     if let Some(config) = get_config_value(lua)?.as_table() {
-        let intercept: mlua::Value = config.get("intercept")?;
-        if let Some(intercept) = intercept.as_function() {
-            return Ok(Some(intercept.call(dictionary_entry.clone())?));
+        let function: mlua::Value = config.get(function_name)?;
+        if let Some(function) = function.as_function() {
+            return Ok(Some(function.call(argument.clone())?));
         }
     }
 
     Ok(None)
 }
 
+fn intercept(
+    lua: &Lua,
+    dictionary_entry: &DictionaryEntry,
+) -> mlua::Result<Option<DictionaryEntry>> {
+    call_configured_lua_function(lua, "intercept", dictionary_entry)
+}
+
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    if let Some(config) = get_config_value(lua)?.as_table() {
-        let format_fn: mlua::Value = config.get("format")?;
-        if let Some(format_fn) = format_fn.as_function() {
-            return Ok(Some(format_fn.call(dictionary_entry.clone())?));
-        }
-    }
-    Ok(None)
+    call_configured_lua_function(lua, "format", dictionary_entry)
 }
 
 impl FromLua for Config {
