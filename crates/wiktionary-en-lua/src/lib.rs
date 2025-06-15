@@ -103,12 +103,15 @@ fn init_lua(lua: &Lua) -> mlua::Result<()> {
     load_lua_api(lua)
 }
 
+fn get_config_value(lua: &Lua) -> mlua::Result<mlua::Value> {
+    lua.globals().get("config")
+}
+
 fn intercept(
     lua: &Lua,
     dictionary_entry: &DictionaryEntry,
 ) -> mlua::Result<Option<DictionaryEntry>> {
-    let config: mlua::Value = lua.globals().get("config")?;
-    if let Some(config) = config.as_table() {
+    if let Some(config) = get_config_value(lua)?.as_table() {
         let intercept: mlua::Value = config.get("intercept")?;
         if let Some(intercept) = intercept.as_function() {
             return Ok(Some(intercept.call(dictionary_entry.clone())?));
@@ -119,8 +122,7 @@ fn intercept(
 }
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    let config: mlua::Value = lua.globals().get("config")?;
-    if let Some(config) = config.as_table() {
+    if let Some(config) = get_config_value(lua)?.as_table() {
         let format_fn: mlua::Value = config.get("format")?;
         if let Some(format_fn) = format_fn.as_function() {
             return Ok(Some(format_fn.call(dictionary_entry.clone())?));
@@ -145,7 +147,7 @@ impl FromLua for Config {
 }
 
 fn load_config(lua: &Lua) -> mlua::Result<Config> {
-    let config: mlua::Value = lua.globals().get("config")?;
+    let config: mlua::Value = get_config_value(lua)?;
     if let Some(config) = config.as_function() {
         return config.call(());
     }
