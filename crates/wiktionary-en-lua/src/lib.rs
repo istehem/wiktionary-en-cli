@@ -22,7 +22,7 @@ pub struct ConfigHandler {
 impl ConfigHandler {
     pub fn init() -> Result<Self> {
         let mut config_handler = Self::init_lua()?;
-        config_handler.config = config_handler.load_config()?;
+        config_handler.config = config_handler.get_config()?;
         Ok(config_handler)
     }
 
@@ -82,8 +82,8 @@ impl ConfigHandler {
         Ok(Some(formatted_entries))
     }
 
-    fn load_config(&self) -> Result<Config> {
-        match load_config(&self.lua) {
+    fn get_config(&self) -> Result<Config> {
+        match get_config(&self.lua) {
             Ok(result) => Ok(result),
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
@@ -92,12 +92,38 @@ impl ConfigHandler {
 
 fn init_lua(lua: &Lua) -> mlua::Result<()> {
     load_lua_api(lua)?;
-    load_lua_library(lua)?;
+    add_lua_library_to_path(lua)?;
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
         .exec()
 }
 
-fn get_config_value(lua: &Lua) -> mlua::Result<mlua::Value> {
+fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
+    let wiktionary_api = lua.create_table()?;
+    let apply_color_fn = apply_color(lua)?;
+    wiktionary_api.set("apply_color", apply_color_fn)?;
+    let apply_style_fn = apply_style(lua)?;
+    wiktionary_api.set("apply_style", apply_style_fn)?;
+    let horizontal_line_fn = horizontal_line(lua)?;
+    wiktionary_api.set("horizontal_line", horizontal_line_fn)?;
+    let to_pretty_string_fn = to_pretty_string(lua)?;
+    wiktionary_api.set("to_pretty_string", to_pretty_string_fn)?;
+    let wrap_text_at_fn = wrap_text_at(lua)?;
+    wiktionary_api.set("wrap_text_at", wrap_text_at_fn)?;
+    let indent_fn = indent(lua)?;
+    wiktionary_api.set("indent", indent_fn)?;
+
+    let package: mlua::Table = lua.globals().get("package")?;
+    let loaded: mlua::Table = package.get("loaded")?;
+    loaded.set("wiktionary_api", wiktionary_api)
+}
+
+fn add_lua_library_to_path(lua: &Lua) -> mlua::Result<()> {
+    let package: mlua::Table = lua.globals().get("package")?;
+    let path: String = package.get("path")?;
+    package.set("path", format!("{};{}/?.lua", path, LUA_DIR!()))
+}
+
+fn get_config_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
     lua.globals().get("config")
 }
 
@@ -110,7 +136,7 @@ where
     A: mlua::IntoLua + Clone,
     B: mlua::FromLua,
 {
-    if let Some(config) = get_config_value(lua)?.as_table() {
+    if let Some(config) = get_config_as_lua_value(lua)?.as_table() {
         let function: mlua::Value = config.get(function_name)?;
         if let Some(function) = function.as_function() {
             return Ok(Some(function.call(argument.clone())?));
@@ -146,39 +172,12 @@ impl FromLua for Config {
     }
 }
 
-fn load_config(lua: &Lua) -> mlua::Result<Config> {
-    let config: mlua::Value = get_config_value(lua)?;
+fn get_config(lua: &Lua) -> mlua::Result<Config> {
+    let config: mlua::Value = get_config_as_lua_value(lua)?;
     if let Some(config) = config.as_function() {
         return config.call(());
     }
     Config::from_lua(config, lua)
-}
-
-fn load_lua_library(lua: &Lua) -> mlua::Result<()> {
-    let package: mlua::Table = lua.globals().get("package")?;
-    let path: String = package.get("path")?;
-    package.set("path", format!("{};{}/?.lua", path, LUA_DIR!()))?;
-    Ok(())
-}
-
-fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
-    let wiktionary_api = lua.create_table()?;
-    let apply_color_fn = apply_color(lua)?;
-    wiktionary_api.set("apply_color", apply_color_fn)?;
-    let apply_style_fn = apply_style(lua)?;
-    wiktionary_api.set("apply_style", apply_style_fn)?;
-    let horizontal_line_fn = horizontal_line(lua)?;
-    wiktionary_api.set("horizontal_line", horizontal_line_fn)?;
-    let to_pretty_string_fn = to_pretty_string(lua)?;
-    wiktionary_api.set("to_pretty_string", to_pretty_string_fn)?;
-    let wrap_text_at_fn = wrap_text_at(lua)?;
-    wiktionary_api.set("wrap_text_at", wrap_text_at_fn)?;
-    let indent_fn = indent(lua)?;
-    wiktionary_api.set("indent", indent_fn)?;
-
-    let package: mlua::Table = lua.globals().get("package")?;
-    let loaded: mlua::Table = package.get("loaded")?;
-    loaded.set("wiktionary_api", wiktionary_api)
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {
