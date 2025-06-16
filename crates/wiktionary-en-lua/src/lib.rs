@@ -14,6 +14,21 @@ pub struct Config {
     pub language: Option<Language>,
 }
 
+impl FromLua for Config {
+    fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
+        let table = value.as_table();
+        match table {
+            Some(table) => {
+                let language_code: String = table.get("language")?;
+                Ok(Config {
+                    language: language_code.parse().ok(),
+                })
+            }
+            None => Ok(Config::default()),
+        }
+    }
+}
+
 pub struct ConfigHandler {
     lua: Lua,
     pub config: Config,
@@ -155,21 +170,6 @@ fn intercept(
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
     call_configured_lua_function(lua, "format", dictionary_entry)
-}
-
-impl FromLua for Config {
-    fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
-        let table = value.as_table();
-        match table {
-            Some(table) => {
-                let language_code: String = table.get("language")?;
-                Ok(Config {
-                    language: language_code.parse().ok(),
-                })
-            }
-            None => Ok(Config::default()),
-        }
-    }
 }
 
 fn get_config(lua: &Lua) -> mlua::Result<Config> {
