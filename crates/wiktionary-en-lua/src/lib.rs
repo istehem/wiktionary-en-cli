@@ -133,7 +133,7 @@ fn call_configured_lua_function<A, B>(
     argument: &A,
 ) -> mlua::Result<Option<B>>
 where
-    A: mlua::IntoLua + Clone,
+    A: mlua::IntoLuaMulti + Clone,
     B: mlua::FromLua,
 {
     if let Some(config) = get_config_as_lua_value(lua)?.as_table() {
