@@ -34,31 +34,34 @@ end
 
 local function sounds_to_strings(sounds, padding)
 	local result = {}
-	for _, v in pairs(sounds) do
-		-- some sounds may not contain a pronunciation
-		local index = #result + 1
+	for i, v in pairs(sounds) do
 		if v.ipa then
 			local formatted =
-				string.format(" %s. IPA: %s %s", style_italic_dimmed(index, padding), v.ipa, format_tags(v.tags))
+				string.format(" %s. IPA: %s %s", style_italic_dimmed(i, padding), v.ipa, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 		if v.enpr then
 			local formatted =
-				string.format(" %s. enPr: %s %s", style_italic_dimmed(index, padding), v.enpr, format_tags(v.tags))
+				string.format(" %s. enPr: %s %s", style_italic_dimmed(i, padding), v.enpr, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 		if v.other then
 			local formatted =
-				string.format(" %s. other: %s %s", style_italic_dimmed(index, padding), v.other, format_tags(v.tags))
+				string.format(" %s. other: %s %s", style_italic_dimmed(i, padding), v.other, format_tags(v.tags))
 			table.insert(result, formatted)
 		end
 	end
 	return result
 end
 
+local function has_pronunciation(sound)
+	return sound.ipa or sound.enpr or sound.other
+end
+
 local function format_sounds(sounds)
 	local result = {}
-	local as_strings = sounds_to_strings(sounds, calculate_pad_size(sounds))
+	local sounds_with_pronunciation = utils.filter(sounds, has_pronunciation)
+	local as_strings = sounds_to_strings(sounds_with_pronunciation, calculate_pad_size(sounds_with_pronunciation))
 	if utils.is_empty(as_strings) then
 		return nil
 	end
