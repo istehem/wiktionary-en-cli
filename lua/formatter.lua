@@ -184,7 +184,7 @@ end
 
 -------------------------------------------------------------------------------
 
-local function format(entry)
+local function format_entry(entry)
 	entry.word = api.apply_color(entry.word, "cyan")
 
 	local content = {}
@@ -229,7 +229,7 @@ local function format(entry)
 	)
 end
 
-local function format_banner(did_you_mean)
+local function format_did_you_mean_banner(did_you_mean)
 	local content = {}
 	local searched_for_msg =
 		string.format("No results found for %s.", api.apply_color(did_you_mean.searched_for, "red"))
@@ -240,6 +240,6 @@ local function format_banner(did_you_mean)
 end
 
 local formatter = {}
-formatter.format = format
-formatter.format_banner = format_banner
+formatter.format_entry = format_entry
+formatter.format_did_you_mean_banner = format_did_you_mean_banner
 return formatter

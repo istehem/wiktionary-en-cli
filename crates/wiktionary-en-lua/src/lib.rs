@@ -180,7 +180,7 @@ fn intercept(
 }
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    call_configured_lua_function(lua, "format", dictionary_entry)
+    call_configured_lua_function(lua, "format_entry", dictionary_entry)
 }
 
 fn format_banner(lua: &Lua, did_you_mean: &DidYouMean) -> mlua::Result<Option<String>> {
