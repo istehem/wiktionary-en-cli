@@ -235,8 +235,9 @@ end
 
 local function format_did_you_mean_banner(did_you_mean)
 	local content = {}
-	local searched_for_msg =
-		string.format("No results found for %s.", style_bold_with_color(did_you_mean.searched_for, "red"))
+	local searched_for_styled =
+		api.apply_style(style_bold_with_color(did_you_mean.searched_for, "red"), "strikethrough")
+	local searched_for_msg = string.format("No results found for %s.", searched_for_styled)
 	local did_you_mean_msg = string.format("Did you mean %s?", style_bold_with_color(did_you_mean.suggestion, "yellow"))
 	table.insert(content, searched_for_msg)
 	table.insert(content, did_you_mean_msg)
