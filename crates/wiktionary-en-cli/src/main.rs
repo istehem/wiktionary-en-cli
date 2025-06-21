@@ -88,7 +88,7 @@ impl fmt::Display for WiktionaryResultWrapper {
                     writeln!(f, "{}", &did_you_mean)?;
                 }
                 Err(err) => {
-                    eprintln!("{:?}", err);
+                    writeln!(f, "{:?}", err)?;
                     return Err(fmt::Error);
                 }
             }
@@ -111,7 +111,7 @@ impl fmt::Display for WiktionaryResultWrapper {
                 Ok(())
             }
             Err(err) => {
-                eprintln!("{:?}", err);
+                writeln!(f, "{:?}", err)?;
                 Err(fmt::Error)
             }
         }
