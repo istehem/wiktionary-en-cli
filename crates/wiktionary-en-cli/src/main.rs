@@ -57,12 +57,12 @@ struct Cli {
     query: bool,
 }
 
-struct WiktionaryExecutor {
+struct WiktionaryResultWrapper {
     result: WiktionaryResult,
     config_handler: wiktionary_en_lua::ConfigHandler,
 }
 
-impl WiktionaryExecutor {
+impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
         if let Some(hits) = self
             .config_handler
@@ -74,7 +74,7 @@ impl WiktionaryExecutor {
     }
 }
 
-impl fmt::Display for WiktionaryExecutor {
+impl fmt::Display for WiktionaryResultWrapper {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(did_you_mean) = &self.result.did_you_mean {
             match self
@@ -273,7 +273,7 @@ fn find_by_word_in_db(term: &String, language: &Language) -> Result<Option<Vec<D
 fn run(
     query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
-) -> Result<WiktionaryExecutor> {
+) -> Result<WiktionaryResultWrapper> {
     match query_params.search_term {
         Some(s) => match find_by_word_in_db(&s, &query_params.language) {
             Ok(Some(csr)) => {
@@ -281,7 +281,7 @@ fn run(
                     did_you_mean: None,
                     hits: csr,
                 };
-                Ok(WiktionaryExecutor {
+                Ok(WiktionaryResultWrapper {
                     result,
                     config_handler,
                 })
@@ -302,7 +302,7 @@ fn run(
                                 }),
                                 hits,
                             };
-                            return Ok(WiktionaryExecutor {
+                            return Ok(WiktionaryResultWrapper {
                                 result,
                                 config_handler,
                             });
@@ -324,7 +324,7 @@ fn run(
                                 }),
                                 hits: vec![did_you_mean],
                             };
-                            return Ok(WiktionaryExecutor {
+                            return Ok(WiktionaryResultWrapper {
                                 result,
                                 config_handler,
                             });
@@ -333,7 +333,7 @@ fn run(
                             did_you_mean: None,
                             hits: sr.full_matches,
                         };
-                        Ok(WiktionaryExecutor {
+                        Ok(WiktionaryResultWrapper {
                             result,
                             config_handler,
                         })
@@ -349,7 +349,7 @@ fn run(
                 did_you_mean: None,
                 hits: vec![hit],
             };
-            Ok(WiktionaryExecutor {
+            Ok(WiktionaryResultWrapper {
                 result,
                 config_handler,
             })
