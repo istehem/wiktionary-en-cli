@@ -1,8 +1,6 @@
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use colored::Colorize;
 use edit_distance::edit_distance;
-use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
@@ -64,6 +62,18 @@ struct WiktionaryExecutor {
     config_handler: wiktionary_en_lua::ConfigHandler,
 }
 
+impl WiktionaryExecutor {
+    pub fn intercept(&mut self) -> Result<()> {
+        if let Some(hits) = self
+            .config_handler
+            .intercept_wiktionary_result(&self.result.hits)?
+        {
+            self.result.hits = hits;
+        }
+        Ok(())
+    }
+}
+
 impl fmt::Display for WiktionaryExecutor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(did_you_mean) = &self.result.did_you_mean {
@@ -116,60 +126,6 @@ struct QueryParameters {
     path: PathBuf,
 }
 
-struct DidYouMean {
-    searched_for: String,
-    suggestion: String,
-}
-
-struct WiktionaryEnResult {
-    did_you_mean: Option<DidYouMean>,
-    hits: Vec<DictionaryEntry>,
-    config_handler: wiktionary_en_lua::ConfigHandler,
-}
-
-impl WiktionaryEnResult {
-    pub fn intercept(&mut self) -> Result<()> {
-        if let Some(hits) = self
-            .config_handler
-            .intercept_wiktionary_result(&self.hits)?
-        {
-            self.hits = hits;
-        }
-        Ok(())
-    }
-}
-
-impl fmt::Display for WiktionaryEnResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(did_you_mean) = &self.did_you_mean {
-            writeln!(
-                f,
-                "{}",
-                did_you_mean_banner(&did_you_mean.searched_for, &did_you_mean.suggestion)
-            )?;
-        }
-
-        match self.config_handler.format_wiktionary_result(&self.hits) {
-            Ok(Some(formated_hits)) => {
-                for hit in &formated_hits {
-                    writeln!(f, "{}", &hit)?;
-                }
-                Ok(())
-            }
-            Ok(None) => {
-                for hit in &self.hits {
-                    writeln!(f, "{}", &hit)?;
-                }
-                Ok(())
-            }
-            Err(err) => {
-                eprintln!("{:?}", err);
-                Err(fmt::Error)
-            }
-        }
-    }
-}
-
 struct SearchResult {
     full_matches: Vec<DictionaryEntry>,
     did_you_mean: Option<DictionaryEntry>,
@@ -179,17 +135,6 @@ struct SearchResult {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CachedDbEntry {
     entries: Vec<DictionaryEntry>,
-}
-
-fn did_you_mean_banner(search_term: &str, partial_match: &str) -> String {
-    formatdoc!(
-        "
-        No result for {}.
-        Did you mean  {}?
-        ",
-        search_term.red(),
-        partial_match.yellow()
-    )
 }
 
 fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<DictionaryEntry> {
@@ -328,29 +273,38 @@ fn find_by_word_in_db(term: &String, language: &Language) -> Result<Option<Vec<D
 fn run(
     query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
-) -> Result<WiktionaryEnResult> {
+) -> Result<WiktionaryExecutor> {
     match query_params.search_term {
         Some(s) => match find_by_word_in_db(&s, &query_params.language) {
-            Ok(Some(csr)) => Ok(WiktionaryEnResult {
-                did_you_mean: None,
-                hits: csr,
-                config_handler,
-            }),
+            Ok(Some(csr)) => {
+                let result = WiktionaryResult {
+                    did_you_mean: None,
+                    hits: csr,
+                };
+                Ok(WiktionaryExecutor {
+                    result,
+                    config_handler,
+                })
+            }
+
             Ok(None) => {
                 #[cfg(feature = "sonic")]
                 {
                     let did_you_mean =
                         wiktionary_en_identifier_index::did_you_mean(&query_params.language, &s)?;
                     if let Some(did_you_mean) = did_you_mean {
-                        let result = find_by_word_in_db(&did_you_mean, &query_params.language)?;
-                        if let Some(result) = result {
-                            return Ok(WiktionaryEnResult {
+                        let hits = find_by_word_in_db(&did_you_mean, &query_params.language)?;
+                        if let Some(hits) = hits {
+                            let result = WiktionaryResult {
                                 did_you_mean: Some(DidYouMean {
                                     searched_for: s.to_string(),
                                     suggestion: did_you_mean,
                                 }),
-                                hits: result,
-                                config_handler: config_handler,
+                                hits,
+                            };
+                            return Ok(WiktionaryExecutor {
+                                result,
+                                config_handler,
                             });
                         }
                     }
@@ -363,18 +317,24 @@ fn run(
                 ) {
                     Ok(sr) => {
                         if let Some(did_you_mean) = sr.did_you_mean {
-                            return Ok(WiktionaryEnResult {
+                            let result = WiktionaryResult {
                                 did_you_mean: Some(DidYouMean {
                                     searched_for: s.to_string(),
                                     suggestion: did_you_mean.word.clone(),
                                 }),
                                 hits: vec![did_you_mean],
+                            };
+                            return Ok(WiktionaryExecutor {
+                                result,
                                 config_handler,
                             });
                         }
-                        Ok(WiktionaryEnResult {
+                        let result = WiktionaryResult {
                             did_you_mean: None,
                             hits: sr.full_matches,
+                        };
+                        Ok(WiktionaryExecutor {
+                            result,
                             config_handler,
                         })
                     }
@@ -385,9 +345,12 @@ fn run(
         },
         None => {
             let hit = random_entry_for_language(&query_params.language)?;
-            Ok(WiktionaryEnResult {
+            let result = WiktionaryResult {
                 did_you_mean: None,
                 hits: vec![hit],
+            };
+            Ok(WiktionaryExecutor {
+                result,
                 config_handler,
             })
         }

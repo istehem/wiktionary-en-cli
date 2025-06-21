@@ -4,8 +4,8 @@ use indoc::formatdoc;
 use std::fmt;
 
 pub struct DidYouMean {
-    searched_for: String,
-    suggestion: String,
+    pub searched_for: String,
+    pub suggestion: String,
 }
 
 impl fmt::Display for DidYouMean {
