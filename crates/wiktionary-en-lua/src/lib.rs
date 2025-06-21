@@ -76,20 +76,20 @@ impl ConfigHandler {
         Ok(Some(intercepted_result))
     }
 
-    fn format(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
-        match format(&self.lua, dictionary_entry) {
+    fn format_entry(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
+        match format_entry(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
     }
 
-    pub fn format_wiktionary_result(
+    pub fn format_wiktionary_entries(
         &self,
         result: &Vec<DictionaryEntry>,
     ) -> Result<Option<Vec<String>>> {
         let mut formatted_entries = Vec::new();
         for entry in result {
-            if let Some(formatted_entry) = self.format(entry)? {
+            if let Some(formatted_entry) = self.format_entry(entry)? {
                 formatted_entries.push(formatted_entry);
             } else {
                 return Ok(None);
@@ -102,7 +102,7 @@ impl ConfigHandler {
         &self,
         did_you_mean: &DidYouMean,
     ) -> Result<Option<String>> {
-        match format_banner(&self.lua, did_you_mean) {
+        match format_did_you_mean_banner(&self.lua, did_you_mean) {
             Ok(result) => Ok(result),
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }
@@ -179,11 +179,14 @@ fn intercept(
     call_configured_lua_function(lua, "intercept", dictionary_entry)
 }
 
-fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
+fn format_entry(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
     call_configured_lua_function(lua, "format_entry", dictionary_entry)
 }
 
-fn format_banner(lua: &Lua, did_you_mean: &DidYouMean) -> mlua::Result<Option<String>> {
+fn format_did_you_mean_banner(
+    lua: &Lua,
+    did_you_mean: &DidYouMean,
+) -> mlua::Result<Option<String>> {
     call_configured_lua_function(lua, "format_did_you_mean_banner", did_you_mean)
 }
 

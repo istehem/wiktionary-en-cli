@@ -96,7 +96,7 @@ impl fmt::Display for WiktionaryResultWrapper {
 
         match self
             .config_handler
-            .format_wiktionary_result(&self.result.hits)
+            .format_wiktionary_entries(&self.result.hits)
         {
             Ok(Some(formated_hits)) => {
                 for hit in &formated_hits {
