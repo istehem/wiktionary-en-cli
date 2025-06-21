@@ -5,7 +5,7 @@ use utilities::colored_string_utils;
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 use utilities::LUA_DIR;
-use wiktionary_en_entities::wiktionary_entity::*;
+use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";

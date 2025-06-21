@@ -1,7 +1,7 @@
 use anyhow::{bail, Context, Result};
 use std::io::{prelude::*, BufReader};
 
-use wiktionary_en_entities::wiktionary_entity::*;
+use wiktionary_en_entities::wiktionary_entry::*;
 
 use std::fmt;
 use std::fs::File;

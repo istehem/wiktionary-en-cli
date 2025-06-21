@@ -9,7 +9,7 @@ mod tests {
     use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::*;
-    use wiktionary_en_entities::wiktionary_entity::*;
+    use wiktionary_en_entities::wiktionary_entry::*;
 
     use wiktionary_en_lua;
 

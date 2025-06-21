@@ -2,7 +2,7 @@ use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
 
-use crate::wiktionary_entity::{DictionaryEntry, Example, RelatedWord, Sense, Sound, Translation};
+use crate::wiktionary_entry::{DictionaryEntry, Example, RelatedWord, Sense, Sound, Translation};
 
 impl FromLua for DictionaryEntry {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {

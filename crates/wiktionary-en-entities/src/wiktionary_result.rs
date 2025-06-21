@@ -1,4 +1,4 @@
-use crate::wiktionary_entity::DictionaryEntry;
+use crate::wiktionary_entry::DictionaryEntry;
 use colored::Colorize;
 use indoc::formatdoc;
 use mlua::FromLua;

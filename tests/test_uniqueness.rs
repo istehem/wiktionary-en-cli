@@ -10,7 +10,7 @@ mod tests {
     use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::*;
-    use wiktionary_en_entities::wiktionary_entity::*;
+    use wiktionary_en_entities::wiktionary_entry::*;
 
     fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
         parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
