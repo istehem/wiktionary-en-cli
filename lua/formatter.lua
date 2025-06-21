@@ -11,6 +11,10 @@ local function style_italic_dimmed(text, length)
 	return api.apply_style(api.apply_style(utils.leftpad(text, length), "italic"), "dimmed")
 end
 
+local function style_bold_with_color(text, color)
+	return api.apply_color(api.apply_style(text, "bold"), color)
+end
+
 local function format_etymology(etymology_text)
 	if not etymology_text then
 		return nil
@@ -232,8 +236,8 @@ end
 local function format_did_you_mean_banner(did_you_mean)
 	local content = {}
 	local searched_for_msg =
-		string.format("No results found for %s.", api.apply_color(did_you_mean.searched_for, "red"))
-	local did_you_mean_msg = string.format("Did you mean %s?", api.apply_color(did_you_mean.suggestion, "yellow"))
+		string.format("No results found for %s.", style_bold_with_color(did_you_mean.searched_for, "red"))
+	local did_you_mean_msg = string.format("Did you mean %s?", style_bold_with_color(did_you_mean.suggestion, "yellow"))
 	table.insert(content, searched_for_msg)
 	table.insert(content, did_you_mean_msg)
 	return table.concat(content, "\n")
