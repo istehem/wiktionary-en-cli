@@ -17,6 +17,7 @@ use utilities::file_utils::*;
 use utilities::language::*;
 
 use wiktionary_en_entities::wiktionary_entity::*;
+use wiktionary_en_entities::wiktionary_result::*;
 
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
@@ -56,6 +57,55 @@ struct Cli {
     /// Query word
     #[clap(short, long)]
     query: bool,
+}
+
+struct WiktionaryExecutor {
+    result: WiktionaryResult,
+    config_handler: wiktionary_en_lua::ConfigHandler,
+}
+
+impl fmt::Display for WiktionaryExecutor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(did_you_mean) = &self.result.did_you_mean {
+            match self
+                .config_handler
+                .format_wiktionary_did_you_mean_banner(&did_you_mean)
+            {
+                Ok(Some(formatted_banner)) => {
+                    writeln!(f, "{}", &formatted_banner)?;
+                }
+                Ok(None) => {
+                    writeln!(f, "{}", &did_you_mean)?;
+                }
+                Err(err) => {
+                    eprintln!("{:?}", err);
+                    return Err(fmt::Error);
+                }
+            }
+        }
+
+        match self
+            .config_handler
+            .format_wiktionary_result(&self.result.hits)
+        {
+            Ok(Some(formated_hits)) => {
+                for hit in &formated_hits {
+                    writeln!(f, "{}", &hit)?;
+                }
+                Ok(())
+            }
+            Ok(None) => {
+                for hit in &self.result.hits {
+                    writeln!(f, "{}", &hit)?;
+                }
+                Ok(())
+            }
+            Err(err) => {
+                eprintln!("{:?}", err);
+                Err(fmt::Error)
+            }
+        }
+    }
 }
 
 struct QueryParameters {

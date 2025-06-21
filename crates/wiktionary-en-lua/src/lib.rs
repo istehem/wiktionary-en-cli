@@ -6,6 +6,7 @@ use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 use utilities::LUA_DIR;
 use wiktionary_en_entities::wiktionary_entity::*;
+use wiktionary_en_entities::wiktionary_result::DidYouMean;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 
@@ -95,6 +96,14 @@ impl ConfigHandler {
             }
         }
         Ok(Some(formatted_entries))
+    }
+
+    pub fn format_wiktionary_did_you_mean_banner(
+        &self,
+        _did_you_mean: &DidYouMean,
+    ) -> Result<Option<String>> {
+        // TODO Implement me
+        Ok(None)
     }
 
     fn get_config(&self) -> Result<Config> {
