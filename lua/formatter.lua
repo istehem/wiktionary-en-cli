@@ -230,11 +230,13 @@ local function format(entry)
 end
 
 local function format_banner(did_you_mean)
-	--local content = {}
-	--local searched_for = table.insert(content, api.apply_color(did_you_mean.searched_for, "red"))
-	--local suggestion = table.insert(content, api.apply_color(did_you_mean.suggestion, "red"))
-	--return table.concat(content, string.format("\n%s\n", horizontal_line))
-	return api.apply_color("Hello World", "red")
+	local content = {}
+	local searched_for_msg =
+		string.format("No results found for %s.", api.apply_color(did_you_mean.searched_for, "red"))
+	local did_you_mean_msg = string.format("Did you mean %s?", api.apply_color(did_you_mean.suggestion, "yellow"))
+	table.insert(content, searched_for_msg)
+	table.insert(content, did_you_mean_msg)
+	return table.concat(content, "\n")
 end
 
 local formatter = {}
