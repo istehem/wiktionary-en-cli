@@ -79,7 +79,7 @@ impl fmt::Display for WiktionaryExecutor {
         if let Some(did_you_mean) = &self.result.did_you_mean {
             match self
                 .config_handler
-                .format_wiktionary_did_you_mean_banner(&did_you_mean)
+                .format_wiktionary_did_you_mean_banner(did_you_mean)
             {
                 Ok(Some(formatted_banner)) => {
                     writeln!(f, "{}", &formatted_banner)?;

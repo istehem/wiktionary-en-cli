@@ -229,6 +229,15 @@ local function format(entry)
 	)
 end
 
+local function format_banner(did_you_mean)
+	--local content = {}
+	--local searched_for = table.insert(content, api.apply_color(did_you_mean.searched_for, "red"))
+	--local suggestion = table.insert(content, api.apply_color(did_you_mean.suggestion, "red"))
+	--return table.concat(content, string.format("\n%s\n", horizontal_line))
+	return api.apply_color("Hello World", "red")
+end
+
 local formatter = {}
 formatter.format = format
+formatter.format_banner = format_banner
 return formatter

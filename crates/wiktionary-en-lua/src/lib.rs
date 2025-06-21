@@ -100,10 +100,12 @@ impl ConfigHandler {
 
     pub fn format_wiktionary_did_you_mean_banner(
         &self,
-        _did_you_mean: &DidYouMean,
+        did_you_mean: &DidYouMean,
     ) -> Result<Option<String>> {
-        // TODO Implement me
-        Ok(None)
+        match format_banner(&self.lua, did_you_mean) {
+            Ok(result) => Ok(result),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
+        }
     }
 
     fn get_config(&self) -> Result<Config> {
@@ -179,6 +181,10 @@ fn intercept(
 
 fn format(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
     call_configured_lua_function(lua, "format", dictionary_entry)
+}
+
+fn format_banner(lua: &Lua, did_you_mean: &DidYouMean) -> mlua::Result<Option<String>> {
+    call_configured_lua_function(lua, "format_did_you_mean_banner", did_you_mean)
 }
 
 fn get_config(lua: &Lua) -> mlua::Result<Config> {
