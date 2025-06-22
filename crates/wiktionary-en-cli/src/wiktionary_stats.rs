@@ -1,5 +1,6 @@
 use colored::ColoredString;
 use colored::Colorize;
+use std::fmt;
 use std::io::BufRead;
 use std::path::Path;
 
@@ -32,8 +33,14 @@ pub struct Stats {
     file_size: Option<f64>,
 }
 
+impl fmt::Display for Stats {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "{}", self.to_pretty_string())
+    }
+}
+
 impl Stats {
-    pub fn to_pretty_string(&self) -> ColoredString {
+    fn to_pretty_string(&self) -> ColoredString {
         let mut res: Vec<ColoredString> = Vec::new();
         res.push(format_key_value!("dictionary file", self.path));
         res.push(format_key_value!("database dir", self.database_dir));

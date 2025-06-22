@@ -122,23 +122,6 @@ pub struct CachedDbEntry {
     entries: Vec<DictionaryEntry>,
 }
 
-fn print_stats(input_path_buf: PathBuf, language: &Language) -> Result<()> {
-    let input_path = input_path_buf.as_path();
-    if input_path.is_dir() {
-        bail!(
-            "specified wiktionary extract file '{}' is a directory",
-            input_path.display()
-        );
-    }
-
-    println!(
-        "{}",
-        calculate_stats(input_path, language).to_pretty_string()
-    );
-
-    Ok(())
-}
-
 fn find_by_word_in_db(term: &String, language: &Language) -> Result<Option<Vec<DictionaryEntry>>> {
     let db_hits = find_by_word(term, language);
     match db_hits {
@@ -240,10 +223,9 @@ fn main() -> Result<()> {
     let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
 
     if args.stats {
-        return print_stats(
-            get_db_path(args.db_path, &language_to_use),
-            &language_to_use,
-        );
+        let input_path = get_db_path(args.db_path, &language_to_use);
+        let stats = calculate_stats(&input_path, &language_to_use);
+        return utilities::pager::print_in_pager(&stats);
     }
     #[cfg(feature = "sonic")]
     if args.autocomplete {
