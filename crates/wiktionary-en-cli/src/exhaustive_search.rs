@@ -74,7 +74,7 @@ fn search_worker(
             Ok(json) => {
                 min_distance = evaluate_entry(
                     &mut search_result,
-                    &term,
+                    term,
                     json,
                     case_insensitive,
                     min_distance,
