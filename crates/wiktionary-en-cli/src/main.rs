@@ -15,7 +15,6 @@ use crate::wiktionary_stats::*;
 
 mod exhaustive_search;
 
-
 use std::fmt;
 
 /// A To English Dictionary
@@ -193,37 +192,16 @@ fn run(
                         }
                     }
                 }
-                match exhaustive_search::search(
+                let result = exhaustive_search::search(
                     &query_params.path,
-                    s.clone(),
+                    &s,
                     query_params.max_results,
                     query_params.case_insensitive,
-                ) {
-                    Ok(sr) => {
-                        if let Some(did_you_mean) = sr.did_you_mean {
-                            let result = WiktionaryResult {
-                                did_you_mean: Some(DidYouMean {
-                                    searched_for: s.to_string(),
-                                    suggestion: did_you_mean.word.clone(),
-                                }),
-                                hits: vec![did_you_mean],
-                            };
-                            return Ok(WiktionaryResultWrapper {
-                                result,
-                                config_handler,
-                            });
-                        }
-                        let result = WiktionaryResult {
-                            did_you_mean: None,
-                            hits: sr.full_matches,
-                        };
-                        Ok(WiktionaryResultWrapper {
-                            result,
-                            config_handler,
-                        })
-                    }
-                    Err(e) => bail!(e),
-                }
+                )?;
+                Ok(WiktionaryResultWrapper {
+                    result,
+                    config_handler,
+                })
             }
             Err(e) => bail!(e),
         },

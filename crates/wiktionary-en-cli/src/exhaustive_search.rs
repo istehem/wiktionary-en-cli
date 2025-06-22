@@ -9,6 +9,7 @@ use std::sync::Arc;
 use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use wiktionary_en_entities::wiktionary_entry::*;
+use wiktionary_en_entities::wiktionary_result::*;
 
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 
@@ -55,7 +56,7 @@ fn parse_line(line: Result<String, std::io::Error>, i: usize) -> Result<Dictiona
 
 fn search_worker(
     file_reader: BufReader<File>,
-    term: String,
+    term: &str,
     max_results: usize,
     case_insensitive: bool,
     is_solution_found: Arc<AtomicBool>,
@@ -95,13 +96,13 @@ fn search_worker(
 
 fn do_search(
     file_reader: BufReader<File>,
-    term: String,
+    term: &str,
     max_results: usize,
     case_insensitive: bool,
 ) -> Result<SearchResult> {
     search_worker(
         file_reader,
-        term.clone(),
+        term,
         max_results,
         case_insensitive,
         Arc::new(AtomicBool::new(false)),
@@ -110,12 +111,23 @@ fn do_search(
 
 pub fn search(
     input_path: &Path,
-    term: String,
+    term: &str,
     max_results: usize,
     case_insensitive: bool,
-) -> Result<SearchResult> {
-    match get_file_reader(input_path) {
-        Ok(br) => do_search(br, term, max_results, case_insensitive),
-        Err(e) => bail!(e),
+) -> Result<WiktionaryResult> {
+    let buf_reader = get_file_reader(input_path)?;
+    let result = do_search(buf_reader, term, max_results, case_insensitive)?;
+    if let Some(did_you_mean) = result.did_you_mean {
+        return Ok(WiktionaryResult {
+            did_you_mean: Some(DidYouMean {
+                searched_for: term.to_string(),
+                suggestion: did_you_mean.word.clone(),
+            }),
+            hits: vec![did_you_mean],
+        });
     }
+    Ok(WiktionaryResult {
+        did_you_mean: None,
+        hits: result.full_matches,
+    })
 }
