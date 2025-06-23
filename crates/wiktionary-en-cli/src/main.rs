@@ -1,6 +1,5 @@
 use anyhow::{bail, Result};
 use clap::Parser;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use utilities::language::*;
@@ -115,11 +114,6 @@ struct QueryParameters {
     max_results: usize,
     case_insensitive: bool,
     path: PathBuf,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct CachedDbEntry {
-    entries: Vec<DictionaryEntry>,
 }
 
 fn find_by_word_in_db(term: &String, language: &Language) -> Result<Option<Vec<DictionaryEntry>>> {
