@@ -3,7 +3,7 @@ use minus::Pager;
 use std::fmt::Display;
 use std::fmt::Write;
 
-pub fn print_lines_in_pager<T: Display>(entries: &Vec<T>) -> Result<()> {
+pub fn print_lines_in_pager<T: Display>(entries: &[T]) -> Result<()> {
     let mut output = Pager::new();
 
     for entry in entries {

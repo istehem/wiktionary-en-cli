@@ -207,8 +207,8 @@ fn sounds_to_strings(sounds: &[Sound]) -> Vec<ColoredString> {
     results
 }
 
-fn format_tags(tags: &Vec<String>) -> String {
-    match tags.as_slice() {
+fn format_tags(tags: &[String]) -> String {
+    match tags {
         [] => String::new(),
         xs => format!("({})", xs.join(", ")),
     }
