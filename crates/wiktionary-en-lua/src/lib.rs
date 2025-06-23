@@ -63,7 +63,7 @@ impl ConfigHandler {
 
     pub fn intercept_wiktionary_result(
         &self,
-        result: &Vec<DictionaryEntry>,
+        result: &[DictionaryEntry],
     ) -> Result<Option<Vec<DictionaryEntry>>> {
         let mut intercepted_result = Vec::new();
         for entry in result {
@@ -85,7 +85,7 @@ impl ConfigHandler {
 
     pub fn format_wiktionary_entries(
         &self,
-        result: &Vec<DictionaryEntry>,
+        result: &[DictionaryEntry],
     ) -> Result<Option<Vec<String>>> {
         let mut formatted_entries = Vec::new();
         for entry in result {
