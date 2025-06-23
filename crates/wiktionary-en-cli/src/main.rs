@@ -53,13 +53,8 @@ struct WiktionaryResultWrapper {
 
 impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
-        if let Some(hits) = self
-            .config_handler
-            .intercept_wiktionary_result(&self.result.hits)?
-        {
-            self.result.hits = hits;
-        }
-        Ok(())
+        self.config_handler
+            .intercept_wiktionary_result(&mut self.result.hits)
     }
 }
 

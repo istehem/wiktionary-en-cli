@@ -61,19 +61,15 @@ impl ConfigHandler {
         }
     }
 
-    pub fn intercept_wiktionary_result(
-        &self,
-        result: &[DictionaryEntry],
-    ) -> Result<Option<Vec<DictionaryEntry>>> {
-        let mut intercepted_result = Vec::new();
+    pub fn intercept_wiktionary_result(&self, result: &mut Vec<DictionaryEntry>) -> Result<()> {
         for entry in result {
-            if let Some(entry) = self.intercept(entry)? {
-                intercepted_result.push(entry);
+            if let Some(intercepted_entry) = self.intercept(entry)? {
+                *entry = intercepted_entry;
             } else {
-                return Ok(None);
+                return Ok(());
             }
         }
-        Ok(Some(intercepted_result))
+        Ok(())
     }
 
     fn format_entry(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
