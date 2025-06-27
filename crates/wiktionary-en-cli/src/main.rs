@@ -136,53 +136,49 @@ fn run(
     query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryResultWrapper> {
-    match &query_params.search_term {
-        Some(term) => {
-            let hits = find_by_word(term, &query_params.language)?;
-            match hits.as_slice() {
-                [_, ..] => {
-                    let result = WiktionaryResult {
-                        did_you_mean: None,
-                        hits,
-                    };
-                    Ok(WiktionaryResultWrapper {
+    if let Some(term) = &query_params.search_term {
+        let hits = find_by_word(term, &query_params.language)?;
+        match hits.as_slice() {
+            [_, ..] => {
+                let result = WiktionaryResult {
+                    did_you_mean: None,
+                    hits,
+                };
+                return Ok(WiktionaryResultWrapper {
+                    result,
+                    config_handler,
+                });
+            }
+            [] => {
+                #[cfg(feature = "sonic")]
+                if let Some(result) = search_for_alternative_word(&query_params)? {
+                    return Ok(WiktionaryResultWrapper {
                         result,
                         config_handler,
-                    })
+                    });
                 }
-                [] => {
-                    #[cfg(feature = "sonic")]
-                    if let Some(result) = search_for_alternative_word(&query_params)? {
-                        return Ok(WiktionaryResultWrapper {
-                            result,
-                            config_handler,
-                        });
-                    }
-                    let result = exhaustive_search::search(
-                        &query_params.path,
-                        term,
-                        query_params.max_results,
-                        query_params.case_insensitive,
-                    )?;
-                    Ok(WiktionaryResultWrapper {
-                        result,
-                        config_handler,
-                    })
-                }
+                let result = exhaustive_search::search(
+                    &query_params.path,
+                    term,
+                    query_params.max_results,
+                    query_params.case_insensitive,
+                )?;
+                return Ok(WiktionaryResultWrapper {
+                    result,
+                    config_handler,
+                });
             }
         }
-        None => {
-            let hit = random_entry_for_language(&query_params.language)?;
-            let result = WiktionaryResult {
-                did_you_mean: None,
-                hits: vec![hit],
-            };
-            Ok(WiktionaryResultWrapper {
-                result,
-                config_handler,
-            })
-        }
     }
+    let hit = random_entry_for_language(&query_params.language)?;
+    let result = WiktionaryResult {
+        did_you_mean: None,
+        hits: vec![hit],
+    };
+    Ok(WiktionaryResultWrapper {
+        result,
+        config_handler,
+    })
 }
 
 fn get_language(language: &Option<String>) -> Result<Option<Language>> {
