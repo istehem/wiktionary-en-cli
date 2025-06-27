@@ -132,43 +132,38 @@ fn search_for_alternative_word(query_params: &QueryParameters) -> Result<Option<
     Ok(None)
 }
 
+fn search_for_word(term: &String, query_params: &QueryParameters) -> Result<WiktionaryResult> {
+    let hits = find_by_word(term, &query_params.language)?;
+    match hits.as_slice() {
+        [_, ..] => Ok(WiktionaryResult {
+            did_you_mean: None,
+            hits,
+        }),
+        [] => {
+            #[cfg(feature = "sonic")]
+            if let Some(result) = search_for_alternative_word(query_params)? {
+                return Ok(result);
+            }
+            exhaustive_search::search(
+                &query_params.path,
+                term,
+                query_params.max_results,
+                query_params.case_insensitive,
+            )
+        }
+    }
+}
+
 fn run(
     query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryResultWrapper> {
     if let Some(term) = &query_params.search_term {
-        let hits = find_by_word(term, &query_params.language)?;
-        match hits.as_slice() {
-            [_, ..] => {
-                let result = WiktionaryResult {
-                    did_you_mean: None,
-                    hits,
-                };
-                return Ok(WiktionaryResultWrapper {
-                    result,
-                    config_handler,
-                });
-            }
-            [] => {
-                #[cfg(feature = "sonic")]
-                if let Some(result) = search_for_alternative_word(&query_params)? {
-                    return Ok(WiktionaryResultWrapper {
-                        result,
-                        config_handler,
-                    });
-                }
-                let result = exhaustive_search::search(
-                    &query_params.path,
-                    term,
-                    query_params.max_results,
-                    query_params.case_insensitive,
-                )?;
-                return Ok(WiktionaryResultWrapper {
-                    result,
-                    config_handler,
-                });
-            }
-        }
+        let result = search_for_word(term, &query_params)?;
+        return Ok(WiktionaryResultWrapper {
+            result,
+            config_handler,
+        });
     }
     let hit = random_entry_for_language(&query_params.language)?;
     let result = WiktionaryResult {
