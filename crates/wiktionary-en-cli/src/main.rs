@@ -110,13 +110,35 @@ struct QueryParameters {
     path: PathBuf,
 }
 
+#[cfg(feature = "sonic")]
+fn search_for_alternative_word(query_params: &QueryParameters) -> Result<Option<WiktionaryResult>> {
+    if let Some(term) = &query_params.search_term {
+        let did_you_mean =
+            wiktionary_en_identifier_index::did_you_mean(&query_params.language, &term)?;
+        if let Some(did_you_mean) = did_you_mean {
+            let hits = find_by_word(&did_you_mean, &query_params.language)?;
+            if !hits.is_empty() {
+                let result = WiktionaryResult {
+                    did_you_mean: Some(DidYouMean {
+                        searched_for: term.to_string(),
+                        suggestion: did_you_mean,
+                    }),
+                    hits,
+                };
+                return Ok(Some(result));
+            }
+        }
+    }
+    Ok(None)
+}
+
 fn run(
     query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryResultWrapper> {
-    match query_params.search_term {
+    match &query_params.search_term {
         Some(term) => {
-            let hits = find_by_word(&term, &query_params.language)?;
+            let hits = find_by_word(term, &query_params.language)?;
             match hits.as_slice() {
                 [_, ..] => {
                     let result = WiktionaryResult {
@@ -130,27 +152,11 @@ fn run(
                 }
                 [] => {
                     #[cfg(feature = "sonic")]
-                    {
-                        let did_you_mean = wiktionary_en_identifier_index::did_you_mean(
-                            &query_params.language,
-                            &term,
-                        )?;
-                        if let Some(did_you_mean) = did_you_mean {
-                            let hits = find_by_word(&did_you_mean, &query_params.language)?;
-                            if !hits.is_empty() {
-                                let result = WiktionaryResult {
-                                    did_you_mean: Some(DidYouMean {
-                                        searched_for: term,
-                                        suggestion: did_you_mean,
-                                    }),
-                                    hits,
-                                };
-                                return Ok(WiktionaryResultWrapper {
-                                    result,
-                                    config_handler,
-                                });
-                            }
-                        }
+                    if let Some(result) = search_for_alternative_word(&query_params)? {
+                        return Ok(WiktionaryResultWrapper {
+                            result,
+                            config_handler,
+                        });
                     }
                     let result = exhaustive_search::search(
                         &query_params.path,
