@@ -160,7 +160,7 @@ fn run(
                     }
                     let result = exhaustive_search::search(
                         &query_params.path,
-                        &term,
+                        term,
                         query_params.max_results,
                         query_params.case_insensitive,
                     )?;
