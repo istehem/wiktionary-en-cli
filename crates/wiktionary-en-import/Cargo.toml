@@ -9,6 +9,7 @@ wiktionary-en-db = { path = "../wiktionary-en-db" }
 wiktionary-en-identifier-index = { path = "../wiktionary-en-identifier-index", optional = true }
 wiktionary-en-entities = { path = "../wiktionary-en-entities" }
 wiktionary-en-download = { path = "../wiktionary-en-download" }
+wiktionary-en-lua = { path = "../wiktionary-en-lua" }
 clap = { workspace = true }
 anyhow = {workspace = true} 
 indicatif = "0.17.11"

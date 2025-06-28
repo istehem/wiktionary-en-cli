@@ -2661,6 +2661,7 @@ dependencies = [
  "wiktionary-en-download",
  "wiktionary-en-entities",
  "wiktionary-en-identifier-index",
+ "wiktionary-en-lua",
 ]
 
 [[package]]

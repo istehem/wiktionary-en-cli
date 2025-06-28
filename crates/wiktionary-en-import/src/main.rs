@@ -40,26 +40,32 @@ fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> R
     }
 }
 
-fn get_language(language: &Option<String>) -> Result<Language> {
+fn get_language(language: &Option<String>) -> Result<Option<Language>> {
     if let Some(language) = language {
-        return language.parse();
+        return Ok(Some(language.parse()?));
     }
-    Ok(Language::default())
+    Ok(None)
 }
 
 fn main() -> Result<()> {
     let args = Cli::parse();
     let language = get_language(&args.language)?;
-    let db_path: PathBuf = get_db_path(args.db_path, &Some(language));
+    let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
+    let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
+
+    let db_path: PathBuf = get_db_path(args.db_path, &Some(language_to_use));
     #[cfg(feature = "sonic")]
     if args.create_index {
-        let stream =
-            wiktionary_en_identifier_index::generate_indices(&language, &db_path, args.force)?;
+        let stream = wiktionary_en_identifier_index::generate_indices(
+            &language_to_use,
+            &db_path,
+            args.force,
+        )?;
         let errors = indexing_executor::execute_with_progress_bar_and_message(stream);
         return utilities::pager::print_lines_in_pager(&errors?);
     }
     if args.download {
-        return download_wiktionary_extract(&language, args.force);
+        return download_wiktionary_extract(&language_to_use, args.force);
     }
-    import_wiktionary_extract(&db_path, &language, args.force)
+    import_wiktionary_extract(&db_path, &language_to_use, args.force)
 }
