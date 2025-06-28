@@ -111,7 +111,7 @@ struct QueryParameters {
 }
 
 #[cfg(feature = "sonic")]
-fn search_for_alternative_word(query_params: &QueryParameters) -> Result<Option<WiktionaryResult>> {
+fn search_for_alternative_term(query_params: &QueryParameters) -> Result<Option<WiktionaryResult>> {
     if let Some(term) = &query_params.search_term {
         let did_you_mean =
             wiktionary_en_identifier_index::did_you_mean(&query_params.language, &term)?;
@@ -132,7 +132,7 @@ fn search_for_alternative_word(query_params: &QueryParameters) -> Result<Option<
     Ok(None)
 }
 
-fn search_for_word(term: &String, query_params: &QueryParameters) -> Result<WiktionaryResult> {
+fn search_for_term(term: &String, query_params: &QueryParameters) -> Result<WiktionaryResult> {
     let hits = find_by_word(term, &query_params.language)?;
     match hits.as_slice() {
         [_, ..] => Ok(WiktionaryResult {
@@ -141,7 +141,7 @@ fn search_for_word(term: &String, query_params: &QueryParameters) -> Result<Wikt
         }),
         [] => {
             #[cfg(feature = "sonic")]
-            if let Some(result) = search_for_alternative_word(query_params)? {
+            if let Some(result) = search_for_alternative_term(query_params)? {
                 return Ok(result);
             }
             exhaustive_search::search(
@@ -159,7 +159,7 @@ fn run(
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryResultWrapper> {
     if let Some(term) = &query_params.search_term {
-        let result = search_for_word(term, &query_params)?;
+        let result = search_for_term(term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
             result,
             config_handler,
