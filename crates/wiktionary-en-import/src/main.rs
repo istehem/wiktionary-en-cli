@@ -40,18 +40,12 @@ fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> R
     }
 }
 
-fn get_language(language: &Option<String>) -> Result<Option<Language>> {
-    if let Some(language) = language {
-        return Ok(Some(language.parse()?));
-    }
-    Ok(None)
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let language = get_language(&args.language)?;
     let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
-    let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
+    let language_to_use = config_handler
+        .config
+        .parse_language_or_use_config_or_default(&args.language)?;
 
     let db_path: PathBuf = get_db_path(args.db_path, &Some(language_to_use));
     #[cfg(feature = "sonic")]

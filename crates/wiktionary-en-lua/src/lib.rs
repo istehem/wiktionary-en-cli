@@ -15,6 +15,18 @@ pub struct Config {
     pub language: Option<Language>,
 }
 
+impl Config {
+    pub fn parse_language_or_use_config_or_default(
+        &self,
+        language: &Option<String>,
+    ) -> Result<Language> {
+        if let Some(language) = language {
+            return language.parse();
+        }
+        Ok(self.language.unwrap_or_default())
+    }
+}
+
 impl FromLua for Config {
     fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
         let table = value.as_table();

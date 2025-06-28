@@ -176,13 +176,6 @@ fn run(
     })
 }
 
-fn get_language(language: &Option<String>) -> Result<Option<Language>> {
-    if let Some(language) = language {
-        return Ok(Some(language.parse()?));
-    }
-    Ok(None)
-}
-
 fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     if let Some(path) = path {
         return PathBuf::from(path);
@@ -192,9 +185,10 @@ fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let language = get_language(&args.language)?;
     let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
-    let language_to_use = language.unwrap_or(config_handler.config.language.unwrap_or_default());
+    let language_to_use = config_handler
+        .config
+        .parse_language_or_use_config_or_default(&args.language)?;
 
     if args.stats {
         let input_path = get_db_path(args.db_path, &language_to_use);
