@@ -145,6 +145,8 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     wiktionary_api.set("wrap_text_at", wrap_text_at_fn)?;
     let indent_fn = indent(lua)?;
     wiktionary_api.set("indent", indent_fn)?;
+    let project_folder_fn = project_folder(lua)?;
+    wiktionary_api.set("project_folder", project_folder_fn)?;
 
     let package: mlua::Table = lua.globals().get("package")?;
     let loaded: mlua::Table = package.get("loaded")?;
@@ -260,4 +262,8 @@ fn to_pretty_string(lua: &Lua) -> mlua::Result<Function> {
     lua.create_function(|_, dictionary_entry: DictionaryEntry| {
         Ok(dictionary_entry.to_pretty_string())
     })
+}
+
+fn project_folder(lua: &Lua) -> mlua::Result<Function> {
+    lua.create_function(|_, ()| Ok(LUA_DIR!()))
 }

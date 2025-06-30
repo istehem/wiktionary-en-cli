@@ -1,21 +1,13 @@
+local api = require("wiktionary_api")
 local utils = require("utils")
 
 local interceptor = {}
 
 interceptor.intercept = function(entry)
-	translation_1 = {
-		lang = "en",
-		code = "en",
-		word = "Hello",
-	}
-	translation_2 = {
-		lang = "en",
-		code = "en",
-		word = "Word!",
-	}
-	if utils.is_empty(entry.translations) then
-		entry.translations = { translation_1, translation_2 }
-	end
+	local history_filename = api.project_folder() .. "/history.txt"
+	local history = io.open(history_filename, "a")
+	history:write(entry.word .. "\n")
+	history:close()
 	return entry
 end
 
