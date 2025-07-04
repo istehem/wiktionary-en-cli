@@ -31,7 +31,12 @@ impl WiktionaryDbClient {
     }
 
     pub fn insert_wiktionary_file(&self, file_reader: BufReader<File>, force: bool) -> Result<()> {
-        insert_wiktionary_file_into_collection(&self.collection(), file_reader, &self.language, force)
+        insert_wiktionary_file_into_collection(
+            &self.collection(),
+            file_reader,
+            &self.language,
+            force,
+        )
     }
 }
 
@@ -44,8 +49,8 @@ pub fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf
         return PathBuf::from(path);
     }
     PathBuf::from(utilities::DICTIONARY_DB_PATH!(language
-            .unwrap_or_default()
-            .value()))
+        .unwrap_or_default()
+        .value()))
 }
 
 fn delete_all_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
