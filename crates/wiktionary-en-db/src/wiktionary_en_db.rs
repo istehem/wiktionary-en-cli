@@ -11,28 +11,26 @@ use wiktionary_en_entities::wiktionary_entry::*;
 use std::fs::File;
 
 pub struct WiktionaryDbClient {
-    pub collection: Collection<DictionaryEntry>,
-    // the database is dropped the referenced isn't kept
     pub database: Database,
+    pub language: Language,
 }
 
 impl WiktionaryDbClient {
-    pub fn init(language: &Language) -> Result<Self> {
-        let db_result = Database::open_path(get_polo_db_path());
-        match db_result {
-            Ok(db) => {
-                let collection = db.collection::<DictionaryEntry>(&language.value());
-                Ok(Self {
-                    collection,
-                    database: db,
-                })
-            }
-            Err(err) => bail!(err),
-        }
+    pub fn init(language: Language) -> Result<Self> {
+        let database = Database::open_path(get_polo_db_path())?;
+        Ok(Self {
+            database,
+            language,
+        })
+    }
+
+    fn collection(&self) -> Collection<DictionaryEntry> {
+        self.database
+            .collection::<DictionaryEntry>(&self.language.value())
     }
 
     pub fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
-        find_by_word_in_collection(term, &self.collection)
+        find_by_word_in_collection(term, &self.collection())
     }
 }
 
@@ -74,8 +72,8 @@ fn find_by_word_in_collection(
     }
 }
 
-pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
-    let client = WiktionaryDbClient::init(language)?;
+pub fn find_by_word(term: &str, language: &Language) -> Result<Vec<DictionaryEntry>> {
+    let client = WiktionaryDbClient::init(*language)?;
     client.find_by_word(term)
 }
 
