@@ -10,6 +10,32 @@ use wiktionary_en_entities::wiktionary_entry::*;
 
 use std::fs::File;
 
+pub struct WiktionaryDbClient {
+    pub collection: Collection<DictionaryEntry>,
+    // the database is dropped the referenced isn't kept
+    pub database: Database,
+}
+
+impl WiktionaryDbClient {
+    pub fn init(language: &Language) -> Result<Self> {
+        let db_result = Database::open_path(get_polo_db_path());
+        match db_result {
+            Ok(db) => {
+                let collection = db.collection::<DictionaryEntry>(&language.value());
+                Ok(Self {
+                    collection,
+                    database: db,
+                })
+            }
+            Err(err) => bail!(err),
+        }
+    }
+
+    pub fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
+        find_by_word_in_collection(term, &self.collection)
+    }
+}
+
 pub fn get_polo_db_path() -> PathBuf {
     PathBuf::from(utilities::DICTIONARY_POLO_DB_DIR!())
 }
@@ -32,8 +58,8 @@ fn delete_all_in_collection(collection: &Collection<DictionaryEntry>) -> Result<
 }
 
 fn find_by_word_in_collection(
-    term: &String,
-    collection: Collection<DictionaryEntry>,
+    term: &str,
+    collection: &Collection<DictionaryEntry>,
 ) -> Result<Vec<DictionaryEntry>> {
     let mut result = Vec::new();
     let search_result = collection.find(doc! { "word" : term}).run();
@@ -49,15 +75,8 @@ fn find_by_word_in_collection(
 }
 
 pub fn find_by_word(term: &String, language: &Language) -> Result<Vec<DictionaryEntry>> {
-    let db_result = Database::open_path(get_polo_db_path());
-    match db_result {
-        Ok(db) => {
-            let collection = db.collection::<DictionaryEntry>(&language.value());
-            let result = find_by_word_in_collection(term, collection)?;
-            Ok(result)
-        }
-        Err(err) => bail!(err),
-    }
+    let client = WiktionaryDbClient::init(language)?;
+    client.find_by_word(term)
 }
 
 /// This is very inefficient.

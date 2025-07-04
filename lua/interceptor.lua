@@ -8,6 +8,7 @@ interceptor.intercept = function(entry)
 	local history = io.open(history_filename, "a")
 	history:write(entry.word .. "\n")
 	history:close()
+	--entry.word = api.apply_color("★", "green") .. entry.word
 	return entry
 end
 
