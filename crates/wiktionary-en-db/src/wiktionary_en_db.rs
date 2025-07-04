@@ -18,10 +18,7 @@ pub struct WiktionaryDbClient {
 impl WiktionaryDbClient {
     pub fn init(language: Language) -> Result<Self> {
         let database = Database::open_path(get_polo_db_path())?;
-        Ok(Self {
-            database,
-            language,
-        })
+        Ok(Self { database, language })
     }
 
     fn collection(&self) -> Collection<DictionaryEntry> {
@@ -70,11 +67,6 @@ fn find_by_word_in_collection(
         }
         Err(err) => bail!(err),
     }
-}
-
-pub fn find_by_word(term: &str, language: &Language) -> Result<Vec<DictionaryEntry>> {
-    let client = WiktionaryDbClient::init(*language)?;
-    client.find_by_word(term)
 }
 
 /// This is very inefficient.

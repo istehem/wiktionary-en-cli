@@ -111,12 +111,15 @@ struct QueryParameters {
 }
 
 #[cfg(feature = "sonic")]
-fn search_for_alternative_term(query_params: &QueryParameters) -> Result<Option<WiktionaryResult>> {
+fn search_for_alternative_term(
+    client: &WiktionaryDbClient,
+    query_params: &QueryParameters,
+) -> Result<Option<WiktionaryResult>> {
     if let Some(term) = &query_params.search_term {
         let did_you_mean =
             wiktionary_en_identifier_index::did_you_mean(&query_params.language, &term)?;
         if let Some(did_you_mean) = did_you_mean {
-            let hits = find_by_word(&did_you_mean, &query_params.language)?;
+            let hits = client.find_by_word(&did_you_mean)?;
             if !hits.is_empty() {
                 let result = WiktionaryResult {
                     did_you_mean: Some(DidYouMean {
@@ -132,8 +135,9 @@ fn search_for_alternative_term(query_params: &QueryParameters) -> Result<Option<
     Ok(None)
 }
 
-fn search_for_term(term: &String, query_params: &QueryParameters) -> Result<WiktionaryResult> {
-    let hits = find_by_word(term, &query_params.language)?;
+fn search_for_term(term: &str, query_params: &QueryParameters) -> Result<WiktionaryResult> {
+    let client = WiktionaryDbClient::init(query_params.language)?;
+    let hits = client.find_by_word(term)?;
     match hits.as_slice() {
         [_, ..] => Ok(WiktionaryResult {
             did_you_mean: None,
@@ -141,7 +145,7 @@ fn search_for_term(term: &String, query_params: &QueryParameters) -> Result<Wikt
         }),
         [] => {
             #[cfg(feature = "sonic")]
-            if let Some(result) = search_for_alternative_term(query_params)? {
+            if let Some(result) = search_for_alternative_term(&client, query_params)? {
                 return Ok(result);
             }
             exhaustive_search::search(
