@@ -12,7 +12,7 @@ use std::fs::File;
 
 pub struct WiktionaryDbClient {
     pub database: Database,
-    pub language: Language,
+    language: Language,
 }
 
 impl WiktionaryDbClient {
