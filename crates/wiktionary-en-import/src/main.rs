@@ -34,8 +34,10 @@ struct Cli {
 }
 
 fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
+    let db_client = WiktionaryDbClient::init(*language)?;
+
     match file_utils::get_file_reader(path) {
-        Ok(path) => insert_wiktionary_file(path, language, force),
+        Ok(path) => db_client.insert_wiktionary_file(path, force),
         Err(err) => bail!(err),
     }
 }

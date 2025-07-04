@@ -29,6 +29,10 @@ impl WiktionaryDbClient {
     pub fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
         find_by_word_in_collection(term, &self.collection())
     }
+
+    pub fn insert_wiktionary_file(&self, file_reader: BufReader<File>, force: bool) -> Result<()> {
+        insert_wiktionary_file_into_db(&self.database, file_reader, &self.language, force)
+    }
 }
 
 pub fn get_polo_db_path() -> PathBuf {
@@ -122,7 +126,7 @@ fn number_of_entries_in_collection(collection: &Collection<DictionaryEntry>) -> 
 }
 
 fn insert_wiktionary_file_into_db(
-    db: Database,
+    db: &Database,
     file_reader: BufReader<File>,
     language: &Language,
     force: bool,
@@ -166,19 +170,6 @@ fn insert_wiktionary_file_into_db(
         &language.value()
     );
     Ok(())
-}
-
-pub fn insert_wiktionary_file(
-    file_reader: BufReader<File>,
-    language: &Language,
-    force: bool,
-) -> Result<()> {
-    let db_result = Database::open_path(get_polo_db_path());
-
-    match db_result {
-        Ok(db) => insert_wiktionary_file_into_db(db, file_reader, language, force),
-        Err(err) => bail!(err),
-    }
 }
 
 fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {
