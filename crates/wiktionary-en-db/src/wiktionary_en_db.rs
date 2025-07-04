@@ -31,7 +31,7 @@ impl WiktionaryDbClient {
     }
 
     pub fn insert_wiktionary_file(&self, file_reader: BufReader<File>, force: bool) -> Result<()> {
-        insert_wiktionary_file_into_db(&self.database, file_reader, &self.language, force)
+        insert_wiktionary_file_into_collection(&self.collection(), file_reader, &self.language, force)
     }
 }
 
@@ -44,8 +44,8 @@ pub fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf
         return PathBuf::from(path);
     }
     PathBuf::from(utilities::DICTIONARY_DB_PATH!(language
-        .unwrap_or_default()
-        .value()))
+            .unwrap_or_default()
+            .value()))
 }
 
 fn delete_all_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
@@ -125,16 +125,14 @@ fn number_of_entries_in_collection(collection: &Collection<DictionaryEntry>) -> 
     }
 }
 
-fn insert_wiktionary_file_into_db(
-    db: &Database,
+fn insert_wiktionary_file_into_collection(
+    collection: &Collection<DictionaryEntry>,
     file_reader: BufReader<File>,
     language: &Language,
     force: bool,
 ) -> Result<()> {
-    let collection = db.collection::<DictionaryEntry>(language.value().as_str());
-
     if !force {
-        let count = number_of_entries_in_collection(&collection)?;
+        let count = number_of_entries_in_collection(collection)?;
         if count > 0 {
             bail!(
                 "dictionary already contains {} entries for language {}, use force to override",
@@ -144,8 +142,8 @@ fn insert_wiktionary_file_into_db(
         }
     }
 
-    delete_all_in_collection(&collection)?;
-    create_index_on_word(&collection)?;
+    delete_all_in_collection(collection)?;
+    create_index_on_word(collection)?;
 
     let mut count = 0;
     let mut all_entries = Vec::new();
