@@ -98,17 +98,6 @@ fn random_entry_in_collection(collection: &Collection<DictionaryEntry>) -> Resul
     }
 }
 
-pub fn number_of_entries_for_language(language: &Language) -> Result<u64> {
-    let db_result = Database::open_path(get_polo_db_path());
-    match db_result {
-        Ok(db) => {
-            let collection = db.collection::<DictionaryEntry>(&language.value());
-            number_of_entries_in_collection(&collection)
-        }
-        Err(err) => bail!(err),
-    }
-}
-
 fn number_of_entries_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
     let count: Result<u64, polodb_core::Error> = collection.count_documents();
     match count {

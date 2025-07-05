@@ -1,3 +1,4 @@
+use anyhow::Result;
 use colored::ColoredString;
 use colored::Colorize;
 use std::fmt;
@@ -61,18 +62,19 @@ impl Stats {
     }
 }
 
-pub fn calculate_stats(dictionary_path: &Path, language: &Language) -> Stats {
-    Stats {
+pub fn calculate_stats(dictionary_path: &Path, language: &Language) -> Result<Stats> {
+    let client = wiktionary_en_db::WiktionaryDbClient::init(*language)?;
+    Ok(Stats {
         path: dictionary_path.display().to_string(),
         database_dir: String::from(DICTIONARY_POLO_DB_DIR!()),
-        database_entries: number_of_database_entries(language),
+        database_entries: number_of_database_entries(&client),
         file_size: file_size_in_megabytes(dictionary_path),
         number_of_entries: number_of_entries(dictionary_path),
-    }
+    })
 }
 
-fn number_of_database_entries(language: &Language) -> Option<usize> {
-    if let Ok(number) = wiktionary_en_db::number_of_entries_for_language(language) {
+fn number_of_database_entries(client: &wiktionary_en_db::WiktionaryDbClient) -> Option<usize> {
+    if let Ok(number) = client.number_of_entries() {
         return Some(number as usize);
     }
     None

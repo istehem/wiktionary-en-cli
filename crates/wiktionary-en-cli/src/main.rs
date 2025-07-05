@@ -194,7 +194,7 @@ fn main() -> Result<()> {
 
     if args.stats {
         let input_path = get_db_path(args.db_path, &language_to_use);
-        let stats = calculate_stats(&input_path, &language_to_use);
+        let stats = calculate_stats(&input_path, &language_to_use)?;
         return utilities::pager::print_in_pager(&stats);
     }
     #[cfg(feature = "sonic")]
