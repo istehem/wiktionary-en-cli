@@ -166,7 +166,7 @@ fn run(
     query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryResultWrapper> {
-    let client = WiktionaryDbClient::init(*&query_params.language)?;
+    let client = WiktionaryDbClient::init(query_params.language)?;
     if let Some(term) = &query_params.search_term {
         let result = search_for_term(&client, term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
