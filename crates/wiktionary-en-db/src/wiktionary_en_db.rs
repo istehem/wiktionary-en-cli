@@ -11,7 +11,7 @@ use wiktionary_en_entities::wiktionary_entry::*;
 use std::fs::File;
 
 pub struct WiktionaryDbClient {
-    pub database: Database,
+    database: Database,
     language: Language,
 }
 
