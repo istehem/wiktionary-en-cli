@@ -41,11 +41,10 @@ mod tests {
             results.push(dictionary_entry);
         }
         let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
-        if let Some(intercepted_results) = config_handler.intercept_wiktionary_result(&results)? {
-            for entry in intercepted_results {
+        config_handler.intercept_wiktionary_result(&mut results)?;
+            for entry in results {
                 println!("{}", entry.to_pretty_string());
             }
-        }
         return Ok(());
     }
 
