@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
 
+use utilities::file_utils::*;
 use utilities::language::*;
 
 use wiktionary_en_entities::wiktionary_result::*;
@@ -178,13 +179,6 @@ fn run(
         result,
         config_handler,
     })
-}
-
-fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
-    if let Some(path) = path {
-        return PathBuf::from(path);
-    }
-    PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()))
 }
 
 fn main() -> Result<()> {

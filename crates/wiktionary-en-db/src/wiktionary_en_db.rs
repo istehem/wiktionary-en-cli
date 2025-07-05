@@ -40,17 +40,8 @@ impl WiktionaryDbClient {
     }
 }
 
-pub fn get_polo_db_path() -> PathBuf {
+fn get_polo_db_path() -> PathBuf {
     PathBuf::from(utilities::DICTIONARY_POLO_DB_DIR!())
-}
-
-pub fn get_db_path(path: Option<String>, language: &Option<Language>) -> PathBuf {
-    if let Some(path) = path {
-        return PathBuf::from(path);
-    }
-    PathBuf::from(utilities::DICTIONARY_DB_PATH!(language
-        .unwrap_or_default()
-        .value()))
 }
 
 fn delete_all_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {

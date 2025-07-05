@@ -49,7 +49,7 @@ fn main() -> Result<()> {
         .config
         .parse_language_or_use_config_or_default(&args.language)?;
 
-    let db_path: PathBuf = get_db_path(args.db_path, &Some(language_to_use));
+    let db_path: PathBuf = file_utils::get_db_path(args.db_path, &language_to_use);
     #[cfg(feature = "sonic")]
     if args.create_index {
         let stream = wiktionary_en_identifier_index::generate_indices(

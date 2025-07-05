@@ -42,9 +42,9 @@ mod tests {
         }
         let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
         config_handler.intercept_wiktionary_result(&mut results)?;
-            for entry in results {
-                println!("{}", entry.to_pretty_string());
-            }
+        for entry in results {
+            println!("{}", entry.to_pretty_string());
+        }
         return Ok(());
     }
 
