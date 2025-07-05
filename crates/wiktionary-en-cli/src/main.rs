@@ -136,8 +136,11 @@ fn search_for_alternative_term(
     Ok(None)
 }
 
-fn search_for_term(term: &str, query_params: &QueryParameters) -> Result<WiktionaryResult> {
-    let client = WiktionaryDbClient::init(query_params.language)?;
+fn search_for_term(
+    client: &WiktionaryDbClient,
+    term: &str,
+    query_params: &QueryParameters,
+) -> Result<WiktionaryResult> {
     let hits = client.find_by_word(term)?;
     match hits.as_slice() {
         [_, ..] => Ok(WiktionaryResult {
@@ -163,14 +166,15 @@ fn run(
     query_params: QueryParameters,
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryResultWrapper> {
+    let client = WiktionaryDbClient::init(*&query_params.language)?;
     if let Some(term) = &query_params.search_term {
-        let result = search_for_term(term, &query_params)?;
+        let result = search_for_term(&client, term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
             result,
             config_handler,
         });
     }
-    let hit = random_entry_for_language(&query_params.language)?;
+    let hit = client.random_entry()?;
     let result = WiktionaryResult {
         did_you_mean: None,
         hits: vec![hit],

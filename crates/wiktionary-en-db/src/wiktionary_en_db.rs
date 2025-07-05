@@ -38,6 +38,13 @@ impl WiktionaryDbClient {
             force,
         )
     }
+    pub fn number_of_entries(&self) -> Result<u64> {
+        number_of_entries_in_collection(&self.collection())
+    }
+
+    pub fn random_entry(&self) -> Result<DictionaryEntry> {
+        random_entry_in_collection(&self.collection())
+    }
 }
 
 fn get_polo_db_path() -> PathBuf {
@@ -86,17 +93,6 @@ fn random_entry_in_collection(collection: &Collection<DictionaryEntry>) -> Resul
                 return Ok(entry?);
             }
             bail!("no entries found")
-        }
-        Err(err) => bail!(err),
-    }
-}
-
-pub fn random_entry_for_language(language: &Language) -> Result<DictionaryEntry> {
-    let db_result = Database::open_path(get_polo_db_path());
-    match db_result {
-        Ok(db) => {
-            let collection = db.collection::<DictionaryEntry>(&language.value());
-            Ok(random_entry_in_collection(&collection)?)
         }
         Err(err) => bail!(err),
     }
