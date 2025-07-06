@@ -6,15 +6,15 @@ use std::str::FromStr;
 #[derive(Copy, Clone, PartialEq, Default, Serialize, Deserialize, Debug)]
 pub enum Language {
     #[default]
-    #[serde(alias = "en", rename = "en")]
+    #[serde(rename = "en")]
     EN,
-    #[serde(alias = "de", rename = "de")]
+    #[serde(rename = "de")]
     DE,
-    #[serde(alias = "fr", rename = "fr")]
+    #[serde(rename = "fr")]
     FR,
-    #[serde(alias = "es", rename = "es")]
+    #[serde(rename = "es")]
     ES,
-    #[serde(alias = "sv", rename = "sv")]
+    #[serde(rename = "sv")]
     SV,
 }
 
