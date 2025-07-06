@@ -35,6 +35,22 @@ impl WiktionaryDbClient {
         find_by_word_in_collection(term, &self.collection())
     }
 
+    pub fn upsert_into_history(&self, term: &str) -> Result<()> {
+        let collection = self.history_collection();
+        collection.insert_one(HistoryEntry {
+            term: term.to_string(),
+            language: self.language,
+        })?;
+        Ok(())
+    }
+
+    pub fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
+        let collection = self.history_collection();
+        let result =
+            collection.find_one(doc! { "word" : term, "language": self.language.value()})?;
+        return Ok(result);
+    }
+
     pub fn insert_wiktionary_file(&self, file_reader: BufReader<File>, force: bool) -> Result<()> {
         insert_wiktionary_file_into_collection(
             &self.collection(),
