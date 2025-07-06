@@ -7,6 +7,7 @@ use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
 use wiktionary_en_entities::wiktionary_entry::*;
+use wiktionary_en_entities::wiktionary_history::{HistoryEntry, HISTORY_COLLECTION};
 
 use std::fs::File;
 
@@ -24,6 +25,10 @@ impl WiktionaryDbClient {
     fn collection(&self) -> Collection<DictionaryEntry> {
         self.database
             .collection::<DictionaryEntry>(&self.language.value())
+    }
+
+    pub fn history_collection(&self) -> Collection<HistoryEntry> {
+        self.database.collection::<HistoryEntry>(HISTORY_COLLECTION)
     }
 
     pub fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
