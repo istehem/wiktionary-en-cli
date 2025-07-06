@@ -1,14 +1,20 @@
 use self::Language::*;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Copy, Clone, PartialEq, Default)]
+#[derive(Copy, Clone, PartialEq, Default, Serialize, Deserialize, Debug)]
 pub enum Language {
     #[default]
+    #[serde(alias = "en", rename = "en")]
     EN,
+    #[serde(alias = "de", rename = "de")]
     DE,
+    #[serde(alias = "fr", rename = "fr")]
     FR,
+    #[serde(alias = "es", rename = "es")]
     ES,
+    #[serde(alias = "sv", rename = "sv")]
     SV,
 }
 

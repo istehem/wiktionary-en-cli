@@ -25,3 +25,7 @@ path = "test_config.rs"
 [[test]]
 name = "test-data-fields"
 path = "test_data_fields.rs"
+
+[[test]]
+name = "test-serde"
+path = "test_serde.rs"
