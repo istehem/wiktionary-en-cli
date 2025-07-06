@@ -85,16 +85,13 @@ fn find_by_word_in_collection(
     collection: &Collection<DictionaryEntry>,
 ) -> Result<Vec<DictionaryEntry>> {
     let mut result = Vec::new();
-    let search_result = collection.find(doc! { "word" : term}).run();
-    match search_result {
-        Ok(entries) => {
-            for entry in entries {
-                result.push(entry?);
-            }
-            Ok(result)
-        }
-        Err(err) => bail!(err),
+    let search_result = collection.find(doc! { "word" : term}).run()?;
+
+    for entry in search_result {
+        result.push(entry?);
     }
+
+    Ok(result)
 }
 
 /// This is very inefficient.
