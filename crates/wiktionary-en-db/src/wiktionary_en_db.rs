@@ -1,13 +1,14 @@
 use anyhow::{bail, Context, Result};
+use chrono::Utc;
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use utilities::language::*;
 
 use polodb_core::bson::doc;
-use polodb_core::{Collection, CollectionT, Database, IndexModel};
+use polodb_core::{Collection, CollectionT, Database, IndexModel, IndexOptions};
 use rand::{rng, Rng};
 use wiktionary_en_entities::wiktionary_entry::*;
-use wiktionary_en_entities::wiktionary_history::{HistoryEntry, HISTORY_COLLECTION};
+use wiktionary_en_entities::{history_collection, wiktionary_history::HistoryEntry};
 
 use std::fs::File;
 
@@ -28,7 +29,8 @@ impl WiktionaryDbClient {
     }
 
     pub fn history_collection(&self) -> Collection<HistoryEntry> {
-        self.database.collection::<HistoryEntry>(HISTORY_COLLECTION)
+        self.database
+            .collection::<HistoryEntry>(&history_collection!(&self.language))
     }
 
     pub fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
@@ -39,19 +41,19 @@ impl WiktionaryDbClient {
         let collection = self.history_collection();
         collection.insert_one(HistoryEntry {
             term: term.to_string(),
-            language: self.language,
+            last_hit: Utc::now(),
         })?;
         Ok(())
     }
 
     pub fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
         let collection = self.history_collection();
-        let result =
-            collection.find_one(doc! { "word" : term, "language": self.language.value()})?;
-        return Ok(result);
+        let result = collection.find_one(doc! { "word" : term})?;
+        Ok(result)
     }
 
     pub fn insert_wiktionary_file(&self, file_reader: BufReader<File>, force: bool) -> Result<()> {
+        create_history_index(&self.history_collection())?;
         insert_wiktionary_file_into_collection(
             &self.collection(),
             file_reader,
@@ -66,6 +68,19 @@ impl WiktionaryDbClient {
     pub fn random_entry(&self) -> Result<DictionaryEntry> {
         random_entry_in_collection(&self.collection())
     }
+}
+
+fn create_history_index(collection: &Collection<HistoryEntry>) -> Result<()> {
+    collection.create_index(IndexModel {
+        keys: doc! {
+            "word": 1,
+        },
+        options: Some(IndexOptions {
+            unique: Some(true),
+            ..Default::default()
+        }),
+    })?;
+    Ok(())
 }
 
 fn get_polo_db_path() -> PathBuf {

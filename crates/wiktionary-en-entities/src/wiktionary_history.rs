@@ -1,10 +1,20 @@
-use serde::{Deserialize, Serialize};
-use utilities::language::*;
+use chrono::serde::ts_seconds::deserialize as from_ts;
+use chrono::serde::ts_seconds::serialize as to_ts;
+use chrono::{DateTime, Utc};
 
-pub const HISTORY_COLLECTION: &str = "history";
+use serde::{Deserialize, Serialize};
+
+#[macro_export]
+macro_rules! history_collection {
+    ($language:expr) => {
+        format!("history_{}", $language)
+    };
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HistoryEntry {
     pub term: String,
-    pub language: Language,
+    #[serde(serialize_with = "to_ts")]
+    #[serde(deserialize_with = "from_ts")]
+    pub last_hit: DateTime<Utc>,
 }
