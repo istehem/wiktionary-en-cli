@@ -12,3 +12,4 @@ anyhow = {workspace = true}
 polodb_core = "5.1.4"
 rand = "0.9.1"
 chrono = { version = "0.4.41" }
+mlua = { version = "0.10", features = ["lua54", "vendored"] }
