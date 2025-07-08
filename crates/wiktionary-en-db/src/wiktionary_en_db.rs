@@ -4,7 +4,6 @@ use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use utilities::language::*;
 
-use mlua;
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel, IndexOptions};
 use rand::{rng, Rng};
@@ -16,17 +15,6 @@ use std::fs::File;
 pub struct WiktionaryDbClient {
     database: Database,
     language: Language,
-}
-
-impl mlua::UserData for WiktionaryDbClient {
-    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("write_to_history", |_, this, word: String| {
-            match this.upsert_into_history(&word) {
-                Ok(_) => Ok(()),
-                Err(err) => Err(mlua::Error::RuntimeError(err.to_string())),
-            }
-        });
-    }
 }
 
 impl WiktionaryDbClient {
