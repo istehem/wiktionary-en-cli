@@ -51,9 +51,12 @@ impl WiktionaryDbClient {
     }
 
     pub fn upsert_into_history(&self, term: &str) -> Result<()> {
+        if let Some(_) = self.find_in_history_by_word(term)? {
+            return Ok(());
+        }
         let collection = self.history_collection();
         collection.insert_one(HistoryEntry {
-            term: term.to_string(),
+            word: term.to_string(),
             last_hit: Utc::now(),
         })?;
         Ok(())

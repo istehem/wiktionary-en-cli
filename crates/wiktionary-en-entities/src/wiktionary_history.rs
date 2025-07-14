@@ -14,7 +14,7 @@ macro_rules! history_collection {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HistoryEntry {
-    pub term: String,
+    pub word: String,
     #[serde(serialize_with = "to_ts")]
     #[serde(deserialize_with = "from_ts")]
     pub last_hit: DateTime<Utc>,
@@ -23,7 +23,7 @@ pub struct HistoryEntry {
 impl fmt::Display for HistoryEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "at {} UTC", self.last_hit)?;
-        writeln!(f, "{}", self.term)?;
+        writeln!(f, "{}", self.word)?;
         Ok(())
     }
 }
