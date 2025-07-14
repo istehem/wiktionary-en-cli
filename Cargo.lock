@@ -2730,6 +2730,7 @@ dependencies = [
  "colored",
  "mlua",
  "utilities",
+ "wiktionary-en-db",
  "wiktionary-en-entities",
 ]
 
