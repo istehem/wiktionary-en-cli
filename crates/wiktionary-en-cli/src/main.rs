@@ -45,6 +45,9 @@ struct Cli {
     /// Query word
     #[clap(short, long)]
     query: bool,
+    /// Search history
+    #[clap(long)]
+    history: bool,
 }
 
 struct WiktionaryResultWrapper {
@@ -214,6 +217,22 @@ fn main() -> Result<()> {
             .ok_or(anyhow::anyhow!("a search term is required"))?;
         let result = wiktionary_en_identifier_index::query(&language_to_use, search_term)?;
         utilities::pager::print_lines_in_pager(&result)?;
+        return Ok(());
+    }
+    if args.history {
+        let search_term = &args
+            .search_term
+            .ok_or(anyhow::anyhow!("a search term is required"))?;
+        let result = client
+            .client
+            .lock()
+            .unwrap()
+            .find_in_history_by_word(search_term)?;
+        if let Some(history_entry) = result {
+            utilities::pager::print_in_pager(&history_entry)?;
+        } else {
+            anyhow::bail!("{}", "Not Found");
+        }
         return Ok(());
     }
 

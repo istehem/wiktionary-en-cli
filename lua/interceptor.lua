@@ -4,10 +4,7 @@ local utils = require("utils")
 local interceptor = {}
 
 interceptor.intercept = function(entry)
-	local history_filename = api.project_folder() .. "/history.txt"
-	local history = io.open(history_filename, "a")
-	history:write(entry.word .. "\n")
-	history:close()
+	db:write_to_history(entry.word)
 	--entry.word = api.apply_color("★", "green") .. entry.word
 	return entry
 end
