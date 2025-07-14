@@ -22,7 +22,7 @@ pub struct HistoryEntry {
 
 impl fmt::Display for HistoryEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "at {} UTC", self.last_hit)?;
+        writeln!(f, "at {}", self.last_hit)?;
         writeln!(f, "{}", self.word)?;
         Ok(())
     }
