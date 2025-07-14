@@ -7,8 +7,7 @@ use utilities::language::*;
 
 use wiktionary_en_entities::wiktionary_result::*;
 
-use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClient;
-use wiktionary_en_db::wiktionary_en_db_lua::WiktionaryDbClientWrapper;
+use wiktionary_en_db::wiktionary_en_db::{WiktionaryDbClient, WiktionaryDbClientMutex};
 
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
@@ -16,7 +15,6 @@ use crate::wiktionary_stats::*;
 mod exhaustive_search;
 
 use std::fmt;
-use std::sync::{Arc, Mutex};
 
 /// A To English Dictionary
 #[derive(Parser)]
@@ -170,7 +168,7 @@ fn run(
     config_handler: wiktionary_en_lua::ConfigHandler,
 ) -> Result<WiktionaryResultWrapper> {
     if let Some(term) = &query_params.search_term {
-        let result = search_for_term(&client, term, &query_params)?;
+        let result = search_for_term(client, term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
             result,
             config_handler,
@@ -189,11 +187,8 @@ fn run(
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let client = Arc::new(Mutex::new(WiktionaryDbClient::init(Language::EN)?));
-    let wrapper = WiktionaryDbClientWrapper {
-        client: client.clone(),
-    };
-    let config_handler = wiktionary_en_lua::ConfigHandler::init(wrapper)?;
+    let client = WiktionaryDbClientMutex::init(Language::EN)?;
+    let config_handler = wiktionary_en_lua::ConfigHandler::init(client.clone())?;
     let language_to_use = config_handler
         .config
         .parse_language_or_use_config_or_default(&args.language)?;
@@ -223,7 +218,7 @@ fn main() -> Result<()> {
     }
 
     let mut result = run(
-        &client.lock().unwrap(),
+        &client.client.lock().unwrap(),
         QueryParameters {
             search_term: args.search_term,
             language: language_to_use,

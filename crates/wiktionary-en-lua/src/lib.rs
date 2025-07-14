@@ -5,7 +5,7 @@ use utilities::colored_string_utils;
 use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 use utilities::LUA_DIR;
-use wiktionary_en_db::wiktionary_en_db_lua::WiktionaryDbClientWrapper;
+use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClientMutex;
 use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
 
@@ -49,22 +49,20 @@ pub struct ConfigHandler {
 }
 
 impl ConfigHandler {
-    pub fn init(db_client: WiktionaryDbClientWrapper) -> Result<Self> {
+    pub fn init(db_client: WiktionaryDbClientMutex) -> Result<Self> {
         let mut config_handler = Self::init_lua(db_client)?;
         config_handler.config = config_handler.get_config()?;
         Ok(config_handler)
     }
 
-    fn init_lua(db_client: WiktionaryDbClientWrapper) -> Result<Self> {
+    fn init_lua(db_client: WiktionaryDbClientMutex) -> Result<Self> {
         let lua = Lua::new();
         match lua.globals().set("db", db_client) {
             Ok(_) => match init_lua(&lua) {
-                Ok(_) => {
-                    Ok(Self {
-                        lua,
-                        config: Config::default(),
-                    })
-                }
+                Ok(_) => Ok(Self {
+                    lua,
+                    config: Config::default(),
+                }),
                 Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
             },
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),

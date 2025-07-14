@@ -11,10 +11,23 @@ use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::{history_collection, wiktionary_history::HistoryEntry};
 
 use std::fs::File;
+use std::sync::{Arc, Mutex};
 
 pub struct WiktionaryDbClient {
     database: Database,
     language: Language,
+}
+
+#[derive(Clone)]
+pub struct WiktionaryDbClientMutex {
+    pub client: Arc<Mutex<WiktionaryDbClient>>,
+}
+
+impl WiktionaryDbClientMutex {
+    pub fn init(language: Language) -> Result<Self> {
+        let client = Arc::new(Mutex::new(WiktionaryDbClient::init(language)?));
+        Ok(Self { client })
+    }
 }
 
 impl WiktionaryDbClient {
