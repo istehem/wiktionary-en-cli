@@ -5,7 +5,8 @@ use std::path::PathBuf;
 use utilities::language::*;
 
 use polodb_core::bson::doc;
-use polodb_core::{Collection, CollectionT, Database, IndexModel, IndexOptions};
+use polodb_core::options::UpdateOptions;
+use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
 use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::{history_collection, wiktionary_history::HistoryEntry};
@@ -52,25 +53,18 @@ impl WiktionaryDbClient {
 
     pub fn upsert_into_history(&self, term: &str) -> Result<()> {
         let collection = self.history_collection();
-        if let Some(_history_entry) = self.find_in_history_by_word(term)? {
-            /*
-            collection.update_many(
-                doc! {
-                    "word": history_entry.word
+        collection.update_one_with_options(
+            doc! {
+                "word": term
+            },
+            doc! {
+                "$set": doc! {
+                    "word": term,
+                    "last_hit": Utc::now().timestamp(),
                 },
-                doc! {
-                    "$set": doc! {
-                        "last_hit": Utc::now().timestamp(),
-                    },
-                },
-            )?;
-            */
-            return Ok(());
-        }
-        collection.insert_one(HistoryEntry {
-            word: term.to_string(),
-            last_hit: Utc::now(),
-        })?;
+            },
+            UpdateOptions { upsert: Some(true) },
+        )?;
         Ok(())
     }
 
@@ -103,10 +97,7 @@ fn create_history_index(collection: &Collection<HistoryEntry>) -> Result<()> {
         keys: doc! {
             "word": 1,
         },
-        options: Some(IndexOptions {
-            unique: Some(true),
-            ..Default::default()
-        }),
+        options: None,
     })?;
     Ok(())
 }
