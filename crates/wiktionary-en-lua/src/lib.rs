@@ -10,6 +10,7 @@ use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
+const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";
 
 pub struct ConfigHandler {
     pub config: Config,
@@ -45,16 +46,16 @@ impl ExtensionHandler {
         match lua.globals().set("db", db_client) {
             Ok(_) => match init_lua(&lua) {
                 Ok(_) => Ok(Self { lua }),
-                Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
+                Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
             },
-            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
     fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<DictionaryEntry>> {
         match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
-            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
@@ -72,7 +73,7 @@ impl ExtensionHandler {
     fn format_entry(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
         match format_entry(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
-            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
@@ -97,7 +98,7 @@ impl ExtensionHandler {
     ) -> Result<Option<String>> {
         match format_did_you_mean_banner(&self.lua, did_you_mean) {
             Ok(result) => Ok(result),
-            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 }
