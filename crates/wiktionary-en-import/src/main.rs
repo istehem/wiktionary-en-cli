@@ -33,12 +33,9 @@ struct Cli {
     download: bool,
 }
 
-fn import_wiktionary_extract(
-    db_client: &WiktionaryDbClient,
-    path: &Path,
-    _language: &Language,
-    force: bool,
-) -> Result<()> {
+fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
+    let db_client = WiktionaryDbClient::init(*language)?;
+
     match file_utils::get_file_reader(path) {
         Ok(path) => db_client.insert_wiktionary_file(path, force),
         Err(err) => bail!(err),
@@ -47,8 +44,8 @@ fn import_wiktionary_extract(
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let client = WiktionaryDbClientMutex::init(Language::EN)?;
-    let config_handler = wiktionary_en_lua::ConfigHandler::init(client.clone())?;
+    let config_handler = wiktionary_en_lua::ConfigHandler2::init()?;
+
     let language_to_use = config_handler
         .config
         .parse_language_or_use_config_or_default(&args.language)?;
@@ -67,11 +64,6 @@ fn main() -> Result<()> {
     if args.download {
         return download_wiktionary_extract(&language_to_use, args.force);
     }
-    let result = import_wiktionary_extract(
-        &client.client.lock().unwrap(),
-        &db_path,
-        &language_to_use,
-        args.force,
-    );
+    let result = import_wiktionary_extract(&db_path, &language_to_use, args.force);
     result
 }
