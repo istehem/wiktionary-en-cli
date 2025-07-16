@@ -151,7 +151,19 @@ fn get_config_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
     lua.globals().get("config")
 }
 
-fn call_configured_lua_function<A, B>(
+fn get_extensions_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
+    lua.globals().get("extensions")
+}
+
+fn get_config(lua: &Lua) -> mlua::Result<Config> {
+    let config: mlua::Value = get_config_as_lua_value(lua)?;
+    if let Some(config) = config.as_function() {
+        return config.call(());
+    }
+    Config::from_lua(config, lua)
+}
+
+fn call_extension_lua_function<A, B>(
     lua: &Lua,
     function_name: &str,
     argument: &A,
@@ -160,7 +172,7 @@ where
     A: mlua::IntoLuaMulti + Clone,
     B: mlua::FromLua,
 {
-    if let Some(config) = get_config_as_lua_value(lua)?.as_table() {
+    if let Some(config) = get_extensions_as_lua_value(lua)?.as_table() {
         let function: mlua::Value = config.get(function_name)?;
         if let Some(function) = function.as_function() {
             return Ok(Some(function.call(argument.clone())?));
@@ -174,26 +186,18 @@ fn intercept(
     lua: &Lua,
     dictionary_entry: &DictionaryEntry,
 ) -> mlua::Result<Option<DictionaryEntry>> {
-    call_configured_lua_function(lua, "intercept", dictionary_entry)
+    call_extension_lua_function(lua, "intercept", dictionary_entry)
 }
 
 fn format_entry(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    call_configured_lua_function(lua, "format_entry", dictionary_entry)
+    call_extension_lua_function(lua, "format_entry", dictionary_entry)
 }
 
 fn format_did_you_mean_banner(
     lua: &Lua,
     did_you_mean: &DidYouMean,
 ) -> mlua::Result<Option<String>> {
-    call_configured_lua_function(lua, "format_did_you_mean_banner", did_you_mean)
-}
-
-fn get_config(lua: &Lua) -> mlua::Result<Config> {
-    let config: mlua::Value = get_config_as_lua_value(lua)?;
-    if let Some(config) = config.as_function() {
-        return config.call(());
-    }
-    Config::from_lua(config, lua)
+    call_extension_lua_function(lua, "format_did_you_mean_banner", did_you_mean)
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {
