@@ -190,11 +190,13 @@ fn run(
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let client = WiktionaryDbClientMutex::init(Language::EN)?;
-    let config_handler = wiktionary_en_lua::ConfigHandler::init(client.clone())?;
+    let config_handler = wiktionary_en_lua::ConfigHandler2::init()?;
     let language_to_use = config_handler
         .config
         .parse_language_or_use_config_or_default(&args.language)?;
+
+    let client = WiktionaryDbClientMutex::init(language_to_use)?;
+    let extension_handler = wiktionary_en_lua::ConfigHandler::init(client.clone())?;
 
     if args.stats {
         let input_path = get_db_path(args.db_path, &language_to_use);
@@ -245,7 +247,7 @@ fn main() -> Result<()> {
             case_insensitive: args.case_insensitive,
             path: get_db_path(args.db_path, &language_to_use),
         },
-        config_handler,
+        extension_handler,
     )?;
     result.intercept()?;
     utilities::pager::print_in_pager(&result)

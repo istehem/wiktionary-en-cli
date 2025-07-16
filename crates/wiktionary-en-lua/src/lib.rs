@@ -1,48 +1,16 @@
 use anyhow::{anyhow, Result};
 use colored::Colorize;
-use mlua::{FromLua, Function, Lua, Value};
+use mlua::{FromLua, Function, Lua};
 use utilities::colored_string_utils;
-use utilities::language::*;
 use utilities::DICTIONARY_CONFIG;
 use utilities::DICTIONARY_CONFIG2;
 use utilities::LUA_DIR;
 use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClientMutex;
+use wiktionary_en_entities::wiktionary_config::Config;
 use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
-
-#[derive(Default, Clone)]
-pub struct Config {
-    pub language: Option<Language>,
-}
-
-impl Config {
-    pub fn parse_language_or_use_config_or_default(
-        &self,
-        language: &Option<String>,
-    ) -> Result<Language> {
-        if let Some(language) = language {
-            return language.parse();
-        }
-        Ok(self.language.unwrap_or_default())
-    }
-}
-
-impl FromLua for Config {
-    fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
-        let table = value.as_table();
-        match table {
-            Some(table) => {
-                let language_code: String = table.get("language")?;
-                Ok(Config {
-                    language: language_code.parse().ok(),
-                })
-            }
-            None => Ok(Config::default()),
-        }
-    }
-}
 
 pub struct ConfigHandler2 {
     pub config: Config,
@@ -66,24 +34,18 @@ impl ConfigHandler2 {
 
 pub struct ConfigHandler {
     lua: Lua,
-    pub config: Config,
 }
 
 impl ConfigHandler {
     pub fn init(db_client: WiktionaryDbClientMutex) -> Result<Self> {
-        let mut config_handler = Self::init_lua(db_client)?;
-        config_handler.config = config_handler.get_config()?;
-        Ok(config_handler)
+        Self::init_lua(db_client)
     }
 
     fn init_lua(db_client: WiktionaryDbClientMutex) -> Result<Self> {
         let lua = Lua::new();
         match lua.globals().set("db", db_client) {
             Ok(_) => match init_lua(&lua) {
-                Ok(_) => Ok(Self {
-                    lua,
-                    config: Config::default(),
-                }),
+                Ok(_) => Ok(Self { lua }),
                 Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
             },
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
@@ -135,13 +97,6 @@ impl ConfigHandler {
         did_you_mean: &DidYouMean,
     ) -> Result<Option<String>> {
         match format_did_you_mean_banner(&self.lua, did_you_mean) {
-            Ok(result) => Ok(result),
-            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
-        }
-    }
-
-    fn get_config(&self) -> Result<Config> {
-        match get_config(&self.lua) {
             Ok(result) => Ok(result),
             Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
         }

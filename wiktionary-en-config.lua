@@ -2,8 +2,6 @@ local formatter = require("formatter")
 local interceptor = require("interceptor")
 
 config = {}
--- set a default language
-config.language = "en"
 -- format Wiktionary results
 config.format_entry = formatter.format_entry
 -- format Wiktionary did-you-mean banner
