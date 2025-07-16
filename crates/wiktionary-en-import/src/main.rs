@@ -64,6 +64,5 @@ fn main() -> Result<()> {
     if args.download {
         return download_wiktionary_extract(&language_to_use, args.force);
     }
-    let result = import_wiktionary_extract(&db_path, &language_to_use, args.force);
-    result
+    import_wiktionary_extract(&db_path, &language_to_use, args.force)
 }
