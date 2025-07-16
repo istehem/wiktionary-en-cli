@@ -38,10 +38,6 @@ pub struct ExtensionHandler {
 
 impl ExtensionHandler {
     pub fn init(db_client: WiktionaryDbClientMutex) -> Result<Self> {
-        Self::init_lua(db_client)
-    }
-
-    fn init_lua(db_client: WiktionaryDbClientMutex) -> Result<Self> {
         let lua = Lua::new();
         match lua.globals().set("db", db_client) {
             Ok(_) => match init_lua(&lua) {
@@ -119,6 +115,16 @@ fn init_lua_config(lua: &Lua) -> mlua::Result<()> {
         .exec()
 }
 
+fn create_importable_lua_module(
+    lua: &Lua,
+    package_name: &str,
+    module: impl mlua::IntoLua,
+) -> mlua::Result<()> {
+    let package: mlua::Table = lua.globals().get("package")?;
+    let loaded: mlua::Table = package.get("loaded")?;
+    loaded.set(package_name, module)
+}
+
 fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     let wiktionary_api = lua.create_table()?;
     let apply_color_fn = apply_color(lua)?;
@@ -136,9 +142,7 @@ fn load_lua_api(lua: &Lua) -> mlua::Result<()> {
     let project_folder_fn = project_folder(lua)?;
     wiktionary_api.set("project_folder", project_folder_fn)?;
 
-    let package: mlua::Table = lua.globals().get("package")?;
-    let loaded: mlua::Table = package.get("loaded")?;
-    loaded.set("wiktionary_api", wiktionary_api)
+    create_importable_lua_module(lua, "wiktionary_api", wiktionary_api)
 }
 
 fn add_lua_library_to_path(lua: &Lua) -> mlua::Result<()> {
