@@ -2,8 +2,7 @@ use anyhow::{anyhow, Result};
 use colored::Colorize;
 use mlua::{FromLua, Function, Lua};
 use utilities::colored_string_utils;
-use utilities::DICTIONARY_CONFIG;
-use utilities::DICTIONARY_CONFIG2;
+use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
 use utilities::LUA_DIR;
 use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClientMutex;
 use wiktionary_en_entities::wiktionary_config::Config;
@@ -12,14 +11,14 @@ use wiktionary_en_entities::wiktionary_result::DidYouMean;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 
-pub struct ConfigHandler2 {
+pub struct ConfigHandler {
     pub config: Config,
 }
 
-impl ConfigHandler2 {
+impl ConfigHandler {
     pub fn init() -> Result<Self> {
         let lua = Lua::new();
-        match init_lua_config2(&lua) {
+        match init_lua_config(&lua) {
             Ok(_) => {
                 let config = match get_config(&lua) {
                     Ok(result) => Ok(result),
@@ -32,11 +31,11 @@ impl ConfigHandler2 {
     }
 }
 
-pub struct ConfigHandler {
+pub struct ExtensionHandler {
     lua: Lua,
 }
 
-impl ConfigHandler {
+impl ExtensionHandler {
     pub fn init(db_client: WiktionaryDbClientMutex) -> Result<Self> {
         Self::init_lua(db_client)
     }
@@ -106,16 +105,16 @@ impl ConfigHandler {
 fn init_lua(lua: &Lua) -> mlua::Result<()> {
     load_lua_api(lua)?;
     add_lua_library_to_path(lua)?;
-    init_lua_config(lua)
+    init_lua_exentions(lua)
+}
+
+fn init_lua_exentions(lua: &Lua) -> mlua::Result<()> {
+    lua.load(std::fs::read_to_string(DICTIONARY_EXTENSIONS!())?)
+        .exec()
 }
 
 fn init_lua_config(lua: &Lua) -> mlua::Result<()> {
     lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
-        .exec()
-}
-
-fn init_lua_config2(lua: &Lua) -> mlua::Result<()> {
-    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG2!())?)
         .exec()
 }
 

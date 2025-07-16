@@ -52,12 +52,12 @@ struct Cli {
 
 struct WiktionaryResultWrapper {
     result: WiktionaryResult,
-    config_handler: wiktionary_en_lua::ConfigHandler,
+    extension_handler: wiktionary_en_lua::ExtensionHandler,
 }
 
 impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
-        self.config_handler
+        self.extension_handler
             .intercept_wiktionary_result(&mut self.result.hits)
     }
 }
@@ -66,7 +66,7 @@ impl fmt::Display for WiktionaryResultWrapper {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(did_you_mean) = &self.result.did_you_mean {
             match self
-                .config_handler
+                .extension_handler
                 .format_wiktionary_did_you_mean_banner(did_you_mean)
             {
                 Ok(Some(formatted_banner)) => {
@@ -83,7 +83,7 @@ impl fmt::Display for WiktionaryResultWrapper {
         }
 
         match self
-            .config_handler
+            .extension_handler
             .format_wiktionary_entries(&self.result.hits)
         {
             Ok(Some(formated_hits)) => {
@@ -168,13 +168,13 @@ fn search_for_term(
 fn run(
     client: &WiktionaryDbClient,
     query_params: QueryParameters,
-    config_handler: wiktionary_en_lua::ConfigHandler,
+    extension_handler: wiktionary_en_lua::ExtensionHandler,
 ) -> Result<WiktionaryResultWrapper> {
     if let Some(term) = &query_params.search_term {
         let result = search_for_term(client, term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
             result,
-            config_handler,
+            extension_handler,
         });
     }
     let hit = client.random_entry()?;
@@ -184,19 +184,19 @@ fn run(
     };
     Ok(WiktionaryResultWrapper {
         result,
-        config_handler,
+        extension_handler,
     })
 }
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let config_handler = wiktionary_en_lua::ConfigHandler2::init()?;
+    let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
     let language_to_use = config_handler
         .config
         .parse_language_or_use_config_or_default(&args.language)?;
 
     let client = WiktionaryDbClientMutex::init(language_to_use)?;
-    let extension_handler = wiktionary_en_lua::ConfigHandler::init(client.clone())?;
+    let extension_handler = wiktionary_en_lua::ExtensionHandler::init(client.clone())?;
 
     if args.stats {
         let input_path = get_db_path(args.db_path, &language_to_use);

@@ -44,7 +44,7 @@ fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> R
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let config_handler = wiktionary_en_lua::ConfigHandler2::init()?;
+    let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
 
     let language_to_use = config_handler
         .config

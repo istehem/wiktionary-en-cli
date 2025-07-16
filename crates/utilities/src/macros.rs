@@ -20,9 +20,9 @@ macro_rules! DICTIONARY_CONFIG {
 }
 
 #[macro_export]
-macro_rules! DICTIONARY_CONFIG2 {
+macro_rules! DICTIONARY_EXTENSIONS {
     () => {
-        env!("DICTIONARY_CONFIG2")
+        env!("DICTIONARY_EXTENSIONS")
     };
 }
 
