@@ -39,7 +39,7 @@ pub struct ExtensionHandler {
 impl ExtensionHandler {
     pub fn init(db_client: WiktionaryDbClientMutex) -> Result<Self> {
         let lua = Lua::new();
-        match lua.globals().set("db", db_client) {
+        match create_importable_lua_module(&lua, "wiktionary_db_client", db_client) {
             Ok(_) => match init_lua(&lua) {
                 Ok(_) => Ok(Self { lua }),
                 Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
