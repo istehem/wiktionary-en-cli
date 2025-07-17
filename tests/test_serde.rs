@@ -23,7 +23,7 @@ mod tests {
     #[test]
     fn test_serialize_history_entry() -> Result<()> {
         let history_entry = HistoryEntry {
-            term: "Hello Word!".to_string(),
+            word: "Hello Word!".to_string(),
             last_hit: Utc::now(),
         };
         let serialized = anyhow_serde::to_string(&history_entry)?;
@@ -39,12 +39,12 @@ mod tests {
             .with_nanosecond(0)
             .expect("truncating nanoseconds to zero should always be valid");
         let history_entry = HistoryEntry {
-            term: term.to_string(),
+            word: term.to_string(),
             last_hit,
         };
         let serialized = anyhow_serde::to_string(&history_entry)?;
         let deserialized: HistoryEntry = anyhow_serde::from_str(&serialized)?;
-        assert_eq!(term, deserialized.term);
+        assert_eq!(term, deserialized.word);
         assert_eq!(last_hit, deserialized.last_hit);
 
         return Ok(());
