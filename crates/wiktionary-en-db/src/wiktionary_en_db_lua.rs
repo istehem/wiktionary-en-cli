@@ -3,10 +3,10 @@ use std::sync::MutexGuard;
 
 use crate::wiktionary_en_db::{WiktionaryDbClient, WiktionaryDbClientMutex};
 
-fn lock<'a>(db_client: &'a WiktionaryDbClientMutex) -> Result<MutexGuard<'a, WiktionaryDbClient>> {
+fn lock(db_client: &WiktionaryDbClientMutex) -> Result<MutexGuard<'_, WiktionaryDbClient>> {
     match db_client.client.lock() {
         Ok(db_client) => Ok(db_client),
-        Err(err) => Err(mlua::Error::RuntimeError(String::from(err.to_string()))),
+        Err(err) => Err(mlua::Error::RuntimeError(err.to_string())),
     }
 }
 
