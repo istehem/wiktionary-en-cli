@@ -232,10 +232,10 @@ fn main() -> Result<()> {
         }
         return Ok(());
     }
-    let db_client_mutex = WiktionaryDbClientMutex::from(db_client);
-    let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex.clone())?;
+    let db_client_mutex = WiktionaryDbClientMutex::from(db_client.clone());
+    let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
     let mut result = run(
-        &db_client_mutex.client.lock().unwrap(),
+        &db_client,
         QueryParameters {
             search_term: args.search_term,
             language: language_to_use,

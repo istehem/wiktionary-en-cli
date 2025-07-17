@@ -14,6 +14,7 @@ use wiktionary_en_entities::{history_collection, wiktionary_history::HistoryEntr
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 
+#[derive(Clone)]
 pub struct WiktionaryDbClient {
     database: Database,
     language: Language,
