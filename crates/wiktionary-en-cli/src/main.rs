@@ -195,9 +195,6 @@ fn main() -> Result<()> {
         .config
         .parse_language_or_use_config_or_default(&args.language)?;
 
-    let client = WiktionaryDbClientMutex::init(language_to_use)?;
-    let extension_handler = wiktionary_en_lua::ExtensionHandler::init(client.clone())?;
-
     if args.stats {
         let input_path = get_db_path(args.db_path, &language_to_use);
         let stats = calculate_stats(&input_path, &language_to_use)?;
@@ -221,15 +218,13 @@ fn main() -> Result<()> {
         utilities::pager::print_lines_in_pager(&result)?;
         return Ok(());
     }
+
+    let db_client = WiktionaryDbClient::init(language_to_use)?;
     if args.history {
         let search_term = &args
             .search_term
             .ok_or(anyhow::anyhow!("a search term is required"))?;
-        let result = client
-            .client
-            .lock()
-            .unwrap()
-            .find_in_history_by_word(search_term)?;
+        let result = &db_client.find_in_history_by_word(search_term)?;
         if let Some(history_entry) = result {
             utilities::pager::print_in_pager(&history_entry)?;
         } else {
@@ -237,9 +232,10 @@ fn main() -> Result<()> {
         }
         return Ok(());
     }
-
+    let db_client_mutex = WiktionaryDbClientMutex::from(db_client);
+    let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex.clone())?;
     let mut result = run(
-        &client.client.lock().unwrap(),
+        &db_client_mutex.client.lock().unwrap(),
         QueryParameters {
             search_term: args.search_term,
             language: language_to_use,

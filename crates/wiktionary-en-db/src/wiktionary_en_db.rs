@@ -25,6 +25,11 @@ pub struct WiktionaryDbClientMutex {
 }
 
 impl WiktionaryDbClientMutex {
+    pub fn from(db_client: WiktionaryDbClient) -> Self {
+        let client = Arc::new(Mutex::new(db_client));
+        Self { client }
+    }
+
     pub fn init(language: Language) -> Result<Self> {
         let client = Arc::new(Mutex::new(WiktionaryDbClient::init(language)?));
         Ok(Self { client })
