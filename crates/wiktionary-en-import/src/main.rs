@@ -31,6 +31,9 @@ struct Cli {
     /// Download a wiktionary extract from the web
     #[clap(long, short = 'x')]
     download: bool,
+    /// Reset metadata like history tables
+    #[clap(long, short = 'r')]
+    reset_metadata: bool,
 }
 
 fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
@@ -60,6 +63,11 @@ fn main() -> Result<()> {
         )?;
         let errors = indexing_executor::execute_with_progress_bar_and_message(stream);
         return utilities::pager::print_lines_in_pager(&errors?);
+    }
+    if args.reset_metadata {
+        let db_client = WiktionaryDbClient::init(language_to_use)?;
+        db_client.delete_history()?;
+        return Ok(());
     }
     if args.download {
         return download_wiktionary_extract(&language_to_use, args.force);

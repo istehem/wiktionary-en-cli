@@ -80,6 +80,11 @@ impl WiktionaryDbClient {
         Ok(result)
     }
 
+    pub fn delete_history(&self) -> Result<u64> {
+        let collection = self.history_collection();
+        delete_all_in_collection(&collection)
+    }
+
     pub fn insert_wiktionary_file(&self, file_reader: BufReader<File>, force: bool) -> Result<()> {
         create_history_index(&self.history_collection())?;
         insert_wiktionary_file_into_collection(
@@ -112,7 +117,7 @@ fn get_polo_db_path() -> PathBuf {
     PathBuf::from(utilities::DICTIONARY_POLO_DB_DIR!())
 }
 
-fn delete_all_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
+fn delete_all_in_collection<T>(collection: &Collection<T>) -> Result<u64> {
     let delete_result = collection.delete_many(doc! {});
     match delete_result {
         Ok(delete_result) => Ok(delete_result.deleted_count),
