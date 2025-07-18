@@ -19,5 +19,12 @@ impl mlua::UserData for WiktionaryDbClientMutex {
                 Err(err) => Err(mlua::Error::RuntimeError(err.to_string())),
             }
         });
+        methods.add_method("find_in_history", |_, this, word: String| {
+            let db_client = lock(this)?;
+            match db_client.find_in_history_by_word(&word) {
+                Ok(entry) => Ok(entry),
+                Err(err) => Err(mlua::Error::RuntimeError(err.to_string())),
+            }
+        });
     }
 }
