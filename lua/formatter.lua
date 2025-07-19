@@ -1,5 +1,6 @@
 local utils = require("utils")
 local api = require("wiktionary_api")
+local db_client = require("wiktionary_db_client")
 
 -- Helper functions
 -------------------------------------------------------------------------------
@@ -186,11 +187,44 @@ local function format_related_words(related_words, category_title)
 	return table.concat(list, "\n")
 end
 
+local function history(word)
+	local entry = db_client:find_in_history(word)
+	if entry then
+		return entry
+	end
+	return {
+		last_seen_at = os.time(),
+		count = 1,
+	}
+end
+
 -------------------------------------------------------------------------------
 
-local function format_entry(entry)
-	entry.word = api.apply_color(entry.word, "cyan")
+local function format_left_side_header(word, pos)
+	return string.format("%s (%s)", word, pos)
+end
 
+local function format_header(word, pos)
+	local history = history(word)
+	local last_seen = utils.format_date(history.last_seen_at)
+
+	local colored_word = api.apply_color(word, "cyan")
+	local left = format_left_side_header(colored_word, pos)
+	local left_width = #format_left_side_header(word, pos)
+	local right = string.format("Last seen: %s (%s)", last_seen, history.count)
+	total_width = 80
+
+	local padding_length = total_width - left_width - #right
+
+	if padding_length < 1 then
+		return string.format("%s %s", left, right)
+	end
+
+	local formatted = left .. string.rep(" ", padding_length) .. right
+	return formatted
+end
+
+local function format_entry(entry)
 	local content = {}
 
 	local formatted_etymology = format_etymology(entry.etymology)
@@ -221,13 +255,12 @@ local function format_entry(entry)
 	return string.format(
 		[[
 %s
-%s (%s)
+%s
 %s
 %s
 	]],
 		horizontal_line,
-		entry.word,
-		entry.pos,
+		format_header(entry.word, entry.pos),
 		horizontal_line,
 		table.concat(content, string.format("\n%s\n", horizontal_line))
 	)

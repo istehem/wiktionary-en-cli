@@ -30,4 +30,8 @@ utils.leftpad = function(text, length, pad_char)
 	return length and string.rep(pad_char or " ", length - #assure_text) .. assure_text or assure_text
 end
 
+utils.format_date = function(timestamp)
+	return os.date("%Y-%m-%d %H:%M:%S.", timestamp)
+end
+
 return utils

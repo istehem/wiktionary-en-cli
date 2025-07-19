@@ -41,7 +41,7 @@ impl HistoryEntry {
             word,
             now_seen_at: now,
             last_seen_at: now,
-            count: 0,
+            count: 1,
         }
     }
 
