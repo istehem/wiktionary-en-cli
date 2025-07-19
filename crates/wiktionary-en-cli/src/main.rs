@@ -58,7 +58,7 @@ struct WiktionaryResultWrapper {
 impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
         self.extension_handler
-            .intercept_wiktionary_result(&mut self.result.hits)
+            .intercept_wiktionary_result(&mut self.result)
     }
 }
 
@@ -126,6 +126,7 @@ fn search_for_alternative_term(
             let hits = client.find_by_word(&did_you_mean)?;
             if !hits.is_empty() {
                 let result = WiktionaryResult {
+                    word: term.to_string(),
                     did_you_mean: Some(DidYouMean {
                         searched_for: term.to_string(),
                         suggestion: did_you_mean,
@@ -147,6 +148,7 @@ fn search_for_term(
     let hits = client.find_by_word(term)?;
     match hits.as_slice() {
         [_, ..] => Ok(WiktionaryResult {
+            word: term.to_string(),
             did_you_mean: None,
             hits,
         }),
@@ -179,6 +181,7 @@ fn run(
     }
     let hit = client.random_entry()?;
     let result = WiktionaryResult {
+        word: hit.word.clone(),
         did_you_mean: None,
         hits: vec![hit],
     };

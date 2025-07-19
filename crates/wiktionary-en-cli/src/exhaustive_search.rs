@@ -119,6 +119,7 @@ pub fn search(
     let result = do_search(buf_reader, term, max_results, case_insensitive)?;
     if let Some(did_you_mean) = result.did_you_mean {
         return Ok(WiktionaryResult {
+            word: term.to_string(),
             did_you_mean: Some(DidYouMean {
                 searched_for: term.to_string(),
                 suggestion: did_you_mean.word.clone(),
@@ -127,6 +128,7 @@ pub fn search(
         });
     }
     Ok(WiktionaryResult {
+        word: term.to_string(),
         did_you_mean: None,
         hits: result.full_matches,
     })

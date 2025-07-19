@@ -8,6 +8,7 @@ use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClientMutex;
 use wiktionary_en_entities::wiktionary_config::Config;
 use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
+use wiktionary_en_entities::wiktionary_result::WiktionaryResult;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";
@@ -48,21 +49,23 @@ impl ExtensionHandler {
         }
     }
 
-    fn intercept(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<DictionaryEntry>> {
+    fn intercept(&self, dictionary_entry: &WiktionaryResult) -> Result<Option<WiktionaryResult>> {
         match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
-    pub fn intercept_wiktionary_result(&self, result: &mut Vec<DictionaryEntry>) -> Result<()> {
-        for entry in result {
-            if let Some(intercepted_entry) = self.intercept(entry)? {
-                *entry = intercepted_entry;
-            } else {
-                return Ok(());
-            }
+    pub fn intercept_wiktionary_result(
+        &self,
+        wiktionary_result: &mut WiktionaryResult,
+    ) -> Result<()> {
+        if let Some(intercepted_result) = self.intercept(wiktionary_result)? {
+            *wiktionary_result = intercepted_result;
+        } else {
+            return Ok(());
         }
+
         Ok(())
     }
 
@@ -188,9 +191,9 @@ where
 
 fn intercept(
     lua: &Lua,
-    dictionary_entry: &DictionaryEntry,
-) -> mlua::Result<Option<DictionaryEntry>> {
-    call_extension_lua_function(lua, "intercept", dictionary_entry)
+    wiktionary_result: &WiktionaryResult,
+) -> mlua::Result<Option<WiktionaryResult>> {
+    call_extension_lua_function(lua, "intercept", wiktionary_result)
 }
 
 fn format_entry(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {

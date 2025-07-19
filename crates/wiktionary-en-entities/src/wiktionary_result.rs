@@ -47,7 +47,9 @@ impl FromLua for DidYouMean {
     }
 }
 
+#[derive(Clone)]
 pub struct WiktionaryResult {
+    pub word: String,
     pub did_you_mean: Option<DidYouMean>,
     pub hits: Vec<DictionaryEntry>,
 }
