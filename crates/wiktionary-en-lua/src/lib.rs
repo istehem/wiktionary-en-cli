@@ -7,6 +7,7 @@ use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
 use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClientMutex;
 use wiktionary_en_entities::wiktionary_config::Config;
 use wiktionary_en_entities::wiktionary_entry::*;
+use wiktionary_en_entities::wiktionary_history::HistoryEntry;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
 use wiktionary_en_entities::wiktionary_result::WiktionaryResult;
 
@@ -96,6 +97,13 @@ impl ExtensionHandler {
         did_you_mean: &DidYouMean,
     ) -> Result<Option<String>> {
         match format_did_you_mean_banner(&self.lua, did_you_mean) {
+            Ok(result) => Ok(result),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
+        }
+    }
+
+    pub fn format_history_entry(&self, history_entry: &HistoryEntry) -> Result<Option<String>> {
+        match format_history_entry(&self.lua, history_entry) {
             Ok(result) => Ok(result),
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
@@ -205,6 +213,10 @@ fn format_did_you_mean_banner(
     did_you_mean: &DidYouMean,
 ) -> mlua::Result<Option<String>> {
     call_extension_lua_function(lua, "format_did_you_mean_banner", did_you_mean)
+}
+
+fn format_history_entry(lua: &Lua, history_entry: &HistoryEntry) -> mlua::Result<Option<String>> {
+    call_extension_lua_function(lua, "format_history_entry", history_entry)
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {
