@@ -1,11 +1,9 @@
 use anyhow::{bail, Context, Result};
-use chrono::Utc;
 use std::io::{prelude::*, BufReader};
 use std::path::PathBuf;
 use utilities::language::*;
 
 use polodb_core::bson::doc;
-use polodb_core::options::UpdateOptions;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
 use wiktionary_en_entities::wiktionary_entry::*;
@@ -59,18 +57,22 @@ impl WiktionaryDbClient {
 
     pub fn upsert_into_history(&self, term: &str) -> Result<()> {
         let collection = self.history_collection();
-        collection.update_one_with_options(
-            doc! {
-                "word": term
-            },
-            doc! {
-                "$set": doc! {
-                    "word": term,
-                    "last_hit": Utc::now().timestamp(),
+        if let Some(mut entry) = self.find_in_history_by_word(term)? {
+            entry.tick();
+            collection.update_one(
+                doc! {
+                    "word": &entry.word,
                 },
-            },
-            UpdateOptions { upsert: Some(true) },
-        )?;
+                doc! {
+                   "$set": doc!{
+                     "last_seen_at": entry.last_seen_at.timestamp(),
+                     "now_seen_at": entry.now_seen_at.timestamp(),
+                     "count": entry.count as u32,
+                }},
+            )?;
+        } else {
+            collection.insert_one(HistoryEntry::from(term.to_string()))?;
+        }
         Ok(())
     }
 

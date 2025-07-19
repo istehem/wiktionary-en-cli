@@ -17,13 +17,34 @@ pub struct HistoryEntry {
     pub word: String,
     #[serde(serialize_with = "to_ts")]
     #[serde(deserialize_with = "from_ts")]
-    pub last_hit: DateTime<Utc>,
+    pub last_seen_at: DateTime<Utc>,
+    #[serde(serialize_with = "to_ts")]
+    #[serde(deserialize_with = "from_ts")]
+    pub now_seen_at: DateTime<Utc>,
+    pub count: usize,
 }
 
 impl fmt::Display for HistoryEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "at {}", self.last_hit)?;
-        writeln!(f, "{}", self.word)?;
+        writeln!(f, "found {}", self.word)?;
         Ok(())
+    }
+}
+
+impl HistoryEntry {
+    pub fn from(word: String) -> Self {
+        let now = Utc::now();
+        Self {
+            word,
+            now_seen_at: now,
+            last_seen_at: now,
+            count: 0,
+        }
+    }
+
+    pub fn tick(&mut self) {
+        self.last_seen_at = self.now_seen_at;
+        self.now_seen_at = Utc::now();
+        self.count += 1;
     }
 }
