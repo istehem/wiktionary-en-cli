@@ -214,14 +214,8 @@ local function format_header(word, pos)
 	local right = string.format("Last seen: %s (%s)", last_seen, history.count)
 	total_width = 80
 
-	local padding_length = total_width - left_width - #right
-
-	if padding_length < 1 then
-		return string.format("%s %s", left, right)
-	end
-
-	local formatted = left .. string.rep(" ", padding_length) .. right
-	return formatted
+	local padding_length = math.max(total_width - left_width - #right, 1)
+	return left .. string.rep(" ", padding_length) .. right
 end
 
 local function format_entry(entry)
