@@ -27,6 +27,9 @@ pub struct HistoryEntry {
 impl fmt::Display for HistoryEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "found {}", self.word)?;
+        writeln!(f, "last seen at {}", self.last_seen_at)?;
+        writeln!(f, "now seen at {}", self.now_seen_at)?;
+        writeln!(f, "count is {}", self.count)?;
         Ok(())
     }
 }
