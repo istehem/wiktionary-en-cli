@@ -180,7 +180,7 @@ fn main() -> Result<()> {
             result: result_wrapper::WiktionaryResult2::HistoryResult(result),
             extension_handler,
         };
-        utilities::pager::print_in_pager(&result_wrapper)?;
+        utilities::pager::print_in_pager(&result_wrapper.fmt()?)?;
         return Ok(());
     }
     let mut result = run(
@@ -195,5 +195,5 @@ fn main() -> Result<()> {
         extension_handler,
     )?;
     result.intercept()?;
-    utilities::pager::print_in_pager(&result)
+    utilities::pager::print_in_pager(&result.fmt()?)
 }

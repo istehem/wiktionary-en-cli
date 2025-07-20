@@ -1,5 +1,4 @@
 use anyhow::{bail, Result};
-use std::fmt;
 
 use wiktionary_en_entities::wiktionary_history::HistoryEntry;
 use wiktionary_en_entities::wiktionary_result::*;
@@ -19,19 +18,6 @@ pub struct WiktionaryResultWrapper {
     pub extension_handler: wiktionary_en_lua::ExtensionHandler,
 }
 
-impl fmt::Display for WiktionaryResultWrapper {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.result {
-            WiktionaryResult2::HistoryResult(result) => {
-                fmt_history_result(f, &self.extension_handler, result)
-            }
-            WiktionaryResult2::SearchResult(result) => {
-                fmt_wiktionary_result(f, &self.extension_handler, &result)
-            }
-        }
-    }
-}
-
 impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
         match &mut self.result {
@@ -41,23 +27,34 @@ impl WiktionaryResultWrapper {
             }
         }
     }
+
+    pub fn fmt(&self) -> Result<String> {
+        match &self.result {
+            WiktionaryResult2::HistoryResult(result) => {
+                fmt_history_result(&self.extension_handler, result)
+            }
+            WiktionaryResult2::SearchResult(result) => {
+                fmt_wiktionary_result(&self.extension_handler, &result)
+            }
+        }
+    }
 }
 
 fn fmt_wiktionary_result(
-    f: &mut fmt::Formatter<'_>,
     extension_handler: &ExtensionHandler,
     wiktionary_result: &WiktionaryResult,
-) -> fmt::Result {
+) -> Result<String> {
+    let mut formatted = Vec::new();
     if let Some(did_you_mean) = &wiktionary_result.did_you_mean {
         match extension_handler.format_wiktionary_did_you_mean_banner(&did_you_mean) {
             Ok(Some(formatted_banner)) => {
-                writeln!(f, "{}", &formatted_banner)?;
+                formatted.push(format!("{}", &formatted_banner));
             }
             Ok(None) => {
-                writeln!(f, "{}", &did_you_mean)?;
+                formatted.push(format!("{}", &did_you_mean));
             }
             Err(err) => {
-                return writeln!(f, "{:?}", err);
+                bail!(err);
             }
         }
     }
@@ -65,42 +62,37 @@ fn fmt_wiktionary_result(
     match extension_handler.format_wiktionary_entries(&wiktionary_result.hits) {
         Ok(Some(formated_hits)) => {
             for hit in &formated_hits {
-                writeln!(f, "{}", &hit)?;
+                formatted.push(format!("{}", &hit));
             }
-            Ok(())
+            Ok(formatted.join("\n"))
         }
         Ok(None) => {
-            for hit in &wiktionary_result.hits {
-                writeln!(f, "{}", &hit)?;
+            for entry in &wiktionary_result.hits {
+                formatted.push(format!("{}", entry));
             }
-            Ok(())
+            Ok(formatted.join("\n"))
         }
         Err(err) => {
-            writeln!(f, "{:?}", err)
+            bail!(err)
         }
     }
 }
 
 fn fmt_history_result(
-    f: &mut fmt::Formatter<'_>,
     extension_handler: &ExtensionHandler,
     history_result: &HistoryResult,
-) -> fmt::Result {
+) -> Result<String> {
     match extension_handler.format_history_entries(&history_result.history_entries) {
-        Ok(Some(formated_hits)) => {
-            for hit in &formated_hits {
-                writeln!(f, "{}", &hit)?;
-            }
-            Ok(())
-        }
+        Ok(Some(formatted_entries)) => Ok(formatted_entries.join("\n")),
         Ok(None) => {
-            for hit in &history_result.history_entries {
-                writeln!(f, "{}", &hit)?;
+            let mut formatted_entries = Vec::new();
+            for entry in &history_result.history_entries {
+                formatted_entries.push(format!("{}", entry));
             }
-            Ok(())
+            Ok(formatted_entries.join("\n"))
         }
         Err(err) => {
-            writeln!(f, "{:?}", err)
+            bail!(err)
         }
     }
 }
