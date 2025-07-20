@@ -9,14 +9,14 @@ const CANNOT_OPEN_SONIC_DB_ERROR_MSG: &str = "Couldn't open sonic db, please sta
 
 const WIKTIONARY_COLLECTION: &str = "wiktionary";
 
-pub struct WiktionarySearchChannel {
+pub struct DictionarySearchChannel {
     language: Language,
     search_channel: SearchChannel,
 }
 
-impl WiktionarySearchChannel {
-    pub fn init(language: &Language) -> Result<WiktionarySearchChannel> {
-        Ok(WiktionarySearchChannel {
+impl DictionarySearchChannel {
+    pub fn init(language: &Language) -> Result<DictionarySearchChannel> {
+        Ok(DictionarySearchChannel {
             language: *language,
             search_channel: start_sonic_search_channel()?,
         })
@@ -79,14 +79,14 @@ impl WiktionarySearchChannel {
     }
 }
 
-pub struct WiktionaryIngestChannel {
+pub struct DictionaryIngestChannel {
     language: Language,
     ingest_channel: IngestChannel,
 }
 
-impl WiktionaryIngestChannel {
-    pub fn init(language: &Language) -> Result<WiktionaryIngestChannel> {
-        Ok(WiktionaryIngestChannel {
+impl DictionaryIngestChannel {
+    pub fn init(language: &Language) -> Result<DictionaryIngestChannel> {
+        Ok(DictionaryIngestChannel {
             language: *language,
             ingest_channel: start_sonic_ingest_channel()?,
         })

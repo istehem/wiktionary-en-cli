@@ -6,7 +6,7 @@ use wiktionary_en_entities::dictionary_entry::{parse_entry, DictionaryEntry};
 use std::fmt;
 use std::fs::File;
 
-use crate::channels::WiktionaryIngestChannel;
+use crate::channels::DictionaryIngestChannel;
 
 use streaming_iterator::*;
 
@@ -30,7 +30,7 @@ type IndexingResponse = Result<Option<IndexingError>>;
 
 pub struct IndexingStream {
     lines: std::io::Lines<BufReader<File>>,
-    ingest_channel: WiktionaryIngestChannel,
+    ingest_channel: DictionaryIngestChannel,
     current_line: Option<Result<String>>,
     indexing_response: IndexingResponse,
     index: usize,
@@ -38,7 +38,7 @@ pub struct IndexingStream {
 }
 
 impl IndexingStream {
-    pub fn from(file_reader: BufReader<File>, ingest_channel: WiktionaryIngestChannel) -> Self {
+    pub fn from(file_reader: BufReader<File>, ingest_channel: DictionaryIngestChannel) -> Self {
         Self {
             lines: file_reader.lines(),
             ingest_channel,
@@ -51,7 +51,7 @@ impl IndexingStream {
 }
 
 fn parse_and_push(
-    channel: &WiktionaryIngestChannel,
+    channel: &DictionaryIngestChannel,
     line: &Result<String>,
     index: usize,
 ) -> Result<Option<IndexingError>> {
