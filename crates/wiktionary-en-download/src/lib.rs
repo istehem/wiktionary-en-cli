@@ -17,7 +17,7 @@ struct Writer {
 }
 
 impl Writer {
-    pub fn init(buf_writer: BufWriter<File>, content_length: Option<u64>) -> Result<Self> {
+    fn init(buf_writer: BufWriter<File>, content_length: Option<u64>) -> Result<Self> {
         let progress_bar = match content_length {
             Some(content_length) => Some(Self::init_progress_bar(content_length)?),
             _ => None,
@@ -35,7 +35,7 @@ impl Writer {
         Ok(progress_bar)
     }
 
-    pub fn write(&mut self, data: &[u8]) -> Result<()> {
+    fn write(&mut self, data: &[u8]) -> Result<()> {
         self.writer.write_all(data)?;
         if let Some(progress_bar) = self.progress_bar.as_ref() {
             progress_bar.inc(data.len() as u64);
@@ -43,7 +43,7 @@ impl Writer {
         Ok(())
     }
 
-    pub fn flush(&mut self) -> Result<()> {
+    fn flush(&mut self) -> Result<()> {
         let result = self.writer.flush().map_err(anyhow::Error::new);
         if let Some(progress_bar) = self.progress_bar.as_ref() {
             progress_bar.finish();
@@ -82,7 +82,7 @@ fn resource_url(language: &Language) -> String {
     String::from(url)
 }
 
-pub fn download_wiktionary_extract(language: &Language, force: bool) -> Result<()> {
+fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
     let url = resource_url(language);
     let output_filename = utilities::DICTIONARY_DB_PATH!(language.value());
     if Path::new(&output_filename).exists() && !force {
@@ -93,4 +93,12 @@ pub fn download_wiktionary_extract(language: &Language, force: bool) -> Result<(
     }
 
     stream_download(&url, &output_filename)
+}
+
+pub struct Downloader {}
+
+impl Downloader {
+    pub fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
+        download_dictionary_extract(language, force)
+    }
 }

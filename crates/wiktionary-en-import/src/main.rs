@@ -4,7 +4,7 @@ use utilities::file_utils;
 use utilities::language::*;
 
 use wiktionary_en_db::client::DbClient;
-use wiktionary_en_download::download_wiktionary_extract;
+use wiktionary_en_download::Downloader;
 
 use clap::Parser;
 
@@ -70,7 +70,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
     if args.download {
-        return download_wiktionary_extract(&language_to_use, args.force);
+        return Downloader::download_dictionary_extract(&language_to_use, args.force);
     }
     import_wiktionary_extract(&db_path, &language_to_use, args.force)
 }
