@@ -13,6 +13,7 @@ mod wiktionary_stats;
 use crate::wiktionary_stats::*;
 
 mod result_wrapper;
+use crate::result_wrapper::HistoryResult;
 use crate::result_wrapper::WiktionaryResultWrapper;
 
 mod exhaustive_search;
@@ -168,20 +169,20 @@ fn main() -> Result<()> {
     }
 
     let db_client = WiktionaryDbClient::init(language_to_use)?;
-    if args.history {
-        let search_term = &args
-            .search_term
-            .ok_or(anyhow::anyhow!("a search term is required"))?;
-        let result = &db_client.find_in_history_by_word(search_term)?;
-        if let Some(history_entry) = result {
-            utilities::pager::print_in_pager(&history_entry)?;
-        } else {
-            anyhow::bail!("{}", "Not Found");
-        }
-        return Ok(());
-    }
     let db_client_mutex = WiktionaryDbClientMutex::from(db_client.clone());
     let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+
+    if args.history {
+        let result = HistoryResult {
+            history_entries: db_client.find_all_in_history()?,
+        };
+        let result_wrapper = WiktionaryResultWrapper {
+            result: result_wrapper::WiktionaryResult2::HistoryResult(result),
+            extension_handler,
+        };
+        utilities::pager::print_in_pager(&result_wrapper)?;
+        return Ok(());
+    }
     let mut result = run(
         &db_client,
         QueryParameters {
