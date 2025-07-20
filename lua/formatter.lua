@@ -204,6 +204,18 @@ local function format_left_side_header(word, pos)
 	return string.format("%s (%s)", word, pos)
 end
 
+local function format_history_entry(history_entry)
+	local last_seen = utils.format_date(history_entry.last_seen_at)
+	local word = history_entry.word
+	local colored_word = api.apply_color(word, "cyan")
+	local left_width = #word
+	local right = string.format("Last seen: %s count: %s", last_seen, history_entry.count)
+	total_width = 80
+
+	local padding_length = math.max(total_width / 2 - left_width, 1)
+	return colored_word .. string.rep(" ", padding_length) .. right
+end
+
 local function format_header(word, pos)
 	local history = history(word)
 	local last_seen = utils.format_date(history.last_seen_at)
@@ -274,4 +286,5 @@ end
 local formatter = {}
 formatter.format_entry = format_entry
 formatter.format_did_you_mean_banner = format_did_you_mean_banner
+formatter.format_history_entry = format_history_entry
 return formatter
