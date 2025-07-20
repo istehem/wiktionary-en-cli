@@ -13,29 +13,29 @@ use std::fs::File;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
-pub struct WiktionaryDbClient {
+pub struct DbClient {
     database: Database,
     language: Language,
 }
 
 #[derive(Clone)]
-pub struct WiktionaryDbClientMutex {
-    pub client: Arc<Mutex<WiktionaryDbClient>>,
+pub struct DbClientMutex {
+    pub client: Arc<Mutex<DbClient>>,
 }
 
-impl WiktionaryDbClientMutex {
-    pub fn from(db_client: WiktionaryDbClient) -> Self {
+impl DbClientMutex {
+    pub fn from(db_client: DbClient) -> Self {
         let client = Arc::new(Mutex::new(db_client));
         Self { client }
     }
 
     pub fn init(language: Language) -> Result<Self> {
-        let client = Arc::new(Mutex::new(WiktionaryDbClient::init(language)?));
+        let client = Arc::new(Mutex::new(DbClient::init(language)?));
         Ok(Self { client })
     }
 }
 
-impl WiktionaryDbClient {
+impl DbClient {
     pub fn init(language: Language) -> Result<Self> {
         let database = Database::open_path(get_polo_db_path())?;
         Ok(Self { database, language })

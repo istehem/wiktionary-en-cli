@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use utilities::file_utils;
 use utilities::language::*;
 
-use wiktionary_en_db::client::WiktionaryDbClient;
+use wiktionary_en_db::client::DbClient;
 use wiktionary_en_download::download_wiktionary_extract;
 
 use clap::Parser;
@@ -37,7 +37,7 @@ struct Cli {
 }
 
 fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
-    let db_client = WiktionaryDbClient::init(*language)?;
+    let db_client = DbClient::init(*language)?;
 
     match file_utils::get_file_reader(path) {
         Ok(path) => db_client.insert_wiktionary_file(path, force),
@@ -65,7 +65,7 @@ fn main() -> Result<()> {
         return utilities::pager::print_lines_in_pager(&errors?);
     }
     if args.reset_metadata {
-        let db_client = WiktionaryDbClient::init(language_to_use)?;
+        let db_client = DbClient::init(language_to_use)?;
         db_client.delete_history()?;
         return Ok(());
     }

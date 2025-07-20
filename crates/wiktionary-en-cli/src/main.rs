@@ -7,7 +7,7 @@ use utilities::language::*;
 
 use wiktionary_en_entities::results::{DidYouMean, HistoryResult, SearchResult};
 
-use wiktionary_en_db::client::{WiktionaryDbClient, WiktionaryDbClientMutex};
+use wiktionary_en_db::client::{DbClient, DbClientMutex};
 
 mod stats;
 use stats::Stats;
@@ -61,7 +61,7 @@ struct QueryParameters {
 
 #[cfg(feature = "sonic")]
 fn search_for_alternative_term(
-    client: &WiktionaryDbClient,
+    client: &DbClient,
     query_params: &QueryParameters,
 ) -> Result<Option<SearchResult>> {
     if let Some(term) = &query_params.search_term {
@@ -86,7 +86,7 @@ fn search_for_alternative_term(
 }
 
 fn search_for_term(
-    client: &WiktionaryDbClient,
+    client: &DbClient,
     term: &str,
     query_params: &QueryParameters,
 ) -> Result<SearchResult> {
@@ -113,7 +113,7 @@ fn search_for_term(
 }
 
 fn run(
-    client: &WiktionaryDbClient,
+    client: &DbClient,
     query_params: QueryParameters,
     extension_handler: wiktionary_en_lua::ExtensionHandler,
 ) -> Result<WiktionaryResultWrapper> {
@@ -167,8 +167,8 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let db_client = WiktionaryDbClient::init(language_to_use)?;
-    let db_client_mutex = WiktionaryDbClientMutex::from(db_client.clone());
+    let db_client = DbClient::init(language_to_use)?;
+    let db_client_mutex = DbClientMutex::from(db_client.clone());
     let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
 
     if args.history {

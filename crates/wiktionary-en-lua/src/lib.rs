@@ -4,7 +4,7 @@ use mlua::{FromLua, Function, Lua};
 use utilities::colored_string_utils;
 use utilities::LUA_DIR;
 use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
-use wiktionary_en_db::client::WiktionaryDbClientMutex;
+use wiktionary_en_db::client::DbClientMutex;
 use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::history_entry::HistoryEntry;
@@ -38,7 +38,7 @@ pub struct ExtensionHandler {
 }
 
 impl ExtensionHandler {
-    pub fn init(db_client: WiktionaryDbClientMutex) -> Result<Self> {
+    pub fn init(db_client: DbClientMutex) -> Result<Self> {
         let lua = Lua::new();
         match create_importable_lua_module(&lua, "wiktionary_db_client", db_client) {
             Ok(_) => match init_lua(&lua) {
