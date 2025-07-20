@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::fmt;
 
 use wiktionary_en_entities::wiktionary_history::HistoryEntry;
@@ -22,9 +22,20 @@ struct WiktionaryResultWrapper2 {
 impl fmt::Display for WiktionaryResultWrapper2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.result {
-            WiktionaryResult2::HistoryResult(result) => Err(fmt::Error),
+            WiktionaryResult2::HistoryResult(_result) => Err(fmt::Error),
             WiktionaryResult2::SearchResult(result) => {
                 fmt_wiktionary_result(f, &self.extension_handler, &result)
+            }
+        }
+    }
+}
+
+impl WiktionaryResultWrapper2 {
+    pub fn intercept(&mut self) -> Result<()> {
+        match &mut self.result {
+            WiktionaryResult2::HistoryResult(_) => bail!("nothing to intercept"),
+            WiktionaryResult2::SearchResult(result) => {
+                self.extension_handler.intercept_wiktionary_result(result)
             }
         }
     }
