@@ -53,13 +53,13 @@ impl FromLua for DidYouMean {
 }
 
 #[derive(Clone)]
-pub struct WiktionaryResult {
+pub struct SearchResult {
     pub word: String,
     pub did_you_mean: Option<DidYouMean>,
     pub hits: Vec<DictionaryEntry>,
 }
 
-impl fmt::Display for WiktionaryResult {
+impl fmt::Display for SearchResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(did_you_mean) = &self.did_you_mean {
             writeln!(

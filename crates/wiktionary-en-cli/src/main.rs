@@ -13,7 +13,6 @@ mod wiktionary_stats;
 use crate::wiktionary_stats::*;
 
 mod result_wrapper;
-use crate::result_wrapper::HistoryResult;
 use crate::result_wrapper::WiktionaryResultWrapper;
 
 mod exhaustive_search;
@@ -64,14 +63,14 @@ struct QueryParameters {
 fn search_for_alternative_term(
     client: &WiktionaryDbClient,
     query_params: &QueryParameters,
-) -> Result<Option<WiktionaryResult>> {
+) -> Result<Option<SearchResult>> {
     if let Some(term) = &query_params.search_term {
         let did_you_mean =
             wiktionary_en_identifier_index::did_you_mean(&query_params.language, &term)?;
         if let Some(did_you_mean) = did_you_mean {
             let hits = client.find_by_word(&did_you_mean)?;
             if !hits.is_empty() {
-                let result = WiktionaryResult {
+                let result = SearchResult {
                     word: term.to_string(),
                     did_you_mean: Some(DidYouMean {
                         searched_for: term.to_string(),
@@ -90,10 +89,10 @@ fn search_for_term(
     client: &WiktionaryDbClient,
     term: &str,
     query_params: &QueryParameters,
-) -> Result<WiktionaryResult> {
+) -> Result<SearchResult> {
     let hits = client.find_by_word(term)?;
     match hits.as_slice() {
-        [_, ..] => Ok(WiktionaryResult {
+        [_, ..] => Ok(SearchResult {
             word: term.to_string(),
             did_you_mean: None,
             hits,
@@ -121,18 +120,18 @@ fn run(
     if let Some(term) = &query_params.search_term {
         let result = search_for_term(client, term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
-            result: result_wrapper::WiktionaryResult2::SearchResult(result),
+            result: result_wrapper::WiktionaryResult::SearchResult(result),
             extension_handler,
         });
     }
     let hit = client.random_entry()?;
-    let result = WiktionaryResult {
+    let result = SearchResult {
         word: hit.word.clone(),
         did_you_mean: None,
         hits: vec![hit],
     };
     Ok(WiktionaryResultWrapper {
-        result: result_wrapper::WiktionaryResult2::SearchResult(result),
+        result: result_wrapper::WiktionaryResult::SearchResult(result),
         extension_handler,
     })
 }
@@ -177,7 +176,7 @@ fn main() -> Result<()> {
             history_entries: db_client.find_all_in_history()?,
         };
         let result_wrapper = WiktionaryResultWrapper {
-            result: result_wrapper::WiktionaryResult2::HistoryResult(result),
+            result: result_wrapper::WiktionaryResult::HistoryResult(result),
             extension_handler,
         };
         utilities::pager::print_in_pager(&result_wrapper.fmt()?)?;

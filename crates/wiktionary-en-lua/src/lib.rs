@@ -9,7 +9,7 @@ use wiktionary_en_entities::wiktionary_config::Config;
 use wiktionary_en_entities::wiktionary_entry::*;
 use wiktionary_en_entities::wiktionary_history::HistoryEntry;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
-use wiktionary_en_entities::wiktionary_result::WiktionaryResult;
+use wiktionary_en_entities::wiktionary_result::SearchResult;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";
@@ -50,17 +50,14 @@ impl ExtensionHandler {
         }
     }
 
-    fn intercept(&self, dictionary_entry: &WiktionaryResult) -> Result<Option<WiktionaryResult>> {
+    fn intercept(&self, dictionary_entry: &SearchResult) -> Result<Option<SearchResult>> {
         match intercept(&self.lua, dictionary_entry) {
             Ok(entry) => Ok(entry),
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
-    pub fn intercept_wiktionary_result(
-        &self,
-        wiktionary_result: &mut WiktionaryResult,
-    ) -> Result<()> {
+    pub fn intercept_wiktionary_result(&self, wiktionary_result: &mut SearchResult) -> Result<()> {
         if let Some(intercepted_result) = self.intercept(wiktionary_result)? {
             *wiktionary_result = intercepted_result;
         } else {
@@ -211,10 +208,7 @@ where
     Ok(None)
 }
 
-fn intercept(
-    lua: &Lua,
-    wiktionary_result: &WiktionaryResult,
-) -> mlua::Result<Option<WiktionaryResult>> {
+fn intercept(lua: &Lua, wiktionary_result: &SearchResult) -> mlua::Result<Option<SearchResult>> {
     call_extension_lua_function(lua, "intercept", wiktionary_result)
 }
 

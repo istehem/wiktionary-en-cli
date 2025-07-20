@@ -1,28 +1,23 @@
 use anyhow::{bail, Result};
 
-use wiktionary_en_entities::wiktionary_history::HistoryEntry;
-use wiktionary_en_entities::wiktionary_result::*;
+use wiktionary_en_entities::wiktionary_result::{HistoryResult, SearchResult};
 use wiktionary_en_lua::ExtensionHandler;
 
-pub struct HistoryResult {
-    pub history_entries: Vec<HistoryEntry>,
-}
-
-pub enum WiktionaryResult2 {
+pub enum WiktionaryResult {
     HistoryResult(HistoryResult),
-    SearchResult(WiktionaryResult),
+    SearchResult(SearchResult),
 }
 
 pub struct WiktionaryResultWrapper {
-    pub result: WiktionaryResult2,
+    pub result: WiktionaryResult,
     pub extension_handler: wiktionary_en_lua::ExtensionHandler,
 }
 
 impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
         match &mut self.result {
-            WiktionaryResult2::HistoryResult(_) => bail!("nothing to intercept"),
-            WiktionaryResult2::SearchResult(result) => {
+            WiktionaryResult::HistoryResult(_) => bail!("nothing to intercept"),
+            WiktionaryResult::SearchResult(result) => {
                 self.extension_handler.intercept_wiktionary_result(result)
             }
         }
@@ -30,10 +25,10 @@ impl WiktionaryResultWrapper {
 
     pub fn fmt(&self) -> Result<String> {
         match &self.result {
-            WiktionaryResult2::HistoryResult(result) => {
+            WiktionaryResult::HistoryResult(result) => {
                 fmt_history_result(&self.extension_handler, result)
             }
-            WiktionaryResult2::SearchResult(result) => {
+            WiktionaryResult::SearchResult(result) => {
                 fmt_wiktionary_result(&self.extension_handler, result)
             }
         }
@@ -42,7 +37,7 @@ impl WiktionaryResultWrapper {
 
 fn fmt_wiktionary_result(
     extension_handler: &ExtensionHandler,
-    wiktionary_result: &WiktionaryResult,
+    wiktionary_result: &SearchResult,
 ) -> Result<String> {
     let mut formatted = Vec::new();
     if let Some(did_you_mean) = &wiktionary_result.did_you_mean {
