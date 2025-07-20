@@ -4,7 +4,7 @@ use mlua::{FromLua, Function, Lua};
 use utilities::colored_string_utils;
 use utilities::LUA_DIR;
 use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
-use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClientMutex;
+use wiktionary_en_db::client::WiktionaryDbClientMutex;
 use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::history_entry::HistoryEntry;

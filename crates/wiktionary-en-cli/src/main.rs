@@ -7,7 +7,7 @@ use utilities::language::*;
 
 use wiktionary_en_entities::results::{DidYouMean, HistoryResult, SearchResult};
 
-use wiktionary_en_db::wiktionary_en_db::{WiktionaryDbClient, WiktionaryDbClientMutex};
+use wiktionary_en_db::client::{WiktionaryDbClient, WiktionaryDbClientMutex};
 
 mod stats;
 use stats::Stats;

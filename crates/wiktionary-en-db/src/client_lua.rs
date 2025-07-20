@@ -1,7 +1,7 @@
 use mlua::Result;
 use std::sync::MutexGuard;
 
-use crate::wiktionary_en_db::{WiktionaryDbClient, WiktionaryDbClientMutex};
+use crate::client::{WiktionaryDbClient, WiktionaryDbClientMutex};
 
 fn lock(db_client: &WiktionaryDbClientMutex) -> Result<MutexGuard<'_, WiktionaryDbClient>> {
     match db_client.client.lock() {

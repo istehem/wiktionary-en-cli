@@ -8,7 +8,7 @@ use std::path::Path;
 use utilities::colored_string_utils::*;
 use utilities::file_utils::*;
 use utilities::language::Language;
-use wiktionary_en_db::wiktionary_en_db;
+use wiktionary_en_db::client::WiktionaryDbClient;
 
 use utilities::DICTIONARY_POLO_DB_DIR;
 
@@ -69,7 +69,7 @@ impl Stats {
 }
 
 fn calculate_stats(dictionary_path: &Path, language: &Language) -> Result<Stats> {
-    let client = wiktionary_en_db::WiktionaryDbClient::init(*language)?;
+    let client = WiktionaryDbClient::init(*language)?;
     Ok(Stats {
         path: dictionary_path.display().to_string(),
         database_dir: String::from(DICTIONARY_POLO_DB_DIR!()),
