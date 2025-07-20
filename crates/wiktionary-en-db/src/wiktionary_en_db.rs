@@ -76,6 +76,17 @@ impl WiktionaryDbClient {
         Ok(())
     }
 
+    pub fn find_all_in_history(&self) -> Result<Vec<HistoryEntry>> {
+        let mut result = Vec::new();
+        let collection = self.history_collection();
+        let search_result = collection.find(doc! {}).run()?;
+
+        for entry in search_result {
+            result.push(entry?);
+        }
+        Ok(result)
+    }
+
     pub fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
         let collection = self.history_collection();
         let result = collection.find_one(doc! { "word" : term})?;
