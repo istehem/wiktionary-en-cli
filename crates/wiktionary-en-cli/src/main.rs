@@ -9,8 +9,8 @@ use wiktionary_en_entities::results::{DidYouMean, HistoryResult, SearchResult};
 
 use wiktionary_en_db::wiktionary_en_db::{WiktionaryDbClient, WiktionaryDbClientMutex};
 
-mod wiktionary_stats;
-use crate::wiktionary_stats::*;
+mod stats;
+use stats::Stats;
 
 mod result_wrapper;
 use crate::result_wrapper::WiktionaryResultWrapper;
@@ -145,7 +145,7 @@ fn main() -> Result<()> {
 
     if args.stats {
         let input_path = get_db_path(args.db_path, &language_to_use);
-        let stats = calculate_stats(&input_path, &language_to_use)?;
+        let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
         return utilities::pager::print_in_pager(&stats);
     }
     #[cfg(feature = "sonic")]

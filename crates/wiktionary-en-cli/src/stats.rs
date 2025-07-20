@@ -62,9 +62,13 @@ impl Stats {
         }
         NEWLINE.normal().join(res)
     }
+
+    pub fn calculate_stats(dictionary_path: &Path, language: &Language) -> Result<Stats> {
+        calculate_stats(dictionary_path, language)
+    }
 }
 
-pub fn calculate_stats(dictionary_path: &Path, language: &Language) -> Result<Stats> {
+fn calculate_stats(dictionary_path: &Path, language: &Language) -> Result<Stats> {
     let client = wiktionary_en_db::WiktionaryDbClient::init(*language)?;
     Ok(Stats {
         path: dictionary_path.display().to_string(),
