@@ -5,12 +5,16 @@ use std::path::PathBuf;
 use utilities::file_utils::*;
 use utilities::language::*;
 
+use wiktionary_en_entities::wiktionary_history::HistoryEntry;
 use wiktionary_en_entities::wiktionary_result::*;
 
 use wiktionary_en_db::wiktionary_en_db::{WiktionaryDbClient, WiktionaryDbClientMutex};
 
 mod wiktionary_stats;
 use crate::wiktionary_stats::*;
+
+mod result_wrapper;
+use crate::result_wrapper::WiktionaryResultWrapper;
 
 mod exhaustive_search;
 
@@ -50,60 +54,8 @@ struct Cli {
     history: bool,
 }
 
-struct WiktionaryResultWrapper {
-    result: WiktionaryResult,
-    extension_handler: wiktionary_en_lua::ExtensionHandler,
-}
-
-impl WiktionaryResultWrapper {
-    pub fn intercept(&mut self) -> Result<()> {
-        self.extension_handler
-            .intercept_wiktionary_result(&mut self.result)
-    }
-}
-
-impl fmt::Display for WiktionaryResultWrapper {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(did_you_mean) = &self.result.did_you_mean {
-            match self
-                .extension_handler
-                .format_wiktionary_did_you_mean_banner(did_you_mean)
-            {
-                Ok(Some(formatted_banner)) => {
-                    writeln!(f, "{}", &formatted_banner)?;
-                }
-                Ok(None) => {
-                    writeln!(f, "{}", &did_you_mean)?;
-                }
-                Err(err) => {
-                    writeln!(f, "{:?}", err)?;
-                    return Err(fmt::Error);
-                }
-            }
-        }
-
-        match self
-            .extension_handler
-            .format_wiktionary_entries(&self.result.hits)
-        {
-            Ok(Some(formated_hits)) => {
-                for hit in &formated_hits {
-                    writeln!(f, "{}", &hit)?;
-                }
-                Ok(())
-            }
-            Ok(None) => {
-                for hit in &self.result.hits {
-                    writeln!(f, "{}", &hit)?;
-                }
-                Ok(())
-            }
-            Err(err) => {
-                writeln!(f, "{:?}", err)?;
-                Err(fmt::Error)
-            }
-        }
-    }
+struct HistoryResult {
+    history_entries: Vec<HistoryEntry>,
 }
 
 struct QueryParameters {
