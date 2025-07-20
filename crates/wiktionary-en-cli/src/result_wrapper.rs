@@ -34,7 +34,7 @@ impl WiktionaryResultWrapper {
                 fmt_history_result(&self.extension_handler, result)
             }
             WiktionaryResult2::SearchResult(result) => {
-                fmt_wiktionary_result(&self.extension_handler, &result)
+                fmt_wiktionary_result(&self.extension_handler, result)
             }
         }
     }
@@ -46,12 +46,12 @@ fn fmt_wiktionary_result(
 ) -> Result<String> {
     let mut formatted = Vec::new();
     if let Some(did_you_mean) = &wiktionary_result.did_you_mean {
-        match extension_handler.format_wiktionary_did_you_mean_banner(&did_you_mean) {
+        match extension_handler.format_wiktionary_did_you_mean_banner(did_you_mean) {
             Ok(Some(formatted_banner)) => {
-                formatted.push(format!("{}", &formatted_banner));
+                formatted.push(formatted_banner.to_string());
             }
             Ok(None) => {
-                formatted.push(format!("{}", &did_you_mean));
+                formatted.push(did_you_mean.to_string());
             }
             Err(err) => {
                 bail!(err);
@@ -62,13 +62,13 @@ fn fmt_wiktionary_result(
     match extension_handler.format_wiktionary_entries(&wiktionary_result.hits) {
         Ok(Some(formated_hits)) => {
             for hit in &formated_hits {
-                formatted.push(format!("{}", &hit));
+                formatted.push(hit.to_string());
             }
             Ok(formatted.join("\n"))
         }
         Ok(None) => {
             for entry in &wiktionary_result.hits {
-                formatted.push(format!("{}", entry));
+                formatted.push(entry.to_string());
             }
             Ok(formatted.join("\n"))
         }
