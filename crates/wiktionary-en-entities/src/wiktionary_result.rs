@@ -1,5 +1,5 @@
 use crate::dictionary_entry::DictionaryEntry;
-use crate::wiktionary_history::HistoryEntry;
+use crate::history_entry::HistoryEntry;
 use colored::Colorize;
 use indoc::formatdoc;
 use mlua::FromLua;

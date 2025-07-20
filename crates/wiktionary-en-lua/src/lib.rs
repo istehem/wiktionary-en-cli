@@ -7,7 +7,7 @@ use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
 use wiktionary_en_db::wiktionary_en_db::WiktionaryDbClientMutex;
 use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-use wiktionary_en_entities::wiktionary_history::HistoryEntry;
+use wiktionary_en_entities::history_entry::HistoryEntry;
 use wiktionary_en_entities::wiktionary_result::DidYouMean;
 use wiktionary_en_entities::wiktionary_result::SearchResult;
 
