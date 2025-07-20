@@ -9,7 +9,7 @@ use std::sync::Arc;
 use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-use wiktionary_en_entities::wiktionary_result::*;
+use wiktionary_en_entities::results::{DidYouMean, SearchResult};
 
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 

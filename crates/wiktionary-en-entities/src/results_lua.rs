@@ -2,7 +2,7 @@ use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
 
-use crate::wiktionary_result::SearchResult;
+use crate::results::SearchResult;
 
 impl IntoLua for SearchResult {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
