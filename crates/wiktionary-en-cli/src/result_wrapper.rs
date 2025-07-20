@@ -57,8 +57,7 @@ fn fmt_wiktionary_result(
                 writeln!(f, "{}", &did_you_mean)?;
             }
             Err(err) => {
-                writeln!(f, "{:?}", err)?;
-                return Err(fmt::Error);
+                return writeln!(f, "{:?}", err);
             }
         }
     }
@@ -77,8 +76,7 @@ fn fmt_wiktionary_result(
             Ok(())
         }
         Err(err) => {
-            writeln!(f, "{:?}", err)?;
-            Err(fmt::Error)
+            writeln!(f, "{:?}", err)
         }
     }
 }
@@ -102,8 +100,7 @@ fn fmt_history_result(
             Ok(())
         }
         Err(err) => {
-            writeln!(f, "{:?}", err)?;
-            Err(fmt::Error)
+            writeln!(f, "{:?}", err)
         }
     }
 }
