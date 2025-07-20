@@ -1,4 +1,4 @@
-use crate::wiktionary_entry::DictionaryEntry;
+use crate::dictionary_entry::DictionaryEntry;
 use crate::wiktionary_history::HistoryEntry;
 use colored::Colorize;
 use indoc::formatdoc;

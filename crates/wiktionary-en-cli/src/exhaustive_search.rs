@@ -8,7 +8,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use utilities::anyhow_serde;
 use utilities::file_utils::*;
-use wiktionary_en_entities::wiktionary_entry::*;
+use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::wiktionary_result::*;
 
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
