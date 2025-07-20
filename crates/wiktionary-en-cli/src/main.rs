@@ -18,8 +18,6 @@ use crate::result_wrapper::WiktionaryResultWrapper;
 
 mod exhaustive_search;
 
-use std::fmt;
-
 /// A To English Dictionary
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -52,10 +50,6 @@ struct Cli {
     /// Search history
     #[clap(long)]
     history: bool,
-}
-
-struct HistoryResult {
-    history_entries: Vec<HistoryEntry>,
 }
 
 struct QueryParameters {
@@ -127,7 +121,7 @@ fn run(
     if let Some(term) = &query_params.search_term {
         let result = search_for_term(client, term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
-            result,
+            result: result_wrapper::WiktionaryResult2::SearchResult(result),
             extension_handler,
         });
     }
@@ -138,7 +132,7 @@ fn run(
         hits: vec![hit],
     };
     Ok(WiktionaryResultWrapper {
-        result,
+        result: result_wrapper::WiktionaryResult2::SearchResult(result),
         extension_handler,
     })
 }

@@ -5,21 +5,21 @@ use wiktionary_en_entities::wiktionary_history::HistoryEntry;
 use wiktionary_en_entities::wiktionary_result::*;
 use wiktionary_en_lua::ExtensionHandler;
 
-struct HistoryResult {
-    history_entries: Vec<HistoryEntry>,
+pub struct HistoryResult {
+    pub history_entries: Vec<HistoryEntry>,
 }
 
-enum WiktionaryResult2 {
+pub enum WiktionaryResult2 {
     HistoryResult(HistoryResult),
     SearchResult(WiktionaryResult),
 }
 
-struct WiktionaryResultWrapper2 {
-    result: WiktionaryResult2,
-    extension_handler: wiktionary_en_lua::ExtensionHandler,
+pub struct WiktionaryResultWrapper {
+    pub result: WiktionaryResult2,
+    pub extension_handler: wiktionary_en_lua::ExtensionHandler,
 }
 
-impl fmt::Display for WiktionaryResultWrapper2 {
+impl fmt::Display for WiktionaryResultWrapper {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.result {
             WiktionaryResult2::HistoryResult(_result) => Err(fmt::Error),
@@ -30,7 +30,7 @@ impl fmt::Display for WiktionaryResultWrapper2 {
     }
 }
 
-impl WiktionaryResultWrapper2 {
+impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
         match &mut self.result {
             WiktionaryResult2::HistoryResult(_) => bail!("nothing to intercept"),
@@ -38,24 +38,6 @@ impl WiktionaryResultWrapper2 {
                 self.extension_handler.intercept_wiktionary_result(result)
             }
         }
-    }
-}
-
-pub struct WiktionaryResultWrapper {
-    pub result: WiktionaryResult,
-    pub extension_handler: wiktionary_en_lua::ExtensionHandler,
-}
-
-impl WiktionaryResultWrapper {
-    pub fn intercept(&mut self) -> Result<()> {
-        self.extension_handler
-            .intercept_wiktionary_result(&mut self.result)
-    }
-}
-
-impl fmt::Display for WiktionaryResultWrapper {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_wiktionary_result(f, &self.extension_handler, &self.result)
     }
 }
 
