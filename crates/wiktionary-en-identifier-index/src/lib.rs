@@ -3,8 +3,8 @@ use std::path::Path;
 use utilities::file_utils;
 use utilities::language::*;
 
-mod wiktionary_channel;
-use crate::wiktionary_channel::*;
+mod channels;
+use crate::channels::{WiktionaryIngestChannel, WiktionarySearchChannel};
 
 pub mod indexing_stream;
 use crate::indexing_stream::*;
