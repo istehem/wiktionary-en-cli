@@ -22,7 +22,9 @@ pub struct WiktionaryResultWrapper {
 impl fmt::Display for WiktionaryResultWrapper {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.result {
-            WiktionaryResult2::HistoryResult(_result) => Err(fmt::Error),
+            WiktionaryResult2::HistoryResult(result) => {
+                fmt_history_result(f, &self.extension_handler, result)
+            }
             WiktionaryResult2::SearchResult(result) => {
                 fmt_wiktionary_result(f, &self.extension_handler, &result)
             }
@@ -70,6 +72,31 @@ fn fmt_wiktionary_result(
         }
         Ok(None) => {
             for hit in &wiktionary_result.hits {
+                writeln!(f, "{}", &hit)?;
+            }
+            Ok(())
+        }
+        Err(err) => {
+            writeln!(f, "{:?}", err)?;
+            Err(fmt::Error)
+        }
+    }
+}
+
+fn fmt_history_result(
+    f: &mut fmt::Formatter<'_>,
+    extension_handler: &ExtensionHandler,
+    history_result: &HistoryResult,
+) -> fmt::Result {
+    match extension_handler.format_history_entries(&history_result.history_entries) {
+        Ok(Some(formated_hits)) => {
+            for hit in &formated_hits {
+                writeln!(f, "{}", &hit)?;
+            }
+            Ok(())
+        }
+        Ok(None) => {
+            for hit in &history_result.history_entries {
                 writeln!(f, "{}", &hit)?;
             }
             Ok(())
