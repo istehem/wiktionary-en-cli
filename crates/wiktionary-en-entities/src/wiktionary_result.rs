@@ -1,4 +1,5 @@
 use crate::wiktionary_entry::DictionaryEntry;
+use crate::wiktionary_history::HistoryEntry;
 use colored::Colorize;
 use indoc::formatdoc;
 use mlua::FromLua;
@@ -6,6 +7,10 @@ use mlua::IntoLua;
 use mlua::Lua;
 use mlua::Value;
 use std::fmt;
+
+pub struct HistoryResult {
+    pub history_entries: Vec<HistoryEntry>,
+}
 
 #[derive(Clone)]
 pub struct DidYouMean {
