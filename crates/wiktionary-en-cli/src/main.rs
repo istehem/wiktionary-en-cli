@@ -112,7 +112,7 @@ fn search_for_term(
     }
 }
 
-fn run(
+fn query_dictionary(
     client: &DbClient,
     query_params: QueryParameters,
     extension_handler: wiktionary_en_lua::ExtensionHandler,
@@ -166,33 +166,36 @@ fn main() -> Result<()> {
         utilities::pager::print_lines_in_pager(&result)?;
         return Ok(());
     }
+    let result = {
+        let db_client = DbClient::init(language_to_use)?;
+        let db_client_mutex = DbClientMutex::from(db_client.clone());
+        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
 
-    let db_client = DbClient::init(language_to_use)?;
-    let db_client_mutex = DbClientMutex::from(db_client.clone());
-    let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+        if args.history {
+            let result = HistoryResult {
+                history_entries: db_client.find_all_in_history()?,
+            };
+            let result_wrapper = WiktionaryResultWrapper {
+                result: result_wrapper::WiktionaryResult::HistoryResult(result),
+                extension_handler,
+            };
+            result_wrapper.fmt()?
+        } else {
+            let mut result = query_dictionary(
+                &db_client,
+                QueryParameters {
+                    search_term: args.search_term,
+                    language: language_to_use,
+                    max_results: args.max_results,
+                    case_insensitive: args.case_insensitive,
+                    path: get_db_path(args.db_path, &language_to_use),
+                },
+                extension_handler,
+            )?;
 
-    if args.history {
-        let result = HistoryResult {
-            history_entries: db_client.find_all_in_history()?,
-        };
-        let result_wrapper = WiktionaryResultWrapper {
-            result: result_wrapper::WiktionaryResult::HistoryResult(result),
-            extension_handler,
-        };
-        utilities::pager::print_in_pager(&result_wrapper.fmt()?)?;
-        return Ok(());
-    }
-    let mut result = run(
-        &db_client,
-        QueryParameters {
-            search_term: args.search_term,
-            language: language_to_use,
-            max_results: args.max_results,
-            case_insensitive: args.case_insensitive,
-            path: get_db_path(args.db_path, &language_to_use),
-        },
-        extension_handler,
-    )?;
-    result.intercept()?;
-    utilities::pager::print_in_pager(&result.fmt()?)
+            result.intercept()?;
+            result.fmt()?
+        }
+    };
+    utilities::pager::print_in_pager(&result)
 }
