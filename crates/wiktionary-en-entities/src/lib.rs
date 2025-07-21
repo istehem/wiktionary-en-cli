@@ -4,5 +4,5 @@ pub mod dictionary_entry;
 pub mod dictionary_entry_lua;
 pub mod history_entry;
 pub mod history_entry_lua;
-pub mod results;
-pub mod results_lua;
+pub mod result;
+pub mod result_lua;

@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use utilities::file_utils::*;
 use utilities::language::*;
 
-use wiktionary_en_entities::results::{DidYouMean, HistoryResult, SearchResult};
+use wiktionary_en_entities::result::{DidYouMean, HistoryResult, SearchResult};
 
 use wiktionary_en_db::client::{DbClient, DbClientMutex};
 

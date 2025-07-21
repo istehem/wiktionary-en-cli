@@ -8,7 +8,7 @@ use wiktionary_en_db::client::DbClientMutex;
 use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::history_entry::HistoryEntry;
-use wiktionary_en_entities::results::{DidYouMean, SearchResult};
+use wiktionary_en_entities::result::{DidYouMean, SearchResult};
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";

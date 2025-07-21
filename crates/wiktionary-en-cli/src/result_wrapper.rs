@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 
-use wiktionary_en_entities::results::{HistoryResult, SearchResult};
+use wiktionary_en_entities::result::{HistoryResult, SearchResult};
 use wiktionary_en_lua::ExtensionHandler;
 
 pub enum WiktionaryResult {

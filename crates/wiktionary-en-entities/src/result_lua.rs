@@ -2,7 +2,7 @@ use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
 
-use crate::results::SearchResult;
+use crate::result::SearchResult;
 
 impl IntoLua for SearchResult {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
