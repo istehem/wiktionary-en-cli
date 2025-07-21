@@ -2,8 +2,8 @@ use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
 
-use utilities::file_utils::*;
-use utilities::language::*;
+use utilities::file_utils::get_db_path;
+use utilities::language::Language;
 
 use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, HistoryResult};
 
