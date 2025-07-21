@@ -1,11 +1,11 @@
 use anyhow::{bail, Result};
 
-use wiktionary_en_entities::result::{HistoryResult, SearchResult};
+use wiktionary_en_entities::result::{DictionaryResult, HistoryResult};
 use wiktionary_en_lua::ExtensionHandler;
 
 pub enum WiktionaryResult {
     HistoryResult(HistoryResult),
-    SearchResult(SearchResult),
+    DictionaryResult(DictionaryResult),
 }
 
 pub struct WiktionaryResultWrapper {
@@ -17,7 +17,7 @@ impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
         match &mut self.result {
             WiktionaryResult::HistoryResult(_) => bail!("nothing to intercept"),
-            WiktionaryResult::SearchResult(result) => {
+            WiktionaryResult::DictionaryResult(result) => {
                 self.extension_handler.intercept_wiktionary_result(result)
             }
         }
@@ -28,7 +28,7 @@ impl WiktionaryResultWrapper {
             WiktionaryResult::HistoryResult(result) => {
                 fmt_history_result(&self.extension_handler, result)
             }
-            WiktionaryResult::SearchResult(result) => {
+            WiktionaryResult::DictionaryResult(result) => {
                 fmt_wiktionary_result(&self.extension_handler, result)
             }
         }
@@ -37,7 +37,7 @@ impl WiktionaryResultWrapper {
 
 fn fmt_wiktionary_result(
     extension_handler: &ExtensionHandler,
-    wiktionary_result: &SearchResult,
+    wiktionary_result: &DictionaryResult,
 ) -> Result<String> {
     let mut formatted = Vec::new();
     if let Some(did_you_mean) = &wiktionary_result.did_you_mean {

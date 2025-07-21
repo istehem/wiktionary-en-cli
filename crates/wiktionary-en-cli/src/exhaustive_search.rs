@@ -9,11 +9,11 @@ use std::sync::Arc;
 use utilities::anyhow_serde;
 use utilities::file_utils::*;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-use wiktionary_en_entities::result::{DidYouMean, SearchResult};
+use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 
 const CHECK_FOR_SOLUTION_FOUND_EVERY: usize = 100;
 
-pub struct ExhaustiveSearchResult {
+pub struct ExhaustiveDictionaryResult {
     pub full_matches: Vec<DictionaryEntry>,
     pub did_you_mean: Option<DictionaryEntry>,
     distance: usize,
@@ -28,7 +28,7 @@ fn levenshtein_distance(search_term: &str, word: &str, case_insensitive: bool) -
 }
 
 fn evaluate_entry(
-    search_result: &mut ExhaustiveSearchResult,
+    search_result: &mut ExhaustiveDictionaryResult,
     term: &str,
     json: DictionaryEntry,
     case_insensitive: bool,
@@ -60,8 +60,8 @@ fn search_worker(
     max_results: usize,
     case_insensitive: bool,
     is_solution_found: Arc<AtomicBool>,
-) -> Result<ExhaustiveSearchResult> {
-    let mut search_result = ExhaustiveSearchResult {
+) -> Result<ExhaustiveDictionaryResult> {
+    let mut search_result = ExhaustiveDictionaryResult {
         full_matches: Vec::new(),
         did_you_mean: None,
         distance: usize::MAX,
@@ -99,7 +99,7 @@ fn do_search(
     term: &str,
     max_results: usize,
     case_insensitive: bool,
-) -> Result<ExhaustiveSearchResult> {
+) -> Result<ExhaustiveDictionaryResult> {
     search_worker(
         file_reader,
         term,
@@ -114,11 +114,11 @@ pub fn search(
     term: &str,
     max_results: usize,
     case_insensitive: bool,
-) -> Result<SearchResult> {
+) -> Result<DictionaryResult> {
     let buf_reader = get_file_reader(input_path)?;
     let result = do_search(buf_reader, term, max_results, case_insensitive)?;
     if let Some(did_you_mean) = result.did_you_mean {
-        return Ok(SearchResult {
+        return Ok(DictionaryResult {
             word: term.to_string(),
             did_you_mean: Some(DidYouMean {
                 searched_for: term.to_string(),
@@ -127,7 +127,7 @@ pub fn search(
             hits: vec![did_you_mean],
         });
     }
-    Ok(SearchResult {
+    Ok(DictionaryResult {
         word: term.to_string(),
         did_you_mean: None,
         hits: result.full_matches,

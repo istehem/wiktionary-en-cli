@@ -2,9 +2,9 @@ use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
 
-use crate::result::SearchResult;
+use crate::result::DictionaryResult;
 
-impl IntoLua for SearchResult {
+impl IntoLua for DictionaryResult {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
         let wiktionary_result = lua.create_table()?;
         wiktionary_result.set("word", self.word)?;
@@ -14,7 +14,7 @@ impl IntoLua for SearchResult {
     }
 }
 
-impl FromLua for SearchResult {
+impl FromLua for DictionaryResult {
     fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
         if let Some(table) = value.as_table() {
             return Ok(Self {

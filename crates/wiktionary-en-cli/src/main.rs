@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use utilities::file_utils::*;
 use utilities::language::*;
 
-use wiktionary_en_entities::result::{DidYouMean, HistoryResult, SearchResult};
+use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, HistoryResult};
 
 use wiktionary_en_db::client::{DbClient, DbClientMutex};
 
@@ -63,14 +63,14 @@ struct QueryParameters {
 fn search_for_alternative_term(
     client: &DbClient,
     query_params: &QueryParameters,
-) -> Result<Option<SearchResult>> {
+) -> Result<Option<DictionaryResult>> {
     if let Some(term) = &query_params.search_term {
         let did_you_mean =
             wiktionary_en_identifier_index::did_you_mean(&query_params.language, &term)?;
         if let Some(did_you_mean) = did_you_mean {
             let hits = client.find_by_word(&did_you_mean)?;
             if !hits.is_empty() {
-                let result = SearchResult {
+                let result = DictionaryResult {
                     word: term.to_string(),
                     did_you_mean: Some(DidYouMean {
                         searched_for: term.to_string(),
@@ -89,10 +89,10 @@ fn search_for_term(
     client: &DbClient,
     term: &str,
     query_params: &QueryParameters,
-) -> Result<SearchResult> {
+) -> Result<DictionaryResult> {
     let hits = client.find_by_word(term)?;
     match hits.as_slice() {
-        [_, ..] => Ok(SearchResult {
+        [_, ..] => Ok(DictionaryResult {
             word: term.to_string(),
             did_you_mean: None,
             hits,
@@ -120,18 +120,18 @@ fn run(
     if let Some(term) = &query_params.search_term {
         let result = search_for_term(client, term, &query_params)?;
         return Ok(WiktionaryResultWrapper {
-            result: result_wrapper::WiktionaryResult::SearchResult(result),
+            result: result_wrapper::WiktionaryResult::DictionaryResult(result),
             extension_handler,
         });
     }
     let hit = client.random_entry()?;
-    let result = SearchResult {
+    let result = DictionaryResult {
         word: hit.word.clone(),
         did_you_mean: None,
         hits: vec![hit],
     };
     Ok(WiktionaryResultWrapper {
-        result: result_wrapper::WiktionaryResult::SearchResult(result),
+        result: result_wrapper::WiktionaryResult::DictionaryResult(result),
         extension_handler,
     })
 }
