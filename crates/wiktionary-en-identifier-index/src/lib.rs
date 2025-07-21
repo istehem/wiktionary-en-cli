@@ -3,8 +3,8 @@ use std::path::Path;
 use utilities::file_utils;
 use utilities::language::*;
 
-mod channels;
-use crate::channels::{DictionaryIngestChannel, DictionarySearchChannel};
+mod channel;
+use crate::channel::{DictionaryIngestChannel, DictionarySearchChannel};
 
 pub mod indexing_stream;
 use crate::indexing_stream::*;
