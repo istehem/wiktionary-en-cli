@@ -30,8 +30,7 @@ impl DbClientMutex {
     }
 
     pub fn init(language: Language) -> Result<Self> {
-        let client = Arc::new(Mutex::new(DbClient::init(language)?));
-        Ok(Self { client })
+        Ok(Self::from(DbClient::init(language)?))
     }
 }
 
