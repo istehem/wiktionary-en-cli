@@ -5,11 +5,12 @@ use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt;
+use std::str::FromStr;
 use textwrap::{fill, indent};
 
 use utilities::anyhow_serde;
 use utilities::colored_string_utils::*;
-use utilities::language::*;
+use utilities::language::Language;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictionaryEntry {
@@ -68,6 +69,14 @@ pub struct RelatedWord {
     #[serde(default)]
     pub tags: Vec<String>,
     pub sense: Option<String>,
+}
+
+impl FromStr for DictionaryEntry {
+    type Err = anyhow::Error;
+
+    fn from_str(entry_string: &str) -> anyhow::Result<Self> {
+        anyhow_serde::from_str(entry_string)
+    }
 }
 
 pub fn parse_entry(entry_string: &str) -> Result<DictionaryEntry> {
