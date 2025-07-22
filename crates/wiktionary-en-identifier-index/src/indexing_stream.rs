@@ -1,7 +1,7 @@
 use anyhow::{bail, Context, Result};
 use std::io::{prelude::*, BufReader};
 
-use wiktionary_en_entities::dictionary_entry::{parse_entry, DictionaryEntry};
+use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 
 use std::fmt;
 use std::fs::File;
@@ -99,5 +99,6 @@ fn check_line(line: Result<String, std::io::Error>, i: usize) -> Result<String> 
 }
 
 fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {
-    parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
+    line.parse()
+        .with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }

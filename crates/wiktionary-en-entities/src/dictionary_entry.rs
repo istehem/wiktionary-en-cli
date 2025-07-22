@@ -74,13 +74,9 @@ pub struct RelatedWord {
 impl FromStr for DictionaryEntry {
     type Err = anyhow::Error;
 
-    fn from_str(entry_string: &str) -> anyhow::Result<Self> {
+    fn from_str(entry_string: &str) -> Result<Self> {
         anyhow_serde::from_str(entry_string)
     }
-}
-
-pub fn parse_entry(entry_string: &str) -> Result<DictionaryEntry> {
-    anyhow_serde::from_str(entry_string)
 }
 
 impl DictionaryEntry {

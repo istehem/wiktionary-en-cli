@@ -6,7 +6,7 @@ use utilities::language::Language;
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
-use wiktionary_en_entities::dictionary_entry::{parse_entry, DictionaryEntry};
+use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::{history_collection, history_entry::HistoryEntry};
 
 use std::fs::File;
@@ -228,7 +228,8 @@ fn insert_wiktionary_file_into_collection(
 }
 
 fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {
-    parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
+    line.parse()
+        .with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
 fn create_index_on_word(collection: &Collection<DictionaryEntry>) -> Result<()> {
