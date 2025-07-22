@@ -1,5 +1,5 @@
 use anyhow::Result;
-use utilities::language::*;
+use utilities::language::Language;
 
 #[derive(Default, Clone)]
 pub struct Config {

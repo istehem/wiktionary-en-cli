@@ -3,7 +3,7 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 use edit_distance::edit_distance;
 use sonic_channel::*;
 
-use utilities::language::*;
+use utilities::language::Language;
 
 const CANNOT_OPEN_SONIC_DB_ERROR_MSG: &str = "Couldn't open sonic db, please start it";
 

@@ -9,7 +9,7 @@ use std::str::FromStr;
 use textwrap::{fill, indent};
 
 use utilities::anyhow_serde;
-use utilities::colored_string_utils::*;
+use utilities::colored_string_utils::{horizontal_line, Join, JoinWrap, LINE_WRAP_AT, NEWLINE};
 use utilities::language::Language;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

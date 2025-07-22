@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use indicatif::{ProgressBar, ProgressStyle};
-use streaming_iterator::*;
+use streaming_iterator::StreamingIterator;
 
 const PROGRESS_BAR_TEMPLATE: &str = "{spinner} {elapsed}{msg}";
 const EMPTY_STRING: &str = "";

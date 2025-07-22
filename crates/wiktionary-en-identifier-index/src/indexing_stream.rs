@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use std::io::{prelude::*, BufReader};
+use std::io::{BufRead, BufReader};
 
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 

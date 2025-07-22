@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use std::path::Path;
 use utilities::file_utils;
-use utilities::language::*;
+use utilities::language::Language;
 
 mod channel;
 use crate::channel::{DictionaryIngestChannel, DictionarySearchChannel};

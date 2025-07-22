@@ -7,7 +7,7 @@ use futures_util::StreamExt;
 use std::io::BufWriter;
 
 use indicatif::{ProgressBar, ProgressStyle};
-use utilities::language::*;
+use utilities::language::Language;
 
 const PROGRESS_BAR_TEMPLATE: &str = "{wide_bar} {bytes}/{total_bytes}";
 
