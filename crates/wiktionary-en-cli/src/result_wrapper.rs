@@ -18,7 +18,7 @@ impl WiktionaryResultWrapper {
         match &mut self.result {
             WiktionaryResult::HistoryResult(_) => bail!("nothing to intercept"),
             WiktionaryResult::DictionaryResult(result) => {
-                self.extension_handler.intercept_wiktionary_result(result)
+                self.extension_handler.intercept_dictionary_result(result)
             }
         }
     }
@@ -29,18 +29,18 @@ impl WiktionaryResultWrapper {
                 fmt_history_result(&self.extension_handler, result)
             }
             WiktionaryResult::DictionaryResult(result) => {
-                fmt_wiktionary_result(&self.extension_handler, result)
+                fmt_dictionary_result(&self.extension_handler, result)
             }
         }
     }
 }
 
-fn fmt_wiktionary_result(
+fn fmt_dictionary_result(
     extension_handler: &ExtensionHandler,
-    wiktionary_result: &DictionaryResult,
+    dictionary_result: &DictionaryResult,
 ) -> Result<String> {
     let mut formatted = Vec::new();
-    if let Some(did_you_mean) = &wiktionary_result.did_you_mean {
+    if let Some(did_you_mean) = &dictionary_result.did_you_mean {
         match extension_handler.format_wiktionary_did_you_mean_banner(did_you_mean) {
             Ok(Some(formatted_banner)) => {
                 formatted.push(formatted_banner.to_string());
@@ -54,7 +54,7 @@ fn fmt_wiktionary_result(
         }
     }
 
-    match extension_handler.format_wiktionary_entries(&wiktionary_result.hits) {
+    match extension_handler.format_wiktionary_entries(&dictionary_result.hits) {
         Ok(Some(formated_hits)) => {
             for hit in &formated_hits {
                 formatted.push(hit.to_string());
@@ -62,7 +62,7 @@ fn fmt_wiktionary_result(
             Ok(formatted.join("\n"))
         }
         Ok(None) => {
-            for entry in &wiktionary_result.hits {
+            for entry in &dictionary_result.hits {
                 formatted.push(entry.to_string());
             }
             Ok(formatted.join("\n"))

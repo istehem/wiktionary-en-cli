@@ -6,11 +6,11 @@ use crate::result::DictionaryResult;
 
 impl IntoLua for DictionaryResult {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let wiktionary_result = lua.create_table()?;
-        wiktionary_result.set("word", self.word)?;
-        wiktionary_result.set("did_you_mean", self.did_you_mean)?;
-        wiktionary_result.set("hits", self.hits)?;
-        Ok(mlua::Value::Table(wiktionary_result))
+        let dictionary_result = lua.create_table()?;
+        dictionary_result.set("word", self.word)?;
+        dictionary_result.set("did_you_mean", self.did_you_mean)?;
+        dictionary_result.set("hits", self.hits)?;
+        Ok(mlua::Value::Table(dictionary_result))
     }
 }
 

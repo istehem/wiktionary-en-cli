@@ -56,12 +56,12 @@ impl ExtensionHandler {
         }
     }
 
-    pub fn intercept_wiktionary_result(
+    pub fn intercept_dictionary_result(
         &self,
-        wiktionary_result: &mut DictionaryResult,
+        dictionary_result: &mut DictionaryResult,
     ) -> Result<()> {
-        if let Some(intercepted_result) = self.intercept(wiktionary_result)? {
-            *wiktionary_result = intercepted_result;
+        if let Some(intercepted_result) = self.intercept(dictionary_result)? {
+            *dictionary_result = intercepted_result;
         } else {
             return Ok(());
         }
@@ -212,9 +212,9 @@ where
 
 fn intercept(
     lua: &Lua,
-    wiktionary_result: &DictionaryResult,
+    dictionary_result: &DictionaryResult,
 ) -> mlua::Result<Option<DictionaryResult>> {
-    call_extension_lua_function(lua, "intercept", wiktionary_result)
+    call_extension_lua_function(lua, "intercept", dictionary_result)
 }
 
 fn format_entry(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {

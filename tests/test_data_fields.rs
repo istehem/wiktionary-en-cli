@@ -11,7 +11,7 @@ mod tests {
     use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::Language;
-    use wiktionary_en_entities::dictionary_entry::{DictionaryEntry, parse_entry};
+    use wiktionary_en_entities::dictionary_entry::{parse_entry, DictionaryEntry};
 
     fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
         parse_entry(line).with_context(|| format!("Couldn't parse line {} in DB file.", i))
