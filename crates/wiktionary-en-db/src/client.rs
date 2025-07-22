@@ -97,7 +97,11 @@ impl DbClient {
         delete_all_in_collection(&collection)
     }
 
-    pub fn insert_wiktionary_file(&self, file_reader: BufReader<File>, force: bool) -> Result<()> {
+    pub fn insert_wiktionary_file(
+        &self,
+        file_reader: BufReader<File>,
+        force: bool,
+    ) -> Result<usize> {
         create_history_index(&self.history_collection())?;
         insert_wiktionary_file_into_collection(
             &self.collection(),
@@ -186,7 +190,7 @@ fn insert_wiktionary_file_into_collection(
     file_reader: BufReader<File>,
     language: &Language,
     force: bool,
-) -> Result<()> {
+) -> Result<usize> {
     if !force {
         let count = number_of_entries_in_collection(collection)?;
         if count > 0 {
@@ -218,12 +222,7 @@ fn insert_wiktionary_file_into_collection(
         bail!(err);
     }
 
-    println!(
-        "inserted {} entries for language {}",
-        count,
-        &language.value()
-    );
-    Ok(())
+    Ok(count)
 }
 
 fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {

@@ -36,7 +36,7 @@ struct Cli {
     reset_metadata: bool,
 }
 
-fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<()> {
+fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<usize> {
     let db_client = DbClient::init(*language)?;
 
     match file_utils::get_file_reader(path) {
@@ -72,5 +72,9 @@ fn main() -> Result<()> {
     if args.download {
         return Downloader::download_dictionary_extract(&language_to_use, args.force);
     }
-    import_wiktionary_extract(&db_path, &language_to_use, args.force)
+    let count = import_wiktionary_extract(&db_path, &language_to_use, args.force)?;
+    utilities::pager::print_in_pager(&format!(
+        "inserted {} entries for language {}",
+        count, &language_to_use
+    ))
 }
