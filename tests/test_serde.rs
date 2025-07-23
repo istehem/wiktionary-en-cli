@@ -51,6 +51,6 @@ mod tests {
         assert_eq!(term, deserialized.word);
         assert_eq!(last_seen_at, deserialized.last_seen_at);
 
-        return Ok(());
+        Ok(())
     }
 }

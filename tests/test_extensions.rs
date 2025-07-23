@@ -37,24 +37,22 @@ mod tests {
     fn test_intercept(#[from(shared_db_client)] db_client: &DbClientMutex) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
-        let mut results = Vec::new();
 
         for (_index, line) in file_reader.lines().enumerate().take(10) {
             let dictionary_entry = parse_line(&line?)?;
-            results.push(dictionary_entry);
+            let mut dictionary_result = DictionaryResult {
+                hits: vec![dictionary_entry.clone()],
+                did_you_mean: None,
+                word: dictionary_entry.word,
+            };
+            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
+            extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
+            for entry in dictionary_result.hits {
+                println!("{}", entry);
+            }
         }
 
-        let mut dictionary_result = DictionaryResult {
-            hits: results,
-            did_you_mean: None,
-            word: "test".to_string(),
-        };
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
-        extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
-        for entry in dictionary_result.hits {
-            println!("{}", entry);
-        }
-        return Ok(());
+        Ok(())
     }
 
     #[traced_test]
@@ -77,6 +75,6 @@ mod tests {
                 println!("{}", formatted_entry);
             }
         }
-        return Ok(());
+        Ok(())
     }
 }

@@ -10,6 +10,6 @@ mod tests {
     fn test_load_config() -> Result<()> {
         let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
         info!("language configured: {}", config_handler.config.language);
-        return Ok(());
+        Ok(())
     }
 }
