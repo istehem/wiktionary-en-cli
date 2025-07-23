@@ -41,7 +41,7 @@ fn fmt_dictionary_result(
 ) -> Result<String> {
     let mut formatted = Vec::new();
     if let Some(did_you_mean) = &dictionary_result.did_you_mean {
-        match extension_handler.format_wiktionary_did_you_mean_banner(did_you_mean) {
+        match extension_handler.format_dictionary_did_you_mean_banner(did_you_mean) {
             Ok(Some(formatted_banner)) => {
                 formatted.push(formatted_banner.to_string());
             }
@@ -54,7 +54,7 @@ fn fmt_dictionary_result(
         }
     }
 
-    match extension_handler.format_wiktionary_entries(&dictionary_result.hits) {
+    match extension_handler.format_dictionary_entries(&dictionary_result.hits) {
         Ok(Some(formated_hits)) => {
             for hit in &formated_hits {
                 formatted.push(hit.to_string());

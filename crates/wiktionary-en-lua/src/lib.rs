@@ -76,7 +76,7 @@ impl ExtensionHandler {
         }
     }
 
-    pub fn format_wiktionary_entries(
+    pub fn format_dictionary_entries(
         &self,
         result: &[DictionaryEntry],
     ) -> Result<Option<Vec<String>>> {
@@ -91,7 +91,7 @@ impl ExtensionHandler {
         Ok(Some(formatted_entries))
     }
 
-    pub fn format_wiktionary_did_you_mean_banner(
+    pub fn format_dictionary_did_you_mean_banner(
         &self,
         did_you_mean: &DidYouMean,
     ) -> Result<Option<String>> {

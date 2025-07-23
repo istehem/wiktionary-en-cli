@@ -9,7 +9,7 @@ mod tests {
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-    use wiktionary_en_entities::result::DictionaryResult;
+    use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 
     use wiktionary_en_lua;
 
@@ -54,7 +54,9 @@ mod tests {
     }
 
     #[rstest]
-    fn test_format(#[from(shared_db_client)] shared_db_client: &DbClientMutex) -> Result<()> {
+    fn test_format_dictionary_entry(
+        #[from(shared_db_client)] shared_db_client: &DbClientMutex,
+    ) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut results = Vec::new();
@@ -66,11 +68,28 @@ mod tests {
 
         let extension_handler =
             wiktionary_en_lua::ExtensionHandler::init(shared_db_client.clone())?;
-        let formatted_entries = extension_handler.format_wiktionary_entries(&results)?;
+        let formatted_entries = extension_handler.format_dictionary_entries(&results)?;
         if let Some(formatted_entries) = formatted_entries {
             for formatted_entry in formatted_entries {
                 println!("{}", formatted_entry);
             }
+        }
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_format_did_you_mean_banner(
+        #[from(shared_db_client)] shared_db_client: &DbClientMutex,
+    ) -> Result<()> {
+        let extension_handler =
+            wiktionary_en_lua::ExtensionHandler::init(shared_db_client.clone())?;
+        let formatted_banner =
+            extension_handler.format_dictionary_did_you_mean_banner(&DidYouMean {
+                searched_for: "You searched for".to_string(),
+                suggestion: "... but probably meant".to_string(),
+            })?;
+        if let Some(formatted_banner) = formatted_banner {
+            println!("{}", formatted_banner);
         }
         Ok(())
     }
