@@ -10,6 +10,7 @@ mod tests {
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
+    use wiktionary_en_entities::result::DictionaryResult;
 
     use wiktionary_en_lua;
 
@@ -18,7 +19,6 @@ mod tests {
             .with_context(|| format!("{}", "Couldn't parse line in DB file."))
     }
 
-    /*
     #[traced_test]
     #[test]
     fn test_intercept() -> Result<()> {
@@ -31,15 +31,23 @@ mod tests {
             let dictionary_entry = parse_line(&line?)?;
             results.push(dictionary_entry);
         }
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init()?;
-        extension_handler.intercept_wiktionary_result(&mut results)?;
-        for entry in results {
-            println!("{}", entry.to_pretty_string());
+        let db_client = DbClient::init(language)?;
+        let db_client_mutex = DbClientMutex::from(db_client.clone());
+
+        let mut dictionary_result = DictionaryResult {
+            hits: results,
+            did_you_mean: None,
+            word: "test".to_string(),
+        };
+        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+        extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
+        for entry in dictionary_result.hits {
+            println!("{}", entry);
         }
         return Ok(());
     }
-    */
 
+    /*
     #[traced_test]
     #[test]
     fn test_format() -> Result<()> {
@@ -65,4 +73,5 @@ mod tests {
         }
         return Ok(());
     }
+    */
 }
