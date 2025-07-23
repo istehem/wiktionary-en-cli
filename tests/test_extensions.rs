@@ -1,19 +1,18 @@
 #[cfg(test)]
 mod tests {
-    use anyhow::{Context, Result};
+    use anyhow::{bail, Context, Result};
+    use rstest::*;
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
+    use std::sync::MutexGuard;
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
-
     use wiktionary_en_lua;
-
-    use rstest::*;
 
     fn language() -> Language {
         Language::EN
@@ -32,7 +31,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_intercept(#[from(shared_db_client)] db_client: &DbClientMutex) -> Result<()> {
+    fn test_interception(#[from(shared_db_client)] db_client: &DbClientMutex) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
 
@@ -54,8 +53,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_format_dictionary_entry(
-        #[from(shared_db_client)] shared_db_client: &DbClientMutex,
+    fn test_format_dictionary_entries(
+        #[from(shared_db_client)] db_client: &DbClientMutex,
     ) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -66,23 +65,22 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let extension_handler =
-            wiktionary_en_lua::ExtensionHandler::init(shared_db_client.clone())?;
+        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
         let formatted_entries = extension_handler.format_dictionary_entries(&results)?;
         if let Some(formatted_entries) = formatted_entries {
             for formatted_entry in formatted_entries {
                 println!("{}", formatted_entry);
             }
         }
+
         Ok(())
     }
 
     #[rstest]
     fn test_format_did_you_mean_banner(
-        #[from(shared_db_client)] shared_db_client: &DbClientMutex,
+        #[from(shared_db_client)] db_client: &DbClientMutex,
     ) -> Result<()> {
-        let extension_handler =
-            wiktionary_en_lua::ExtensionHandler::init(shared_db_client.clone())?;
+        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
         let formatted_banner =
             extension_handler.format_dictionary_did_you_mean_banner(&DidYouMean {
                 searched_for: "You searched for".to_string(),
@@ -91,6 +89,31 @@ mod tests {
         if let Some(formatted_banner) = formatted_banner {
             println!("{}", formatted_banner);
         }
+
+        Ok(())
+    }
+
+    fn lock(db_client: &DbClientMutex) -> Result<MutexGuard<'_, DbClient>> {
+        match db_client.client.lock() {
+            Ok(db_client) => Ok(db_client),
+            Err(err) => bail!(err.to_string()),
+        }
+    }
+
+    #[rstest]
+    fn test_format_history_entries(
+        #[from(shared_db_client)] db_client: &DbClientMutex,
+    ) -> Result<()> {
+        let history_entries = lock(db_client)?.find_all_in_history()?;
+        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
+        let formatted_entries = extension_handler.format_history_entries(&history_entries)?;
+
+        if let Some(formatted_entries) = formatted_entries {
+            for formatted_entry in formatted_entries {
+                println!("{}", formatted_entry);
+            }
+        }
+
         Ok(())
     }
 }
