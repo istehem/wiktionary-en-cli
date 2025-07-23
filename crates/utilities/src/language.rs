@@ -19,7 +19,7 @@ pub enum Language {
 }
 
 impl Language {
-    pub fn value(&self) -> String {
+    fn value(&self) -> String {
         match self {
             EN => "en".to_string(),
             DE => "de".to_string(),

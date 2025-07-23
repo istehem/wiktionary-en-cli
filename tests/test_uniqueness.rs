@@ -21,7 +21,7 @@ mod tests {
     #[test]
     fn at_least_as_many_unique_entries_as_all_entries() -> Result<()> {
         let language = Language::SV;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut unique_entries = HashSet::new();
         let mut count = 0;

@@ -84,7 +84,7 @@ fn resource_url(language: &Language) -> String {
 
 fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
     let url = resource_url(language);
-    let output_filename = utilities::DICTIONARY_DB_PATH!(language.value());
+    let output_filename = utilities::DICTIONARY_DB_PATH!(language.to_string());
     if Path::new(&output_filename).exists() && !force {
         bail!(
             "file {} already exists, use force to override",

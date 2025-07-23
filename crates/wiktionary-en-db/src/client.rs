@@ -42,7 +42,7 @@ impl DbClient {
 
     fn collection(&self) -> Collection<DictionaryEntry> {
         self.database
-            .collection::<DictionaryEntry>(&self.language.value())
+            .collection::<DictionaryEntry>(&self.language.to_string())
     }
 
     pub fn history_collection(&self) -> Collection<HistoryEntry> {
@@ -197,7 +197,7 @@ fn insert_wiktionary_file_into_collection(
             bail!(
                 "dictionary already contains {} entries for language {}, use force to override",
                 count,
-                language.value()
+                language.to_string()
             );
         }
     }

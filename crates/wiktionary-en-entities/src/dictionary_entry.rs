@@ -242,7 +242,7 @@ fn examples_to_strings(examples: &[Example]) -> Vec<ColoredString> {
 
 fn translations_to_strings(translations: &[Translation]) -> Vec<ColoredString> {
     let langs: Vec<Option<String>> = Language::iterator()
-        .map(|lang| Some(lang.value()))
+        .map(|lang| Some(lang.to_string()))
         .collect();
     let translations_as_set: HashSet<&Translation> = translations
         .iter()

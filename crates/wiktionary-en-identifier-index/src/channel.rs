@@ -25,7 +25,7 @@ impl DictionarySearchChannel {
     pub fn query(&self, search_term: &String) -> Result<Vec<String>> {
         let objects = self.search_channel.query(
             QueryRequest::new(
-                Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()),
+                Dest::col_buc(WIKTIONARY_COLLECTION, self.language.to_string()),
                 search_term,
             )
             .lang(to_sonic_language(&self.language))
@@ -48,7 +48,7 @@ impl DictionarySearchChannel {
             .take_while(|c| c != &' ' && c != &'-')
             .collect();
         let suggestions = self.search_channel.suggest(SuggestRequest::new(
-            Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()),
+            Dest::col_buc(WIKTIONARY_COLLECTION, self.language.to_string()),
             &first_word,
         ))?;
         Ok(suggestions)
@@ -95,7 +95,7 @@ impl DictionaryIngestChannel {
     pub fn count(&self) -> Result<u64> {
         let number_of_objects = self.ingest_channel.count(CountRequest::objects(
             WIKTIONARY_COLLECTION,
-            self.language.value(),
+            self.language.to_string(),
         ))?;
         Ok(number_of_objects as u64)
     }
@@ -114,14 +114,14 @@ impl DictionaryIngestChannel {
     pub fn flush(&self) -> Result<u64> {
         let flushdb_count = self.ingest_channel.flush(FlushRequest::bucket(
             WIKTIONARY_COLLECTION,
-            self.language.value(),
+            self.language.to_string(),
         ))?;
         Ok(flushdb_count as u64)
     }
 
     pub fn push(&self, word: &String) -> Result<()> {
         let obj = STANDARD.encode(word);
-        let dest = Dest::col_buc(WIKTIONARY_COLLECTION, self.language.value()).obj(&obj);
+        let dest = Dest::col_buc(WIKTIONARY_COLLECTION, self.language.to_string()).obj(&obj);
         self.ingest_channel
             .push(PushRequest::new(dest, word).lang(to_sonic_language(&self.language)))?;
         Ok(())

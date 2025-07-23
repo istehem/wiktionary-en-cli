@@ -18,5 +18,5 @@ pub fn get_db_path(path: Option<String>, language: &Language) -> PathBuf {
     if let Some(path) = path {
         return PathBuf::from(path);
     }
-    PathBuf::from(DICTIONARY_DB_PATH!(language.value()))
+    PathBuf::from(DICTIONARY_DB_PATH!(language.to_string()))
 }
