@@ -31,7 +31,7 @@ mod tests {
 
     #[traced_test]
     #[rstest]
-    fn test_intercept(shared_db_client: &DbClientMutex) -> Result<()> {
+    fn test_intercept(#[from(shared_db_client)] db_client: &DbClientMutex) -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -47,8 +47,7 @@ mod tests {
             did_you_mean: None,
             word: "test".to_string(),
         };
-        let extension_handler =
-            wiktionary_en_lua::ExtensionHandler::init(shared_db_client.clone())?;
+        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
         extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
         for entry in dictionary_result.hits {
             println!("{}", entry);
@@ -58,7 +57,7 @@ mod tests {
 
     #[traced_test]
     #[rstest]
-    fn test_format(shared_db_client: &DbClientMutex) -> Result<()> {
+    fn test_format(#[from(shared_db_client)] shared_db_client: &DbClientMutex) -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
