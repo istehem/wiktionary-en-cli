@@ -5,7 +5,6 @@ mod tests {
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
-    use tracing_test::traced_test;
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
@@ -32,7 +31,6 @@ mod tests {
             .with_context(|| format!("{}", "Couldn't parse line in DB file."))
     }
 
-    #[traced_test]
     #[rstest]
     fn test_intercept(#[from(shared_db_client)] db_client: &DbClientMutex) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
@@ -55,7 +53,6 @@ mod tests {
         Ok(())
     }
 
-    #[traced_test]
     #[rstest]
     fn test_format(#[from(shared_db_client)] shared_db_client: &DbClientMutex) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
