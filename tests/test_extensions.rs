@@ -14,14 +14,24 @@ mod tests {
 
     use wiktionary_en_lua;
 
+    use rstest::*;
+
+    #[fixture]
+    #[once]
+    fn shared_db_client() -> DbClientMutex {
+        let language = Language::EN;
+        let db_client = DbClient::init(language).unwrap();
+        DbClientMutex::from(db_client)
+    }
+
     fn parse_line(line: &String) -> Result<DictionaryEntry> {
         line.parse()
             .with_context(|| format!("{}", "Couldn't parse line in DB file."))
     }
 
     #[traced_test]
-    #[test]
-    fn test_intercept() -> Result<()> {
+    #[rstest]
+    fn test_intercept(shared_db_client: &DbClientMutex) -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -31,15 +41,14 @@ mod tests {
             let dictionary_entry = parse_line(&line?)?;
             results.push(dictionary_entry);
         }
-        let db_client = DbClient::init(language)?;
-        let db_client_mutex = DbClientMutex::from(db_client.clone());
 
         let mut dictionary_result = DictionaryResult {
             hits: results,
             did_you_mean: None,
             word: "test".to_string(),
         };
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+        let extension_handler =
+            wiktionary_en_lua::ExtensionHandler::init(shared_db_client.clone())?;
         extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
         for entry in dictionary_result.hits {
             println!("{}", entry);
@@ -47,10 +56,9 @@ mod tests {
         return Ok(());
     }
 
-    /*
     #[traced_test]
-    #[test]
-    fn test_format() -> Result<()> {
+    #[rstest]
+    fn test_format(shared_db_client: &DbClientMutex) -> Result<()> {
         let language = Language::EN;
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -61,10 +69,8 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let db_client = DbClient::init(language)?;
-        let db_client_mutex = DbClientMutex::from(db_client.clone());
-
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+        let extension_handler =
+            wiktionary_en_lua::ExtensionHandler::init(shared_db_client.clone())?;
         let formatted_entries = extension_handler.format_wiktionary_entries(&results)?;
         if let Some(formatted_entries) = formatted_entries {
             for formatted_entry in formatted_entries {
@@ -73,5 +79,4 @@ mod tests {
         }
         return Ok(());
     }
-    */
 }
