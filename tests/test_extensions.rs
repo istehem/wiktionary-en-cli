@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    /*
     use anyhow::{Context, Result};
     use std::fs::File;
     use std::io::BufRead;
@@ -8,15 +7,18 @@ mod tests {
     use std::path::PathBuf;
     use tracing_test::traced_test;
     use utilities::file_utils;
-    use utilities::language::*;
-    use wiktionary_en_entities::wiktionary_entry::*;
+    use utilities::language::Language;
+    use wiktionary_en_db::client::{DbClient, DbClientMutex};
+    use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 
     use wiktionary_en_lua;
 
     fn parse_line(line: &String) -> Result<DictionaryEntry> {
-        parse_entry(line).with_context(|| format!("{}", "Couldn't parse line in DB file."))
+        line.parse()
+            .with_context(|| format!("{}", "Couldn't parse line in DB file."))
     }
 
+    /*
     #[traced_test]
     #[test]
     fn test_intercept() -> Result<()> {
@@ -36,6 +38,7 @@ mod tests {
         }
         return Ok(());
     }
+    */
 
     #[traced_test]
     #[test]
@@ -50,8 +53,10 @@ mod tests {
             results.push(dictionary_entry);
         }
 
+        let db_client = DbClient::init(language)?;
+        let db_client_mutex = DbClientMutex::from(db_client.clone());
 
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init()?;
+        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
         let formatted_entries = extension_handler.format_wiktionary_entries(&results)?;
         if let Some(formatted_entries) = formatted_entries {
             for formatted_entry in formatted_entries {
@@ -60,5 +65,4 @@ mod tests {
         }
         return Ok(());
     }
-    */
 }

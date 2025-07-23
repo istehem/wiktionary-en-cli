@@ -2123,6 +2123,7 @@ dependencies = [
  "tracing",
  "tracing-test",
  "utilities",
+ "wiktionary-en-db",
  "wiktionary-en-entities",
  "wiktionary-en-lua",
 ]

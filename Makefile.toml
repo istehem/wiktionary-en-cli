@@ -64,6 +64,7 @@ args = [
 ]
 
 [tasks.test]
+ent = { "DICTIONARY_POLD_DB_DIR" = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-test-polo-db/" }
 workspace = false
 command = "cargo"
 args = [
