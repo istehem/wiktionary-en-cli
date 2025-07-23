@@ -16,11 +16,14 @@ mod tests {
 
     use rstest::*;
 
+    fn language() -> Language {
+        Language::EN
+    }
+
     #[fixture]
     #[once]
     fn shared_db_client() -> DbClientMutex {
-        let language = Language::EN;
-        let db_client = DbClient::init(language).unwrap();
+        let db_client = DbClient::init(language()).unwrap();
         DbClientMutex::from(db_client)
     }
 
@@ -32,8 +35,7 @@ mod tests {
     #[traced_test]
     #[rstest]
     fn test_intercept(#[from(shared_db_client)] db_client: &DbClientMutex) -> Result<()> {
-        let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut results = Vec::new();
 
@@ -58,8 +60,7 @@ mod tests {
     #[traced_test]
     #[rstest]
     fn test_format(#[from(shared_db_client)] shared_db_client: &DbClientMutex) -> Result<()> {
-        let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.value()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut results = Vec::new();
 
