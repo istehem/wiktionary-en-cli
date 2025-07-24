@@ -34,7 +34,7 @@ struct Cli {
     case_insensitive: bool,
     /// Set search term language
     #[clap(long, short = 'l')]
-    language: Option<String>,
+    language: Option<Language>,
     /// Show dictionary information
     #[clap(short, long)]
     stats: bool,
@@ -141,7 +141,7 @@ fn main() -> Result<()> {
     let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
     let language_to_use = config_handler
         .config
-        .parse_language_or_use_config_or_default(&args.language)?;
+        .or_use_config_or_default(args.language);
 
     if args.stats {
         let input_path = get_db_path(args.db_path, &language_to_use);

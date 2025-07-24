@@ -1,4 +1,3 @@
-use anyhow::Result;
 use utilities::language::Language;
 
 #[derive(Default, Clone)]
@@ -7,13 +6,10 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn parse_language_or_use_config_or_default(
-        &self,
-        language: &Option<String>,
-    ) -> Result<Language> {
+    pub fn or_use_config_or_default(&self, language: Option<Language>) -> Language {
         if let Some(language) = language {
-            return language.parse();
+            return language;
         }
-        Ok(self.language)
+        self.language
     }
 }

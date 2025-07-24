@@ -20,7 +20,7 @@ struct Cli {
     db_path: Option<String>,
     /// Language to import
     #[clap(long, short = 'l')]
-    language: Option<String>,
+    language: Option<Language>,
     /// Force import, existing data will be overwritten
     #[clap(long, short = 'f')]
     force: bool,
@@ -51,7 +51,7 @@ fn main() -> Result<()> {
 
     let language_to_use = config_handler
         .config
-        .parse_language_or_use_config_or_default(&args.language)?;
+        .or_use_config_or_default(args.language);
 
     let db_path: PathBuf = file_utils::get_db_path(args.db_path, &language_to_use);
     #[cfg(feature = "sonic")]
