@@ -12,7 +12,7 @@ mod tests {
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
-    use wiktionary_en_lua;
+    use wiktionary_en_lua::ExtensionHandler;
 
     fn language() -> Language {
         Language::EN
@@ -25,13 +25,22 @@ mod tests {
         DbClientMutex::from(db_client)
     }
 
+    #[fixture]
+    fn shared_extension_handler(
+        #[from(shared_db_client)] db_client: &DbClientMutex,
+    ) -> ExtensionHandler {
+        ExtensionHandler::init(db_client.clone()).unwrap()
+    }
+
     fn parse_line(line: &String) -> Result<DictionaryEntry> {
         line.parse()
             .with_context(|| format!("{}", "Couldn't parse line in DB file."))
     }
 
     #[rstest]
-    fn test_interception(#[from(shared_db_client)] db_client: &DbClientMutex) -> Result<()> {
+    fn test_interception(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
 
@@ -42,7 +51,6 @@ mod tests {
                 did_you_mean: None,
                 word: dictionary_entry.word,
             };
-            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
             extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
             for entry in dictionary_result.hits {
                 println!("{}", entry);
@@ -54,7 +62,7 @@ mod tests {
 
     #[rstest]
     fn test_format_dictionary_entries(
-        #[from(shared_db_client)] db_client: &DbClientMutex,
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -65,7 +73,6 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
         let formatted_entries = extension_handler.format_dictionary_entries(&results)?;
         if let Some(formatted_entries) = formatted_entries {
             for formatted_entry in formatted_entries {
@@ -78,9 +85,8 @@ mod tests {
 
     #[rstest]
     fn test_format_did_you_mean_banner(
-        #[from(shared_db_client)] db_client: &DbClientMutex,
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
         let formatted_banner =
             extension_handler.format_dictionary_did_you_mean_banner(&DidYouMean {
                 searched_for: "You searched for".to_string(),
@@ -103,9 +109,9 @@ mod tests {
     #[rstest]
     fn test_format_history_entries(
         #[from(shared_db_client)] db_client: &DbClientMutex,
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let history_entries = lock(db_client)?.find_all_in_history()?;
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client.clone())?;
+        let history_entries = lock(&db_client)?.find_all_in_history()?;
         let formatted_entries = extension_handler.format_history_entries(&history_entries)?;
 
         if let Some(formatted_entries) = formatted_entries {
