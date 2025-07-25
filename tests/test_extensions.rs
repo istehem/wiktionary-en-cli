@@ -111,7 +111,7 @@ mod tests {
         #[from(shared_db_client)] db_client: &DbClientMutex,
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let history_entries = lock(&db_client)?.find_all_in_history()?;
+        let history_entries = lock(db_client)?.find_all_in_history()?;
         let formatted_entries = extension_handler.format_history_entries(&history_entries)?;
 
         if let Some(formatted_entries) = formatted_entries {
