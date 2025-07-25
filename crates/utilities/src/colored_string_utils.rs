@@ -19,7 +19,10 @@ pub trait JoinWrap {
         Self: Sized;
 }
 
-impl<T: Display + From<String>> Join for T {
+impl<T> Join for T
+where
+    T: Display + From<String>,
+{
     fn join(&self, list: Vec<T>) -> T {
         let mut res: T = T::from(String::new());
         let len: usize = list.len();
