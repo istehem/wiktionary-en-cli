@@ -13,7 +13,7 @@ mod tests {
     use utilities::language::Language;
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 
-    fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
+    fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {
         line.parse()
             .with_context(|| format!("Couldn't parse line {} in DB file.", i))
     }
@@ -256,7 +256,7 @@ mod tests {
 
     fn find_first_elem_in_array_by(value: &Value, field: &str) -> Option<Value> {
         if let Some(array) = find_array_value_by(value, field) {
-            return array.get(0).cloned();
+            return array.first().cloned();
         }
         None
     }

@@ -32,9 +32,9 @@ mod tests {
         ExtensionHandler::init(db_client.clone()).unwrap()
     }
 
-    fn parse_line(line: &String) -> Result<DictionaryEntry> {
+    fn parse_line(line: &str) -> Result<DictionaryEntry> {
         line.parse()
-            .with_context(|| format!("{}", "Couldn't parse line in DB file."))
+            .with_context(|| "Couldn't parse line in DB file.".to_string())
     }
 
     #[rstest]

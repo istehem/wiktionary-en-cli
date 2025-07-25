@@ -16,7 +16,7 @@ mod tests {
         let serialized = anyhow_serde::to_string(&language)?;
         info!("serializes as: {}", serialized);
 
-        return Ok(());
+        Ok(())
     }
 
     #[traced_test]
@@ -30,7 +30,8 @@ mod tests {
         };
         let serialized = anyhow_serde::to_string(&history_entry)?;
         info!("serializes as: {}", serialized);
-        return Ok(());
+
+        Ok(())
     }
 
     #[traced_test]
@@ -42,7 +43,7 @@ mod tests {
             .expect("truncating nanoseconds to zero should always be valid");
         let history_entry = HistoryEntry {
             word: term.to_string(),
-            now_seen_at: last_seen_at.clone(),
+            now_seen_at: last_seen_at,
             last_seen_at,
             count: 0,
         };

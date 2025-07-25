@@ -12,7 +12,7 @@ mod tests {
     use utilities::language::*;
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 
-    fn parse_line(line: &String, i: usize) -> Result<DictionaryEntry> {
+    fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {
         line.parse()
             .with_context(|| format!("Couldn't parse line {} in DB file.", i))
     }
@@ -33,7 +33,7 @@ mod tests {
                 }
                 _ => bail!("couldn't read line {}", i),
             }
-            count = count + 1;
+            count += 1;
         }
         info!("there are {} total entries in the db file", count);
         info!(
