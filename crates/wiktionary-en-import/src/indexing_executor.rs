@@ -25,5 +25,5 @@ pub fn execute_with_progress_bar_and_message<X: std::fmt::Display>(
     }
     progress_bar.set_message(EMPTY_STRING);
     progress_bar.finish();
-    return Ok(errors);
+    Ok(errors)
 }

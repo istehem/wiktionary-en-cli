@@ -66,7 +66,7 @@ fn search_for_alternative_term(
 ) -> Result<Option<DictionaryResult>> {
     if let Some(term) = &query_params.search_term {
         let did_you_mean =
-            wiktionary_en_identifier_index::did_you_mean(&query_params.language, &term)?;
+            wiktionary_en_identifier_index::did_you_mean(&query_params.language, term)?;
         if let Some(did_you_mean) = did_you_mean {
             let hits = client.find_by_word(&did_you_mean)?;
             if !hits.is_empty() {
@@ -99,7 +99,7 @@ fn search_for_term(
         }),
         [] => {
             #[cfg(feature = "sonic")]
-            if let Some(result) = search_for_alternative_term(&client, query_params)? {
+            if let Some(result) = search_for_alternative_term(client, query_params)? {
                 return Ok(result);
             }
             exhaustive_search::search(
