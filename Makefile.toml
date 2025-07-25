@@ -91,3 +91,10 @@ command = "cargo"
 args = [
 	"test", "-p", "tests", "--test", "test-serde",  "--", "--nocapture"
 ]
+
+[tasks.test-utils]
+workspace = false
+command = "cargo"
+args = [
+	"test", "-p", "tests", "--test", "test-utilities",  "--", "--nocapture"
+]

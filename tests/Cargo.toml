@@ -36,3 +36,7 @@ path = "test_data_fields.rs"
 [[test]]
 name = "test-serde"
 path = "test_serde.rs"
+
+[[test]]
+name = "test-utilities"
+path = "test_utilities.rs"
