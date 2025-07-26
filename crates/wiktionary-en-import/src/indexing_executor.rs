@@ -5,9 +5,12 @@ use streaming_iterator::StreamingIterator;
 const PROGRESS_BAR_TEMPLATE: &str = "{spinner} {elapsed}{msg}";
 const EMPTY_STRING: &str = "";
 
-pub fn execute_with_progress_bar_and_message<X: std::fmt::Display>(
+pub fn execute_with_progress_bar_and_message<X>(
     mut iterator: impl StreamingIterator<Item = Result<Option<X>>>,
-) -> Result<Vec<String>> {
+) -> Result<Vec<String>>
+where
+    X: std::fmt::Display,
+{
     let mut errors: Vec<String> = Vec::new();
     let progress_bar = ProgressBar::no_length()
         .with_style(ProgressStyle::default_spinner().template(PROGRESS_BAR_TEMPLATE)?);
