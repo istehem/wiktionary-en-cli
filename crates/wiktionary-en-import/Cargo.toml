@@ -12,7 +12,7 @@ wiktionary-en-download = { path = "../wiktionary-en-download" }
 wiktionary-en-lua = { path = "../wiktionary-en-lua" }
 clap = { workspace = true }
 anyhow = {workspace = true} 
-indicatif = "0.17.11"
+indicatif = { workspace = true }
 streaming-iterator = { version = "0.1.9" }
 
 
