@@ -32,10 +32,7 @@ impl Language {
         [EN, DE, FR, ES, SV].iter().copied()
     }
     pub fn as_strings() -> Vec<String> {
-        Language::iterator().map(|lang| lang.value()).collect()
-    }
-    pub fn from_str_or_default(language: &str) -> Language {
-        language.parse().unwrap_or_default()
+        Language::iterator().map(|lang| lang.to_string()).collect()
     }
 }
 

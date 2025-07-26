@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use rstest::*;
-    use utilities::colored_string_utils::Join;
+    use utilities::colored_string_utils::{format_integer, Join};
 
     #[rstest]
     fn test_join_strings() -> () {
@@ -15,5 +15,15 @@ mod tests {
         let vec: Vec<String> = [1].iter().map(|&num| num.to_string()).collect();
         let joined = String::from(",").join(vec);
         assert_eq!(joined, "1");
+    }
+
+    #[rstest]
+    fn test_format_zero() -> () {
+        assert_eq!(format_integer(0).to_ascii_lowercase(), "0");
+    }
+
+    #[rstest]
+    fn test_format_million() -> () {
+        assert_eq!(format_integer(1000000).to_ascii_lowercase(), "1,000,000");
     }
 }
