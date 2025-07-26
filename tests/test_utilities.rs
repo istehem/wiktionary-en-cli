@@ -26,4 +26,9 @@ mod tests {
     fn test_format_million() -> () {
         assert_eq!(format_integer(1000000).to_ascii_lowercase(), "1,000,000");
     }
+
+    #[rstest]
+    fn test_format_ten_thousand() -> () {
+        assert_eq!(format_integer(10000).to_ascii_lowercase(), "10,000");
+    }
 }
