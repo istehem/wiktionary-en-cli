@@ -7,6 +7,6 @@ edition = "2021"
 utilities = { path = "../utilities" }
 wiktionary-en-entities = { path = "../wiktionary-en-entities" }
 anyhow = {workspace = true} 
-mlua = { version = "0.10", features = ["lua54", "vendored"] }
+mlua = { workspace = true }
 colored = "3.0.0"
 wiktionary-en-db = { path = "../wiktionary-en-db" }
