@@ -257,7 +257,7 @@ local function format_entry(entry)
   if formatted_translations then
     table.insert(content, formatted_translations)
   end
-  local horizontal_line = api.horizontal_line()
+  local horizontal_line = api.horizontal_line(constants.max_line_width)
   return string.format(
     [[
 %s

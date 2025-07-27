@@ -64,6 +64,10 @@ pub fn format_integer(number: usize) -> ColoredString {
         .yellow()
 }
 
+pub fn horizontal_line_with_length(length: usize) -> ColoredString {
+    " ".repeat(length).strikethrough()
+}
+
 pub fn horizontal_line() -> ColoredString {
-    " ".repeat(LINE_WRAP_AT).strikethrough()
+    horizontal_line_with_length(LINE_WRAP_AT)
 }

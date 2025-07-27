@@ -267,7 +267,12 @@ fn apply_style(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn horizontal_line(lua: &Lua) -> mlua::Result<Function> {
-    lua.create_function(|_, ()| Ok(colored_string_utils::horizontal_line().to_string()))
+    lua.create_function(|_, size: Option<usize>| {
+        if let Some(size) = size {
+            return Ok(colored_string_utils::horizontal_line_with_length(size).to_string());
+        }
+        Ok(colored_string_utils::horizontal_line().to_string())
+    })
 }
 
 fn wrap_text_at(lua: &Lua) -> mlua::Result<Function> {
