@@ -63,6 +63,11 @@ args = [
 	"clippy", "--all-targets", "--no-deps", "--all-features"
 ]
 
+[tasks.outdated]
+workspace = false
+command = "cargo"
+args = [ "upgrade", "--locked", "--dry-run" ]
+
 [tasks.test]
 env = { "DICTIONARY_POLD_DB_DIR" = "${CARGO_MAKE_WORKING_DIRECTORY}/wiktionary-en-test-polo-db/" }
 workspace = false
