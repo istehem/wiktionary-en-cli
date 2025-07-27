@@ -1,3 +1,4 @@
+local constants = require("constants")
 local utils = require("utils")
 local api = require("wiktionary_api")
 local db_client = require("wiktionary_db_client")
@@ -22,7 +23,7 @@ local function format_etymology(etymology_text)
 	end
 	local list = {}
 	table.insert(list, api.apply_style("Etymology:", "bold"))
-	table.insert(list, api.wrap_text_at(etymology_text, 80))
+	table.insert(list, api.wrap_text_at(etymology_text, constants.max_line_width))
 	return table.concat(list, "\n")
 end
 
@@ -115,7 +116,8 @@ local function examples_to_strings(examples)
 	result = {}
 	for i, v in ipairs(examples) do
 		if v.text then
-			local formatted = string.format("%s. %s", style_italic_dimmed(i), api.wrap_text_at(v.text, 80 - 1))
+			local formatted =
+				string.format("%s. %s", style_italic_dimmed(i), api.wrap_text_at(v.text, constants.max_line_width - 1))
 			table.insert(result, api.indent(formatted))
 		end
 	end
@@ -131,7 +133,7 @@ local function format_sense(sense, i)
 	local result = {}
 	local title = string.format("%s. %s", api.apply_style(i, "bold"), api.apply_style(format_tags(sense.tags), "bold"))
 	table.insert(result, title)
-	table.insert(result, api.wrap_text_at(format_glosses(sense.glosses), 80))
+	table.insert(result, api.wrap_text_at(format_glosses(sense.glosses), constants.max_line_width))
 	if not utils.is_empty(sense.examples) then
 		table.insert(result, format_examples(sense.examples))
 	end
@@ -210,7 +212,7 @@ local function format_history_entry(history_entry)
 	local colored_word = api.apply_color(word, "cyan")
 	local left_width = #word
 	local right = string.format("Last seen: %s count: %s", last_seen, history_entry.count)
-	total_width = 80
+	total_width = constants.max_line_width
 
 	local padding_length = math.max(total_width / 2 - left_width, 1)
 	return colored_word .. string.rep(" ", padding_length) .. right
@@ -224,7 +226,7 @@ local function format_header(word, pos)
 	local left = format_left_side_header(colored_word, pos)
 	local left_width = #format_left_side_header(word, pos)
 	local right = string.format("Last seen: %s (%s)", last_seen, history.count)
-	total_width = 80
+	total_width = constants.max_line_width
 
 	local padding_length = math.max(total_width - left_width - #right, 1)
 	return left .. string.rep(" ", padding_length) .. right
