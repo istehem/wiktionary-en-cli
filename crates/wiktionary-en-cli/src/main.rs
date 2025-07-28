@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::Parser;
 use std::path::PathBuf;
 
@@ -49,6 +49,9 @@ struct Cli {
     /// Search history
     #[clap(long)]
     history: bool,
+    /// Run extension
+    #[clap(short, long)]
+    extension: Option<String>,
 }
 
 struct QueryParameters {
@@ -171,7 +174,12 @@ fn main() -> Result<()> {
         let db_client_mutex = DbClientMutex::from(db_client.clone());
         let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
 
-        if args.history {
+        if let Some(extension) = args.extension {
+            match extension_handler.call_extension(&extension)? {
+                Some(result) => result,
+                None => bail!("extension '{}' not found", extension),
+            }
+        } else if args.history {
             let result = HistoryResult {
                 history_entries: db_client.find_all_in_history()?,
             };

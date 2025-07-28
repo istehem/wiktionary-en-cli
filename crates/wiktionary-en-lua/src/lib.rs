@@ -121,6 +121,13 @@ impl ExtensionHandler {
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
+
+    pub fn call_extension(&self, extension_name: &str) -> Result<Option<String>> {
+        match call_extension_lua_function(&self.lua, extension_name, &mlua::Value::Nil) {
+            Ok(result) => Ok(result),
+            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
+        }
+    }
 }
 
 fn init_lua(lua: &Lua) -> mlua::Result<()> {

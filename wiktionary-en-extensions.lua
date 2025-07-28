@@ -10,3 +10,7 @@ extensions.format_did_you_mean_banner = formatter.format_did_you_mean_banner
 extensions.format_history_entry = formatter.format_history_entry
 -- intercept Wiktionary results
 extensions.intercept = interceptor.intercept
+-- dummy extension
+extensions.dummy = function()
+  return "Hello World!"
+end
