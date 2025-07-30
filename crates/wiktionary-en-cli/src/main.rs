@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
 
@@ -175,10 +175,7 @@ fn main() -> Result<()> {
         let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
 
         if let Some(extension) = args.extension {
-            match extension_handler.call_extension(&extension)? {
-                Some(result) => result,
-                None => bail!("extension '{}' not found", extension),
-            }
+            extension_handler.call_extension(&extension)?.result
         } else if args.history {
             let result = HistoryResult {
                 history_entries: db_client.find_all_in_history()?,

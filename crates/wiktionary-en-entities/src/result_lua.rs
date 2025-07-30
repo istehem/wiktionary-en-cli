@@ -2,7 +2,7 @@ use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
 
-use crate::result::DictionaryResult;
+use crate::result::{DictionaryResult, ExtensionResult};
 
 impl IntoLua for DictionaryResult {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
@@ -24,7 +24,20 @@ impl FromLua for DictionaryResult {
             });
         }
         Err(mlua::Error::RuntimeError(
-            "no related word found in lua".to_string(),
+            "no result could be interpreted".to_string(),
+        ))
+    }
+}
+
+impl FromLua for ExtensionResult {
+    fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
+        if let Some(table) = value.as_table() {
+            return Ok(Self {
+                result: table.get("result")?,
+            });
+        }
+        Err(mlua::Error::RuntimeError(
+            "no result could be interpreted".to_string(),
         ))
     }
 }

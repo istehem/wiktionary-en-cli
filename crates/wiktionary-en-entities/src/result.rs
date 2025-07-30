@@ -8,6 +8,10 @@ use mlua::Lua;
 use mlua::Value;
 use std::fmt;
 
+pub struct ExtensionResult {
+    pub result: String,
+}
+
 pub struct HistoryResult {
     pub history_entries: Vec<HistoryEntry>,
 }

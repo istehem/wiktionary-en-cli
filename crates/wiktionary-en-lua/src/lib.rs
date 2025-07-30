@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
 use mlua::{FromLua, Function, Lua};
 use utilities::colored_string_utils;
@@ -8,7 +8,7 @@ use wiktionary_en_db::client::DbClientMutex;
 use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::history_entry::HistoryEntry;
-use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
+use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, ExtensionResult};
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";
@@ -122,9 +122,12 @@ impl ExtensionHandler {
         }
     }
 
-    pub fn call_extension(&self, extension_name: &str) -> Result<Option<String>> {
+    pub fn call_extension(&self, extension_name: &str) -> Result<ExtensionResult> {
         match call_extension_lua_function(&self.lua, extension_name, &mlua::Value::Nil) {
-            Ok(result) => Ok(result),
+            Ok(result) => match result {
+                Some(result) => Ok(result),
+                None => bail!("extension '{}' not found", extension_name),
+            },
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
