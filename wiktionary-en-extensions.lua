@@ -12,5 +12,5 @@ extensions.format_history_entry = formatter.format_history_entry
 extensions.intercept = interceptor.intercept
 -- dummy extension
 extensions.dummy = function()
-  return { result = "Hello World!" }
+  return { resultn = "Hello World!" }
 end

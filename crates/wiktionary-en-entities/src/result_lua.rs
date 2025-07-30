@@ -1,6 +1,7 @@
 use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
+use std::any::type_name;
 
 use crate::result::{DictionaryResult, ExtensionResult};
 
@@ -36,8 +37,10 @@ impl FromLua for ExtensionResult {
                 result: table.get("result")?,
             });
         }
-        Err(mlua::Error::RuntimeError(
-            "no result could be interpreted".to_string(),
-        ))
+        Err(mlua::Error::FromLuaConversionError {
+            from: "table",
+            to: type_name::<Self>().to_string(),
+            message: None,
+        })
     }
 }
