@@ -18,8 +18,12 @@ local function format_history_entry(history_entry)
 end
 
 history.format = function()
-  entry = db_client:find_in_history("test")
-  return { result = format_history_entry(entry) }
+  local formatted_entries = {}
+  for _, entry in ipairs(db_client:find_all_in_history()) do
+    table.insert(formatted_entries, format_history_entry(entry))
+  end
+
+  return { result = table.concat(formatted_entries, "\n") }
 end
 
 return history

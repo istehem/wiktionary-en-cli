@@ -26,5 +26,13 @@ impl mlua::UserData for DbClientMutex {
                 Err(err) => Err(mlua::Error::RuntimeError(err.to_string())),
             }
         });
+
+        methods.add_method("find_all_in_history", |_, this, _: ()| {
+            let db_client = lock(this)?;
+            match db_client.find_all_in_history() {
+                Ok(entry) => Ok(entry),
+                Err(err) => Err(mlua::Error::RuntimeError(err.to_string())),
+            }
+        });
     }
 }
