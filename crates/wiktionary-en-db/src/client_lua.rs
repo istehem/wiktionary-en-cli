@@ -64,15 +64,13 @@ fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
         }
         Bson::Document(doc) => {
             let nested = WiktionaryDocument::from(doc).into_lua(lua)?;
-            Ok(nested) // already a Value::Table
+            Ok(nested)
         }
         Bson::Null | Bson::Undefined => Ok(mlua::Value::Nil),
-        _ => {
-            Err(mlua::Error::FromLuaConversionError {
-                from: "unmatched bson type",
-                to: "table".to_string(),
-                message: None,
-            })
-        }
+        _ => Err(mlua::Error::FromLuaConversionError {
+            from: "unmatched bson type",
+            to: "table".to_string(),
+            message: None,
+        }),
     }
 }

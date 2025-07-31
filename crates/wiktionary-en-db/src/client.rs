@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use utilities::language::Language;
 
 use bson::document::Document;
+use bson::Bson;
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
@@ -61,6 +62,11 @@ impl DbClient {
             .collection::<HistoryEntry>(&history_collection!(&self.language))
     }
 
+    pub fn history_docs_collection(&self) -> Collection<Document> {
+        self.database
+            .collection::<Document>(&history_collection!(&self.language))
+    }
+
     pub fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
         find_by_word_in_collection(term, &self.collection())
     }
@@ -95,6 +101,23 @@ impl DbClient {
             result.push(entry?);
         }
         Ok(result)
+    }
+
+    pub fn find_all_in_history_as_doc(&self) -> Result<WiktionaryDocument> {
+        let collection = self.history_docs_collection();
+        let search_result = collection.find(doc! {}).run()?;
+
+        let mut collector: Vec<Document> = Vec::new();
+        for entry in search_result {
+            collector.push(entry?);
+        }
+
+        let mut result = Document::new();
+        result.insert(
+            "find_result",
+            Bson::Array(collector.into_iter().map(Bson::Document).collect()),
+        );
+        Ok(WiktionaryDocument::from(result))
     }
 
     pub fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
