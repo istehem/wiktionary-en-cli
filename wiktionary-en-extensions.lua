@@ -7,9 +7,7 @@ extensions = {}
 extensions.format_entry = formatter.format_entry
 -- format Wiktionary did-you-mean banner
 extensions.format_did_you_mean_banner = formatter.format_did_you_mean_banner
--- format an history entry
-extensions.format_history_entry = formatter.format_history_entry
 -- intercept Wiktionary results
 extensions.intercept = interceptor.intercept
--- dummy extension
+-- show history
 extensions.history = history.format

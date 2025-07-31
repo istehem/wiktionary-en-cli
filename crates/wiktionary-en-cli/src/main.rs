@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use utilities::file_utils::get_db_path;
 use utilities::language::Language;
 
-use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, HistoryResult};
+use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 
 use wiktionary_en_db::client::{DbClient, DbClientMutex};
 
@@ -46,9 +46,6 @@ struct Cli {
     /// Query word
     #[clap(short, long)]
     query: bool,
-    /// Search history
-    #[clap(long)]
-    history: bool,
     /// Run extension
     #[clap(short, long)]
     extension: Option<String>,
@@ -176,15 +173,6 @@ fn main() -> Result<()> {
 
         if let Some(extension) = args.extension {
             extension_handler.call_extension(&extension)?.result
-        } else if args.history {
-            let result = HistoryResult {
-                history_entries: db_client.find_all_in_history()?,
-            };
-            let result_wrapper = WiktionaryResultWrapper {
-                result: result_wrapper::WiktionaryResult::HistoryResult(result),
-                extension_handler,
-            };
-            result_wrapper.fmt()?
         } else {
             let mut result = query_dictionary(
                 &db_client,

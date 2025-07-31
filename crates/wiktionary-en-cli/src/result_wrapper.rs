@@ -1,10 +1,9 @@
 use anyhow::{bail, Result};
 
-use wiktionary_en_entities::result::{DictionaryResult, HistoryResult};
+use wiktionary_en_entities::result::DictionaryResult;
 use wiktionary_en_lua::ExtensionHandler;
 
 pub enum WiktionaryResult {
-    HistoryResult(HistoryResult),
     DictionaryResult(DictionaryResult),
 }
 
@@ -16,7 +15,6 @@ pub struct WiktionaryResultWrapper {
 impl WiktionaryResultWrapper {
     pub fn intercept(&mut self) -> Result<()> {
         match &mut self.result {
-            WiktionaryResult::HistoryResult(_) => bail!("nothing to intercept"),
             WiktionaryResult::DictionaryResult(result) => {
                 self.extension_handler.intercept_dictionary_result(result)
             }
@@ -25,9 +23,6 @@ impl WiktionaryResultWrapper {
 
     pub fn fmt(&self) -> Result<String> {
         match &self.result {
-            WiktionaryResult::HistoryResult(result) => {
-                fmt_history_result(&self.extension_handler, result)
-            }
             WiktionaryResult::DictionaryResult(result) => {
                 fmt_dictionary_result(&self.extension_handler, result)
             }
@@ -73,21 +68,3 @@ fn fmt_dictionary_result(
     }
 }
 
-fn fmt_history_result(
-    extension_handler: &ExtensionHandler,
-    history_result: &HistoryResult,
-) -> Result<String> {
-    match extension_handler.format_history_entries(&history_result.history_entries) {
-        Ok(Some(formatted_entries)) => Ok(formatted_entries.join("\n")),
-        Ok(None) => {
-            let mut formatted_entries = Vec::new();
-            for entry in &history_result.history_entries {
-                formatted_entries.push(format!("{}", entry));
-            }
-            Ok(formatted_entries.join("\n"))
-        }
-        Err(err) => {
-            bail!(err)
-        }
-    }
-}
