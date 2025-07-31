@@ -2629,6 +2629,7 @@ name = "wiktionary-en-db"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bson",
  "chrono",
  "mlua",
  "polodb_core",

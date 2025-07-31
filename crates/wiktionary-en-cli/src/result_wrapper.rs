@@ -67,4 +67,3 @@ fn fmt_dictionary_result(
         }
     }
 }
-

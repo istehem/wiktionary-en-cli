@@ -3,6 +3,7 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use utilities::language::Language;
 
+use bson::document::Document;
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
@@ -31,6 +32,16 @@ impl DbClientMutex {
 
     pub fn init(language: Language) -> Result<Self> {
         Ok(Self::from(DbClient::init(language)?))
+    }
+}
+
+pub struct WiktionaryDocument {
+    pub document: Document,
+}
+
+impl WiktionaryDocument {
+    pub fn from(document: Document) -> Self {
+        Self { document }
     }
 }
 
