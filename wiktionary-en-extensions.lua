@@ -1,5 +1,6 @@
 local formatter = require("formatter")
 local interceptor = require("interceptor")
+local history = require("history")
 
 extensions = {}
 -- format Wiktionary results
@@ -11,6 +12,4 @@ extensions.format_history_entry = formatter.format_history_entry
 -- intercept Wiktionary results
 extensions.intercept = interceptor.intercept
 -- dummy extension
-extensions.dummy = function()
-  return { result = "Hello World!" }
-end
+extensions.history = history.format
