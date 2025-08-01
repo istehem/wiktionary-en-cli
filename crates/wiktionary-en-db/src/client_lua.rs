@@ -1,6 +1,7 @@
 use bson::Bson;
 use mlua::{Error, IntoLua, Lua, Result, UserData, UserDataMethods};
 use std::sync::MutexGuard;
+use std::any::type_name;
 
 use crate::client::{DbClient, DbClientMutex, WiktionaryDocument};
 
@@ -35,6 +36,14 @@ impl UserData for DbClientMutex {
                 Err(err) => Err(Error::RuntimeError(err.to_string())),
             }
         });
+
+        methods.add_method("find_all_in_history_as_doc", |_, this, _: ()| {
+            let db_client = lock(this)?;
+            match db_client.find_all_in_history_as_doc() {
+                Ok(entry) => Ok(entry),
+                Err(err) => Err(Error::RuntimeError(err.to_string())),
+            }
+        });
     }
 }
 
@@ -55,6 +64,7 @@ fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
         Bson::Int64(i) => Ok(mlua::Value::Integer(i)),
         Bson::Double(f) => Ok(mlua::Value::Number(f)),
         Bson::Boolean(b) => Ok(mlua::Value::Boolean(b)),
+        Bson::ObjectId(id) => Ok(mlua::Value::String(lua.create_string(&id.to_hex())?)),
         Bson::Array(arr) => {
             let tbl = lua.create_table()?;
             for (i, item) in arr.into_iter().enumerate() {
@@ -68,9 +78,12 @@ fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
         }
         Bson::Null | Bson::Undefined => Ok(mlua::Value::Nil),
         _ => Err(mlua::Error::FromLuaConversionError {
-            from: "unmatched bson type",
-            to: "table".to_string(),
-            message: None,
+            from: "bson",
+            to: type_name::<mlua::Value>().to_string(),
+            message: Some(format!(
+                "conversion for {} is not implemented yet",
+                bson.clone().to_string()
+            )),
         }),
     }
 }
