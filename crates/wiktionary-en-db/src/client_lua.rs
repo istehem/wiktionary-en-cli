@@ -1,5 +1,7 @@
 use bson::Bson;
-use mlua::{Error, IntoLua, Lua, Result, UserData, UserDataMethods};
+use bson::Document;
+use mlua::{Error, FromLua, IntoLua, Lua, Result, Table, UserData, UserDataMethods, Value};
+use std::any::type_name;
 use std::sync::MutexGuard;
 
 use crate::client::{DbClient, DbClientMutex, ExtensionDocument};
@@ -46,6 +48,80 @@ impl IntoLua for ExtensionDocument {
         }
         Ok(mlua::Value::Table(table))
     }
+}
+
+impl FromLua for ExtensionDocument {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(lua_document) = value.as_table() {
+            let mut document = Document::new();
+            for pair in lua_document.pairs::<mlua::Value, mlua::Value>() {
+                let (k, v) = pair?;
+                let key = match k {
+                    Value::String(s) => s.to_str()?.to_owned(),
+                    _ => return Err(mlua::Error::runtime("bson document keys must be strings")),
+                };
+                let bson_value = lua_value_to_bson(v)?;
+                document.insert(key, bson_value);
+            }
+            return Ok(ExtensionDocument::from(document));
+        }
+        Err(mlua::Error::FromLuaConversionError {
+            from: "value",
+            to: type_name::<Self>().to_string(),
+            message: None,
+        })
+    }
+}
+
+fn lua_value_to_bson(value: Value) -> mlua::Result<Bson> {
+    match value {
+        Value::Nil => Ok(bson::Bson::Null),
+        Value::Boolean(b) => Ok(bson::Bson::Boolean(b)),
+        Value::Integer(i) => {
+            Ok(bson::Bson::Int32(i.try_into().map_err(|_| {
+                mlua::Error::runtime("integer overflow for i32")
+            })?))
+        }
+        Value::Number(n) => Ok(bson::Bson::Double(n)),
+        Value::String(s) => Ok(bson::Bson::String(s.to_str()?.to_owned())),
+        Value::Table(table) => {
+            if is_array(&table)? {
+                let mut vec = Vec::new();
+                for value in table.sequence_values::<Value>() {
+                    vec.push(lua_value_to_bson(value?)?);
+                }
+                Ok(bson::Bson::Array(vec))
+            } else {
+                let mut doc = Document::new();
+                for pair in table.pairs::<mlua::Value, mlua::Value>() {
+                    let (k, v) = pair?;
+                    let key = match k {
+                        Value::String(s) => s.to_str()?.to_owned(),
+                        _ => {
+                            return Err(mlua::Error::runtime("bson document keys must be strings"))
+                        }
+                    };
+                    doc.insert(key, lua_value_to_bson(v)?);
+                }
+                Ok(bson::Bson::Document(doc))
+            }
+        }
+        _ => Err(mlua::Error::FromLuaConversionError {
+            from: "value",
+            to: type_name::<Bson>().to_string(),
+            message: Some("conversion for this bson type isn't implemented yet".to_string()),
+        }),
+    }
+}
+
+fn is_array(table: &Table) -> mlua::Result<bool> {
+    let len = table.len()?;
+    for i in 1..=len {
+        if !table.contains_key(i)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
