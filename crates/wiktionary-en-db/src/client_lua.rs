@@ -3,7 +3,7 @@ use mlua::{Error, IntoLua, Lua, Result, UserData, UserDataMethods};
 use std::any::type_name;
 use std::sync::MutexGuard;
 
-use crate::client::{DbClient, DbClientMutex, WiktionaryDocument};
+use crate::client::{DbClient, DbClientMutex, ExtensionDocument};
 
 fn lock(db_client: &DbClientMutex) -> Result<MutexGuard<'_, DbClient>> {
     match db_client.client.lock() {
@@ -39,7 +39,7 @@ impl UserData for DbClientMutex {
     }
 }
 
-impl IntoLua for WiktionaryDocument {
+impl IntoLua for ExtensionDocument {
     fn into_lua(self, lua: &Lua) -> mlua::Result<mlua::Value> {
         let table = lua.create_table()?;
         for (k, v) in self.document {
@@ -65,7 +65,7 @@ fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
             Ok(mlua::Value::Table(tbl))
         }
         Bson::Document(doc) => {
-            let nested = WiktionaryDocument::from(doc).into_lua(lua)?;
+            let nested = ExtensionDocument::from(doc).into_lua(lua)?;
             Ok(nested)
         }
         Bson::Null | Bson::Undefined => Ok(mlua::Value::Nil),

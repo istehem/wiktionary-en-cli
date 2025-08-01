@@ -36,11 +36,11 @@ impl DbClientMutex {
     }
 }
 
-pub struct WiktionaryDocument {
+pub struct ExtensionDocument {
     pub document: Document,
 }
 
-impl WiktionaryDocument {
+impl ExtensionDocument {
     pub fn from(document: Document) -> Self {
         Self { document }
     }
@@ -92,7 +92,7 @@ impl DbClient {
         Ok(())
     }
 
-    pub fn find_all_in_history_as_doc(&self) -> Result<WiktionaryDocument> {
+    pub fn find_all_in_history_as_doc(&self) -> Result<ExtensionDocument> {
         let collection = self.history_docs_collection();
         let search_result = collection.find(doc! {}).run()?;
 
@@ -106,7 +106,7 @@ impl DbClient {
             "find_result",
             Bson::Array(collector.into_iter().map(Bson::Document).collect()),
         );
-        Ok(WiktionaryDocument::from(result))
+        Ok(ExtensionDocument::from(result))
     }
 
     fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
@@ -115,11 +115,11 @@ impl DbClient {
         Ok(result)
     }
 
-    pub fn find_in_history_as_doc_by_word(&self, term: &str) -> Result<Option<WiktionaryDocument>> {
+    pub fn find_in_history_as_doc_by_word(&self, term: &str) -> Result<Option<ExtensionDocument>> {
         let collection = self.history_docs_collection();
         let result = collection.find_one(doc! { "word" : term})?;
         if let Some(document) = result {
-            return Ok(Some(WiktionaryDocument::from(document)));
+            return Ok(Some(ExtensionDocument::from(document)));
         }
         Ok(None)
     }
