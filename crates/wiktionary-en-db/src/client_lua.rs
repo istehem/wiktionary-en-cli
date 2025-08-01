@@ -23,13 +23,13 @@ impl UserData for DbClientMutex {
         });
         methods.add_method("find_in_history", |_, this, word: String| {
             let db_client = lock(this)?;
-            match db_client.find_in_history_by_word(&word) {
+            match db_client.find_in_history_as_doc_by_word(&word) {
                 Ok(entry) => Ok(entry),
                 Err(err) => Err(Error::RuntimeError(err.to_string())),
             }
         });
 
-        methods.add_method("find_all_in_history_as_doc", |_, this, _: ()| {
+        methods.add_method("find_all_in_history", |_, this, _: ()| {
             let db_client = lock(this)?;
             match db_client.find_all_in_history_as_doc() {
                 Ok(entry) => Ok(entry),

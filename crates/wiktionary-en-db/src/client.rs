@@ -109,10 +109,19 @@ impl DbClient {
         Ok(WiktionaryDocument::from(result))
     }
 
-    pub fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
+    fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
         let collection = self.history_collection();
         let result = collection.find_one(doc! { "word" : term})?;
         Ok(result)
+    }
+
+    pub fn find_in_history_as_doc_by_word(&self, term: &str) -> Result<Option<WiktionaryDocument>> {
+        let collection = self.history_docs_collection();
+        let result = collection.find_one(doc! { "word" : term})?;
+        if let Some(document) = result {
+            return Ok(Some(WiktionaryDocument::from(document)));
+        }
+        Ok(None)
     }
 
     pub fn delete_history(&self) -> Result<u64> {
