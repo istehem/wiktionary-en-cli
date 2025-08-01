@@ -29,14 +29,6 @@ impl UserData for DbClientMutex {
             }
         });
 
-        methods.add_method("find_all_in_history", |_, this, _: ()| {
-            let db_client = lock(this)?;
-            match db_client.find_all_in_history() {
-                Ok(entry) => Ok(entry),
-                Err(err) => Err(Error::RuntimeError(err.to_string())),
-            }
-        });
-
         methods.add_method("find_all_in_history_as_doc", |_, this, _: ()| {
             let db_client = lock(this)?;
             match db_client.find_all_in_history_as_doc() {
