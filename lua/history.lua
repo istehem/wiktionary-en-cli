@@ -19,9 +19,9 @@ end
 
 history.format = function()
   local formatted_entries = {}
-  local document = db_client:find_all_in_history()
+  local documents = db_client:find_in_collection({})
 
-  for _, entry in ipairs(document.find_result) do
+  for _, entry in ipairs(documents) do
     table.insert(formatted_entries, format_history_entry(entry))
   end
 
