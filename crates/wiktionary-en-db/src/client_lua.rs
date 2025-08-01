@@ -42,6 +42,26 @@ impl UserData for DbClientMutex {
                 }
             },
         );
+        methods.add_method(
+            "insert_one_in_collection",
+            |lua, this, (extension_name, document): (String, ExtensionDocument)| {
+                let db_client = lock(this)?;
+                match db_client.insert_one_into_extension_collection(&extension_name, document) {
+                    Ok(result) => bson_to_lua_value(result, lua),
+                    Err(err) => Err(Error::RuntimeError(err.to_string())),
+                }
+            },
+        );
+        methods.add_method(
+            "update_one_in_collection",
+            |_, this, (extension_name, query, update): (String, ExtensionDocument, ExtensionDocument)| {
+                let db_client = lock(this)?;
+                match db_client.update_one_in_extension_collection(&extension_name, query, update) {
+                    Ok(update_count) => Ok(update_count),
+                    Err(err) => Err(Error::RuntimeError(err.to_string())),
+                }
+            },
+        );
     }
 }
 
