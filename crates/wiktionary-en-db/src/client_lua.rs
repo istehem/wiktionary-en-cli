@@ -109,7 +109,7 @@ fn lua_value_to_bson(value: Value) -> mlua::Result<Bson> {
         _ => Err(mlua::Error::FromLuaConversionError {
             from: "value",
             to: type_name::<Bson>().to_string(),
-            message: Some("conversion for this bson type isn't implemented yet".to_string()),
+            message: None,
         }),
     }
 }
