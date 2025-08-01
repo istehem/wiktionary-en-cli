@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use utilities::language::Language;
 
 use bson::document::Document;
+use bson::Bson;
 use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
@@ -22,6 +23,12 @@ pub struct DbClient {
 #[derive(Clone)]
 pub struct DbClientMutex {
     pub client: Arc<Mutex<DbClient>>,
+}
+
+macro_rules! extension_collection {
+    ($language:expr, $extension_name:expr) => {
+        format!("extension_{}_{}", $language, $extension_name)
+    };
 }
 
 impl DbClientMutex {
@@ -61,6 +68,11 @@ impl DbClient {
             .collection::<HistoryEntry>(&history_collection!(&self.language))
     }
 
+    pub fn extension_collection(&self, extension_name: &str) -> Collection<Document> {
+        self.database
+            .collection::<Document>(&extension_collection!(&self.language, extension_name))
+    }
+
     pub fn history_docs_collection(&self) -> Collection<Document> {
         self.database
             .collection::<Document>(&history_collection!(&self.language))
@@ -89,6 +101,27 @@ impl DbClient {
             collection.insert_one(HistoryEntry::from(term.to_string()))?;
         }
         Ok(())
+    }
+
+    pub fn insert_one_into_extension_collection(
+        &self,
+        extension_name: &str,
+        document: ExtensionDocument,
+    ) -> Result<Bson> {
+        let collection = self.extension_collection(extension_name);
+        let result = collection.insert_one(document.document)?;
+        Ok(result.inserted_id)
+    }
+
+    pub fn update_one_in_extension_collection(
+        &self,
+        extension_name: &str,
+        query: ExtensionDocument,
+        update: ExtensionDocument,
+    ) -> Result<u64> {
+        let collection = self.extension_collection(extension_name);
+        let result = collection.update_one(query.document, update.document)?;
+        Ok(result.modified_count)
     }
 
     pub fn find_in_extension_collection(
