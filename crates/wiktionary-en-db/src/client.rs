@@ -104,19 +104,22 @@ impl DbClient {
         Ok(result)
     }
 
-    fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
-        let collection = self.history_collection();
-        let result = collection.find_one(doc! { "word" : term})?;
-        Ok(result)
-    }
-
-    pub fn find_in_history_as_doc_by_word(&self, term: &str) -> Result<Option<ExtensionDocument>> {
+    pub fn find_one_in_extension_collection(
+        &self,
+        document: ExtensionDocument,
+    ) -> Result<Option<ExtensionDocument>> {
         let collection = self.history_docs_collection();
-        let result = collection.find_one(doc! { "word" : term})?;
+        let result = collection.find_one(document.document)?;
         if let Some(document) = result {
             return Ok(Some(ExtensionDocument::from(document)));
         }
         Ok(None)
+    }
+
+    fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
+        let collection = self.history_collection();
+        let result = collection.find_one(doc! { "word" : term})?;
+        Ok(result)
     }
 
     pub fn delete_history(&self) -> Result<u64> {
@@ -137,6 +140,7 @@ impl DbClient {
             force,
         )
     }
+
     pub fn number_of_entries(&self) -> Result<u64> {
         number_of_entries_in_collection(&self.collection())
     }

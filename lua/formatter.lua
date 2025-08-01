@@ -188,7 +188,10 @@ local function format_related_words(related_words, category_title)
 end
 
 local function history(word)
-  local entry = db_client:find_in_history(word)
+  local query = {
+    word = word,
+  }
+  local entry = db_client:find_one_in_collection(query)
   if entry then
     return entry
   end
