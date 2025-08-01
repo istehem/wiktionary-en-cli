@@ -1,12 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use anyhow::{bail, Context, Result};
+    use anyhow::{Context, Result};
     use rstest::*;
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
-    use std::sync::MutexGuard;
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
@@ -99,27 +98,13 @@ mod tests {
         Ok(())
     }
 
-    fn lock(db_client: &DbClientMutex) -> Result<MutexGuard<'_, DbClient>> {
-        match db_client.client.lock() {
-            Ok(db_client) => Ok(db_client),
-            Err(err) => bail!(err.to_string()),
-        }
-    }
-
     #[rstest]
     fn test_format_history_entries(
-        #[from(shared_db_client)] db_client: &DbClientMutex,
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let history_entries = lock(db_client)?.find_all_in_history()?;
-        let formatted_entries = extension_handler.format_history_entries(&history_entries)?;
+        let extension_result = extension_handler.call_extension("history")?;
 
-        if let Some(formatted_entries) = formatted_entries {
-            for formatted_entry in formatted_entries {
-                println!("{}", formatted_entry);
-            }
-        }
-
+        println!("{}", extension_result.result);
         Ok(())
     }
 }

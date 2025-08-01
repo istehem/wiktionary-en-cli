@@ -7,7 +7,6 @@ use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
 use wiktionary_en_db::client::DbClientMutex;
 use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-use wiktionary_en_entities::history_entry::HistoryEntry;
 use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, ExtensionResult};
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
@@ -96,27 +95,6 @@ impl ExtensionHandler {
         did_you_mean: &DidYouMean,
     ) -> Result<Option<String>> {
         match format_did_you_mean_banner(&self.lua, did_you_mean) {
-            Ok(result) => Ok(result),
-            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
-        }
-    }
-
-    pub fn format_history_entries(
-        &self,
-        history_entries: &[HistoryEntry],
-    ) -> Result<Option<Vec<String>>> {
-        let mut formatted_entries = Vec::new();
-        for entry in history_entries {
-            if let Some(formatted_entry) = self.format_history_entry(entry)? {
-                formatted_entries.push(formatted_entry);
-            } else {
-                return Ok(None);
-            }
-        }
-        Ok(Some(formatted_entries))
-    }
-    fn format_history_entry(&self, history_entry: &HistoryEntry) -> Result<Option<String>> {
-        match format_history_entry(&self.lua, history_entry) {
             Ok(result) => Ok(result),
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
@@ -236,10 +214,6 @@ fn format_did_you_mean_banner(
     did_you_mean: &DidYouMean,
 ) -> mlua::Result<Option<String>> {
     call_extension_lua_function(lua, "format_did_you_mean_banner", did_you_mean)
-}
-
-fn format_history_entry(lua: &Lua, history_entry: &HistoryEntry) -> mlua::Result<Option<String>> {
-    call_extension_lua_function(lua, "format_history_entry", history_entry)
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {

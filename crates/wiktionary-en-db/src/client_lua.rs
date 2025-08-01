@@ -1,6 +1,5 @@
 use bson::Bson;
 use mlua::{Error, IntoLua, Lua, Result, UserData, UserDataMethods};
-use std::any::type_name;
 use std::sync::MutexGuard;
 
 use crate::client::{DbClient, DbClientMutex, ExtensionDocument};
@@ -69,13 +68,10 @@ fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
             Ok(nested)
         }
         Bson::Null | Bson::Undefined => Ok(mlua::Value::Nil),
-        _ => Err(mlua::Error::FromLuaConversionError {
-            from: "bson",
-            to: type_name::<mlua::Value>().to_string(),
-            message: Some(format!(
-                "conversion for {} is not implemented yet",
-                bson.clone()
-            )),
+        other => Err(mlua::Error::ToLuaConversionError {
+            from: other.to_string(),
+            to: "table",
+            message: Some("conversion for this bson type isn't implemented yet".to_string()),
         }),
     }
 }
