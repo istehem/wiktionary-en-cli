@@ -1,7 +1,7 @@
 use bson::Bson;
 use mlua::{Error, IntoLua, Lua, Result, UserData, UserDataMethods};
-use std::sync::MutexGuard;
 use std::any::type_name;
+use std::sync::MutexGuard;
 
 use crate::client::{DbClient, DbClientMutex, WiktionaryDocument};
 
@@ -64,7 +64,7 @@ fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
         Bson::Int64(i) => Ok(mlua::Value::Integer(i)),
         Bson::Double(f) => Ok(mlua::Value::Number(f)),
         Bson::Boolean(b) => Ok(mlua::Value::Boolean(b)),
-        Bson::ObjectId(id) => Ok(mlua::Value::String(lua.create_string(&id.to_hex())?)),
+        Bson::ObjectId(id) => Ok(mlua::Value::String(lua.create_string(id.to_hex())?)),
         Bson::Array(arr) => {
             let tbl = lua.create_table()?;
             for (i, item) in arr.into_iter().enumerate() {
@@ -82,7 +82,7 @@ fn bson_to_lua_value(bson: Bson, lua: &Lua) -> mlua::Result<mlua::Value> {
             to: type_name::<mlua::Value>().to_string(),
             message: Some(format!(
                 "conversion for {} is not implemented yet",
-                bson.clone().to_string()
+                bson.clone()
             )),
         }),
     }
