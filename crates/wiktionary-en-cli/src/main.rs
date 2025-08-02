@@ -43,17 +43,21 @@ enum Command {
         /// Use case insensitive search
         #[clap(short = 'i', long)]
         case_insensitive: bool,
-        #[cfg(feature = "sonic")]
+    },
+    /// Show statistics
+    Stats {},
+    #[cfg(feature = "sonic")]
+    /// Sonic operations
+    Sonic {
+        /// A word of interest
+        word: String,
         /// Autocomplete word
         #[clap(short, long)]
         autocomplete: bool,
-        #[cfg(feature = "sonic")]
         /// Query word
         #[clap(short, long)]
         query: bool,
     },
-    /// Show statistics
-    Stats {},
     /// Call an extension
     Extension {
         /// The name of the extension
@@ -159,43 +163,41 @@ fn main() -> Result<()> {
     let result = match args.command {
         Command::Search {
             search_term,
-            autocomplete,
-            query,
             max_results,
             case_insensitive,
         } => {
-            //#[cfg(feature = "sonic")]
+            let db_client = DbClient::init(language_to_use)?;
+            let db_client_mutex = DbClientMutex::from(db_client.clone());
+            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+            let mut result = query_dictionary(
+                &db_client,
+                QueryParameters {
+                    search_term,
+                    language: language_to_use,
+                    max_results,
+                    case_insensitive,
+                    path: get_db_path(args.db_path, &language_to_use),
+                },
+                extension_handler,
+            )?;
+
+            result.intercept()?;
+            result.fmt()?
+        }
+        #[cfg(feature = "sonic")]
+        Command::Sonic {
+            word,
+            autocomplete,
+            query,
+        } => {
             if autocomplete {
-                let search_term =
-                    search_term.ok_or(anyhow::anyhow!("a search term is required"))?;
-                let result =
-                    wiktionary_en_identifier_index::suggest(&language_to_use, &search_term)?;
+                let result = wiktionary_en_identifier_index::suggest(&language_to_use, &word)?;
                 result.join("\n")
-            }
-            //#[cfg(feature = "sonic")]
-            else if query {
-                let search_term =
-                    search_term.ok_or(anyhow::anyhow!("a search term is required"))?;
-                let result = wiktionary_en_identifier_index::query(&language_to_use, &search_term)?;
+            } else if query {
+                let result = wiktionary_en_identifier_index::query(&language_to_use, &word)?;
                 result.join("\n")
             } else {
-                let db_client = DbClient::init(language_to_use)?;
-                let db_client_mutex = DbClientMutex::from(db_client.clone());
-                let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
-                let mut result = query_dictionary(
-                    &db_client,
-                    QueryParameters {
-                        search_term,
-                        language: language_to_use,
-                        max_results,
-                        case_insensitive,
-                        path: get_db_path(args.db_path, &language_to_use),
-                    },
-                    extension_handler,
-                )?;
-
-                result.intercept()?;
-                result.fmt()?
+                String::new()
             }
         }
         Command::Stats {} => {

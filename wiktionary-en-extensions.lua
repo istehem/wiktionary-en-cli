@@ -9,5 +9,5 @@ extensions.format_entry = formatter.format_entry
 extensions.format_did_you_mean_banner = formatter.format_did_you_mean_banner
 -- intercept Wiktionary results
 extensions.intercept = interceptor.intercept
--- show history
+-- handle history
 extensions.history = history.main
