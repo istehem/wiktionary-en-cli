@@ -156,7 +156,7 @@ fn main() -> Result<()> {
         .config
         .or_use_config_or_default(args.language);
 
-    match args.command {
+    let result = match args.command {
         Command::Search {
             search_term,
             autocomplete,
@@ -164,52 +164,51 @@ fn main() -> Result<()> {
             max_results,
             case_insensitive,
         } => {
-            #[cfg(feature = "sonic")]
+            //#[cfg(feature = "sonic")]
             if autocomplete {
                 let search_term =
                     search_term.ok_or(anyhow::anyhow!("a search term is required"))?;
                 let result =
                     wiktionary_en_identifier_index::suggest(&language_to_use, &search_term)?;
-                utilities::pager::print_lines_in_pager(&result)?;
-                return Ok(());
+                result.join("\n")
             }
-            #[cfg(feature = "sonic")]
-            if query {
+            //#[cfg(feature = "sonic")]
+            else if query {
                 let search_term =
                     search_term.ok_or(anyhow::anyhow!("a search term is required"))?;
                 let result = wiktionary_en_identifier_index::query(&language_to_use, &search_term)?;
-                utilities::pager::print_lines_in_pager(&result)?;
-                return Ok(());
-            }
-            let db_client = DbClient::init(language_to_use)?;
-            let db_client_mutex = DbClientMutex::from(db_client.clone());
-            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
-            let mut result = query_dictionary(
-                &db_client,
-                QueryParameters {
-                    search_term,
-                    language: language_to_use,
-                    max_results,
-                    case_insensitive,
-                    path: get_db_path(args.db_path, &language_to_use),
-                },
-                extension_handler,
-            )?;
+                result.join("\n")
+            } else {
+                let db_client = DbClient::init(language_to_use)?;
+                let db_client_mutex = DbClientMutex::from(db_client.clone());
+                let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+                let mut result = query_dictionary(
+                    &db_client,
+                    QueryParameters {
+                        search_term,
+                        language: language_to_use,
+                        max_results,
+                        case_insensitive,
+                        path: get_db_path(args.db_path, &language_to_use),
+                    },
+                    extension_handler,
+                )?;
 
-            result.intercept()?;
-            utilities::pager::print_in_pager(&result.fmt()?)
+                result.intercept()?;
+                result.fmt()?
+            }
         }
         Command::Stats {} => {
             let input_path = get_db_path(args.db_path, &language_to_use);
             let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
-            utilities::pager::print_in_pager(&stats)
+            stats.to_string()
         }
         Command::Extension { name, options } => {
             let db_client = DbClient::init(language_to_use)?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
             let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
-            let result = extension_handler.call_extension(&name, &options)?.result;
-            utilities::pager::print_in_pager(&result)
+            extension_handler.call_extension(&name, &options)?.result
         }
-    }
+    };
+    utilities::pager::print_in_pager(&result)
 }
