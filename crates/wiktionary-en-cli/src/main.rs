@@ -33,13 +33,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    Extension {
-        /// The name of the extension
-        name: String,
-        /// The arguments to the extension
-        #[clap(short, long)]
-        options: Vec<String>,
-    },
+    /// Search in the dictionary
     Search {
         /// A word to search for; omitting it will yield a random entry
         search_term: Option<String>,
@@ -58,7 +52,16 @@ enum Command {
         #[clap(short, long)]
         query: bool,
     },
+    /// Show statistics
     Stats {},
+    /// Call an extension
+    Extension {
+        /// The name of the extension
+        name: String,
+        /// The arguments to the extension
+        #[clap(short, long)]
+        options: Vec<String>,
+    },
 }
 
 struct QueryParameters {
