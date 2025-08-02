@@ -49,14 +49,9 @@ enum Command {
     #[cfg(feature = "sonic")]
     /// Sonic operations
     Sonic {
-        /// A word of interest
-        word: String,
-        /// Autocomplete word
-        #[clap(short, long)]
-        autocomplete: bool,
-        /// Query word
-        #[clap(short, long)]
-        query: bool,
+        /// Operation
+        #[command(subcommand)]
+        command: SonicCommand,
     },
     /// Call an extension
     Extension {
@@ -65,6 +60,21 @@ enum Command {
         /// The arguments to the extension
         #[clap(short, long)]
         options: Vec<String>,
+    },
+}
+
+#[cfg(feature = "sonic")]
+#[derive(Subcommand)]
+enum SonicCommand {
+    /// Autocomplete word
+    Auto {
+        /// A word of interest
+        word: String,
+    },
+    /// Query word
+    Query {
+        /// A word of interest
+        word: String,
     },
 }
 
@@ -185,21 +195,16 @@ fn main() -> Result<()> {
             result.fmt()?
         }
         #[cfg(feature = "sonic")]
-        Command::Sonic {
-            word,
-            autocomplete,
-            query,
-        } => {
-            if autocomplete {
+        Command::Sonic { command } => match command {
+            SonicCommand::Auto { word } => {
                 let result = wiktionary_en_identifier_index::suggest(&language_to_use, &word)?;
                 result.join("\n")
-            } else if query {
+            }
+            SonicCommand::Query { word } => {
                 let result = wiktionary_en_identifier_index::query(&language_to_use, &word)?;
                 result.join("\n")
-            } else {
-                String::new()
             }
-        }
+        },
         Command::Stats {} => {
             let input_path = get_db_path(args.db_path, &language_to_use);
             let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
