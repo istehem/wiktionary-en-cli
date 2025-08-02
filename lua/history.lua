@@ -29,9 +29,12 @@ local function format_all_entries()
   return { result = table.concat(formatted_entries, "\n") }
 end
 
-history.main = function(option)
-  if option then
-    print(string.format("got option '%s'", option))
+history.main = function(options)
+  if not utils.is_empty(options) then
+    for _, option in ipairs(options) do
+      print(option)
+    end
+    return { result = string.format("got option '%s'", options) }
   else
     return format_all_entries()
   end

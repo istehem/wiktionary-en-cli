@@ -201,11 +201,11 @@ fn main() -> Result<()> {
             let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
             return utilities::pager::print_in_pager(&stats);
         }
-        Command::Extension { name, options: _ } => {
+        Command::Extension { name, options } => {
             let db_client = DbClient::init(language_to_use)?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
             let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
-            let result = extension_handler.call_extension(&name)?.result;
+            let result = extension_handler.call_extension(&name, &options)?.result;
             utilities::pager::print_in_pager(&result)
         }
     }

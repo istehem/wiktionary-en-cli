@@ -100,8 +100,12 @@ impl ExtensionHandler {
         }
     }
 
-    pub fn call_extension(&self, extension_name: &str) -> Result<ExtensionResult> {
-        match call_extension_lua_function(&self.lua, extension_name, &mlua::Value::Nil) {
+    pub fn call_extension(
+        &self,
+        extension_name: &str,
+        options: &Vec<String>,
+    ) -> Result<ExtensionResult> {
+        match call_extension_lua_function(&self.lua, extension_name, options) {
             Ok(result) => match result {
                 Some(result) => Ok(result),
                 None => bail!("extension '{}' not found", extension_name),
