@@ -24,7 +24,7 @@ impl UserData for DbClientMutex {
         });
         methods.add_method(
             "find_in_collection",
-            |_, this, document: ExtensionDocument| {
+            |_, this, (extension_name, document): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
                 match db_client.find_in_extension_collection(document) {
                     Ok(entry) => Ok(entry),
@@ -34,7 +34,7 @@ impl UserData for DbClientMutex {
         );
         methods.add_method(
             "find_one_in_collection",
-            |_, this, document: ExtensionDocument| {
+            |_, this, (extension_name, document): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
                 match db_client.find_one_in_extension_collection(document) {
                     Ok(entry) => Ok(entry),

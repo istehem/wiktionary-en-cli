@@ -1,4 +1,5 @@
 local constants = require("constants")
+local features = require("features")
 local utils = require("utils")
 local api = require("wiktionary_api")
 local db_client = require("wiktionary_db_client")
@@ -191,7 +192,7 @@ local function history(word)
   local query = {
     word = word,
   }
-  local entry = db_client:find_one_in_collection(query)
+  local entry = db_client:find_one_in_collection(features.history.name, query)
   if entry then
     return entry
   end

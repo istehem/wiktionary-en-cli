@@ -1,4 +1,5 @@
 local db_client = require("wiktionary_db_client")
+local features = require("features")
 local utils = require("utils")
 
 local interceptor = {}
@@ -19,7 +20,7 @@ end
 
 interceptor.intercept = function(entry)
   local query = { word = entry.word }
-  local existing = db_client:find_one_in_collection(query)
+  local existing = db_client:find_one_in_collection(features.history.name, query)
 
   if existing then
     -- update

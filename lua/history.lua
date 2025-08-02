@@ -2,6 +2,7 @@ local constants = require("constants")
 local api = require("wiktionary_api")
 local db_client = require("wiktionary_db_client")
 local utils = require("utils")
+local features = require("features")
 
 local history = {}
 
@@ -19,7 +20,7 @@ end
 
 history.format = function()
   local formatted_entries = {}
-  local documents = db_client:find_in_collection({})
+  local documents = db_client:find_in_collection(features.history.name, {})
 
   for _, entry in ipairs(documents) do
     table.insert(formatted_entries, format_history_entry(entry))
