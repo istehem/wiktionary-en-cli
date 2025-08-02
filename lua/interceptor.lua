@@ -4,31 +4,6 @@ local utils = require("utils")
 
 local interceptor = {}
 
---[[
-pub fn tick(&mut self) {
-        self.last_seen_at = self.now_seen_at;
-        self.now_seen_at = Utc::now();
-        self.count += 1;
-}
---]]
---[[
-                doc! {
-                    "word": &entry.word,
-                },
-                doc! {
-                   "$set": doc!{
-                     "last_seen_at": entry.last_seen_at.timestamp(),
-                     "now_seen_at": entry.now_seen_at.timestamp(),
-                     "count": entry.count as u32,
-                }},
-        Self {
-            word,
-            now_seen_at: now,
-            last_seen_at: now,
-            count: 1,
-        }
---]]
-
 local function tick(entry)
   entry.last_seen_at = entry.now_seen_at
   entry.now_seen_at = os.time()
@@ -40,11 +15,13 @@ interceptor.intercept = function(entry)
   local existing = db_client:find_one_in_collection(features.history.name, query)
 
   if existing then
-    -- update
     tick(existing)
-    print(utils.format_date(existing.last_seen_at))
-    print(utils.format_date(existing.now_seen_at))
-    print(existing.count)
+    local update = {
+      last_seen_at = existing.last_seen_at,
+      now_seen_at = existing.now_seen_at,
+      count = existing.count,
+    }
+    db_client:update_one_in_collection(features.history.name, query, update)
   else
     local now = os.time()
     local history_entry = {

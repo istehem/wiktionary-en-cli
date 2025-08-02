@@ -120,7 +120,12 @@ impl DbClient {
         update: ExtensionDocument,
     ) -> Result<u64> {
         let collection = self.extension_collection(extension_name);
-        let result = collection.update_one(query.document, update.document)?;
+        let result = collection.update_one(
+            query.document,
+            doc! {
+                "$set" : update.document
+            },
+        )?;
         Ok(result.modified_count)
     }
 
