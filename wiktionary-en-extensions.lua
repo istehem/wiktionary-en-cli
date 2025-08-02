@@ -10,4 +10,4 @@ extensions.format_did_you_mean_banner = formatter.format_did_you_mean_banner
 -- intercept Wiktionary results
 extensions.intercept = interceptor.intercept
 -- show history
-extensions.history = history.format
+extensions.history = history.main

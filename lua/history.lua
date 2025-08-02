@@ -18,7 +18,7 @@ local function format_history_entry(history_entry)
   return colored_word .. string.rep(" ", padding_length) .. right
 end
 
-history.format = function()
+local function format_all_entries()
   local formatted_entries = {}
   local documents = db_client:find_in_collection(features.history.name, {})
 
@@ -27,6 +27,14 @@ history.format = function()
   end
 
   return { result = table.concat(formatted_entries, "\n") }
+end
+
+history.main = function(option)
+  if option then
+    print(string.format("got option '%s'", option))
+  else
+    return format_all_entries()
+  end
 end
 
 return history
