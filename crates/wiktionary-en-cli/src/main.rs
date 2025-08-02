@@ -45,7 +45,7 @@ enum Command {
         case_insensitive: bool,
     },
     /// Show statistics
-    Stats {},
+    Stats,
     #[cfg(feature = "sonic")]
     /// Sonic operations
     Sonic {
@@ -205,7 +205,7 @@ fn main() -> Result<()> {
                 result.join("\n")
             }
         },
-        Command::Stats {} => {
+        Command::Stats => {
             let input_path = get_db_path(args.db_path, &language_to_use);
             let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
             stats.to_string()
