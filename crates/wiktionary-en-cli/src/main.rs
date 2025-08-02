@@ -184,10 +184,10 @@ fn main() -> Result<()> {
             let mut result = query_dictionary(
                 &db_client,
                 QueryParameters {
-                    search_term: search_term,
+                    search_term,
                     language: language_to_use,
-                    max_results: max_results,
-                    case_insensitive: case_insensitive,
+                    max_results,
+                    case_insensitive,
                     path: get_db_path(args.db_path, &language_to_use),
                 },
                 extension_handler,
@@ -199,7 +199,7 @@ fn main() -> Result<()> {
         Command::Stats {} => {
             let input_path = get_db_path(args.db_path, &language_to_use);
             let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
-            return utilities::pager::print_in_pager(&stats);
+            utilities::pager::print_in_pager(&stats)
         }
         Command::Extension { name, options } => {
             let db_client = DbClient::init(language_to_use)?;

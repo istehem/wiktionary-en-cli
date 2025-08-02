@@ -102,7 +102,7 @@ mod tests {
     fn test_format_history_entries(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let extension_result = extension_handler.call_extension("history")?;
+        let extension_result = extension_handler.call_extension("history", &vec![])?;
 
         println!("{}", extension_result.result);
         Ok(())
