@@ -9,7 +9,6 @@ use polodb_core::bson::doc;
 use polodb_core::{Collection, CollectionT, Database, IndexModel};
 use rand::{rng, Rng};
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-use wiktionary_en_entities::{history_collection, history_entry::HistoryEntry};
 
 use std::fs::File;
 use std::sync::{Arc, Mutex};
@@ -61,11 +60,6 @@ impl DbClient {
     fn collection(&self) -> Collection<DictionaryEntry> {
         self.database
             .collection::<DictionaryEntry>(&self.language.to_string())
-    }
-
-    pub fn history_collection(&self) -> Collection<HistoryEntry> {
-        self.database
-            .collection::<HistoryEntry>(&history_collection!(&self.language))
     }
 
     pub fn extension_collection(&self, extension_name: &str) -> Collection<Document> {
@@ -130,9 +124,17 @@ impl DbClient {
         Ok(None)
     }
 
-    pub fn delete_history(&self) -> Result<u64> {
-        let collection = self.history_collection();
-        delete_all_in_collection(&collection)
+    pub fn delete_many_in_extension_collection(
+        &self,
+        extension_name: &str,
+        query: ExtensionDocument,
+    ) -> Result<u64> {
+        let collection = self.extension_collection(extension_name);
+        let delete_result = collection.delete_many(query.document);
+        match delete_result {
+            Ok(delete_result) => Ok(delete_result.deleted_count),
+            Err(err) => bail!(err),
+        }
     }
 
     pub fn insert_wiktionary_file(
@@ -140,7 +142,6 @@ impl DbClient {
         file_reader: BufReader<File>,
         force: bool,
     ) -> Result<usize> {
-        create_history_index(&self.history_collection())?;
         insert_wiktionary_file_into_collection(
             &self.collection(),
             file_reader,
@@ -156,16 +157,6 @@ impl DbClient {
     pub fn random_entry(&self) -> Result<DictionaryEntry> {
         random_entry_in_collection(&self.collection())
     }
-}
-
-fn create_history_index(collection: &Collection<HistoryEntry>) -> Result<()> {
-    collection.create_index(IndexModel {
-        keys: doc! {
-            "word": 1,
-        },
-        options: None,
-    })?;
-    Ok(())
 }
 
 fn get_polo_db_path() -> PathBuf {
