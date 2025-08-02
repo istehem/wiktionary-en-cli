@@ -15,18 +15,11 @@ fn lock(db_client: &DbClientMutex) -> Result<MutexGuard<'_, DbClient>> {
 
 impl UserData for DbClientMutex {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("write_to_history", |_, this, word: String| {
-            let db_client = lock(this)?;
-            match db_client.upsert_into_history(&word) {
-                Ok(_) => Ok(()),
-                Err(err) => Err(Error::RuntimeError(err.to_string())),
-            }
-        });
         methods.add_method(
             "find_in_collection",
             |_, this, (extension_name, document): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
-                match db_client.find_in_extension_collection(document) {
+                match db_client.find_in_extension_collection(&extension_name, document) {
                     Ok(entry) => Ok(entry),
                     Err(err) => Err(Error::RuntimeError(err.to_string())),
                 }
@@ -36,14 +29,14 @@ impl UserData for DbClientMutex {
             "find_one_in_collection",
             |_, this, (extension_name, document): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
-                match db_client.find_one_in_extension_collection(document) {
+                match db_client.find_one_in_extension_collection(&extension_name, document) {
                     Ok(entry) => Ok(entry),
                     Err(err) => Err(Error::RuntimeError(err.to_string())),
                 }
             },
         );
         methods.add_method(
-            "insert_one_in_collection",
+            "insert_one_into_collection",
             |lua, this, (extension_name, document): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
                 match db_client.insert_one_into_extension_collection(&extension_name, document) {

@@ -126,9 +126,10 @@ impl DbClient {
 
     pub fn find_in_extension_collection(
         &self,
+        extension_name: &str,
         document: ExtensionDocument,
     ) -> Result<Vec<ExtensionDocument>> {
-        let collection = self.history_docs_collection();
+        let collection = self.extension_collection(extension_name);
         let search_result = collection.find(document.document).run()?;
         let mut result: Vec<ExtensionDocument> = Vec::new();
         for document in search_result {
@@ -139,9 +140,10 @@ impl DbClient {
 
     pub fn find_one_in_extension_collection(
         &self,
+        extension_name: &str,
         document: ExtensionDocument,
     ) -> Result<Option<ExtensionDocument>> {
-        let collection = self.history_docs_collection();
+        let collection = self.extension_collection(extension_name);
         let result = collection.find_one(document.document)?;
         if let Some(document) = result {
             return Ok(Some(ExtensionDocument::from(document)));

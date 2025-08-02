@@ -11,6 +11,23 @@ pub fn tick(&mut self) {
         self.count += 1;
 }
 --]]
+--[[
+                doc! {
+                    "word": &entry.word,
+                },
+                doc! {
+                   "$set": doc!{
+                     "last_seen_at": entry.last_seen_at.timestamp(),
+                     "now_seen_at": entry.now_seen_at.timestamp(),
+                     "count": entry.count as u32,
+                }},
+        Self {
+            word,
+            now_seen_at: now,
+            last_seen_at: now,
+            count: 1,
+        }
+--]]
 
 local function tick(entry)
   entry.last_seen_at = entry.now_seen_at
@@ -29,8 +46,14 @@ interceptor.intercept = function(entry)
     print(utils.format_date(existing.now_seen_at))
     print(existing.count)
   else
-    -- insert
-    print("not found")
+    local now = os.time()
+    local history_entry = {
+      word = entry.word,
+      last_seen_at = now,
+      now_seen_at = now,
+      count = 1,
+    }
+    db_client:insert_one_into_collection(features.history.name, history_entry)
   end
   return entry
 end
