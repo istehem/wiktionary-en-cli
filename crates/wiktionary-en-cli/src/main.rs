@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 use utilities::file_utils::get_db_path;
@@ -24,31 +24,41 @@ struct Cli {
     /// Override dictionary db file to use
     #[clap(long, short = 'd')]
     db_path: Option<String>,
-    /// A word to search for; omitting it will yield a random entry
-    search_term: Option<String>,
-    /// Maximal number of results
-    #[clap(short, long, default_value = "1")]
-    max_results: usize,
-    /// Use case insensitive search
-    #[clap(short = 'i', long)]
-    case_insensitive: bool,
-    /// Set search term language
+    /// Set dictionary language
     #[clap(long, short = 'l')]
     language: Option<Language>,
-    /// Show dictionary information
-    #[clap(short, long)]
-    stats: bool,
-    #[cfg(feature = "sonic")]
-    /// Autocomplete word
-    #[clap(short, long)]
-    autocomplete: bool,
-    #[cfg(feature = "sonic")]
-    /// Query word
-    #[clap(short, long)]
-    query: bool,
-    /// Run extension
-    #[clap(short, long)]
-    extension: Option<String>,
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    Extension {
+        /// The name of the extension
+        name: String,
+        /// The arguments to the extension
+        #[clap(short, long)]
+        options: Vec<String>,
+    },
+    Search {
+        /// A word to search for; omitting it will yield a random entry
+        search_term: Option<String>,
+        /// Maximal number of results
+        #[clap(short, long, default_value = "1")]
+        max_results: usize,
+        /// Use case insensitive search
+        #[clap(short = 'i', long)]
+        case_insensitive: bool,
+        #[cfg(feature = "sonic")]
+        /// Autocomplete word
+        #[clap(short, long)]
+        autocomplete: bool,
+        #[cfg(feature = "sonic")]
+        /// Query word
+        #[clap(short, long)]
+        query: bool,
+    },
+    Stats {},
 }
 
 struct QueryParameters {
@@ -143,52 +153,60 @@ fn main() -> Result<()> {
         .config
         .or_use_config_or_default(args.language);
 
-    if args.stats {
-        let input_path = get_db_path(args.db_path, &language_to_use);
-        let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
-        return utilities::pager::print_in_pager(&stats);
-    }
-    #[cfg(feature = "sonic")]
-    if args.autocomplete {
-        let search_term = &args
-            .search_term
-            .ok_or(anyhow::anyhow!("a search term is required"))?;
-        let result = wiktionary_en_identifier_index::suggest(&language_to_use, search_term)?;
-        utilities::pager::print_lines_in_pager(&result)?;
-        return Ok(());
-    }
-    #[cfg(feature = "sonic")]
-    if args.query {
-        let search_term = &args
-            .search_term
-            .ok_or(anyhow::anyhow!("a search term is required"))?;
-        let result = wiktionary_en_identifier_index::query(&language_to_use, search_term)?;
-        utilities::pager::print_lines_in_pager(&result)?;
-        return Ok(());
-    }
-    let result = {
-        let db_client = DbClient::init(language_to_use)?;
-        let db_client_mutex = DbClientMutex::from(db_client.clone());
-        let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
-
-        if let Some(extension) = args.extension {
-            extension_handler.call_extension(&extension)?.result
-        } else {
+    match args.command {
+        Command::Search {
+            search_term,
+            autocomplete,
+            query,
+            max_results,
+            case_insensitive,
+        } => {
+            #[cfg(feature = "sonic")]
+            if autocomplete {
+                let search_term =
+                    search_term.ok_or(anyhow::anyhow!("a search term is required"))?;
+                let result =
+                    wiktionary_en_identifier_index::suggest(&language_to_use, &search_term)?;
+                utilities::pager::print_lines_in_pager(&result)?;
+                return Ok(());
+            }
+            #[cfg(feature = "sonic")]
+            if query {
+                let search_term =
+                    search_term.ok_or(anyhow::anyhow!("a search term is required"))?;
+                let result = wiktionary_en_identifier_index::query(&language_to_use, &search_term)?;
+                utilities::pager::print_lines_in_pager(&result)?;
+                return Ok(());
+            }
+            let db_client = DbClient::init(language_to_use)?;
+            let db_client_mutex = DbClientMutex::from(db_client.clone());
+            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
             let mut result = query_dictionary(
                 &db_client,
                 QueryParameters {
-                    search_term: args.search_term,
+                    search_term: search_term,
                     language: language_to_use,
-                    max_results: args.max_results,
-                    case_insensitive: args.case_insensitive,
+                    max_results: max_results,
+                    case_insensitive: case_insensitive,
                     path: get_db_path(args.db_path, &language_to_use),
                 },
                 extension_handler,
             )?;
 
             result.intercept()?;
-            result.fmt()?
+            utilities::pager::print_in_pager(&result.fmt()?)
         }
-    };
-    utilities::pager::print_in_pager(&result)
+        Command::Stats {} => {
+            let input_path = get_db_path(args.db_path, &language_to_use);
+            let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
+            return utilities::pager::print_in_pager(&stats);
+        }
+        Command::Extension { name, options: _ } => {
+            let db_client = DbClient::init(language_to_use)?;
+            let db_client_mutex = DbClientMutex::from(db_client.clone());
+            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+            let result = extension_handler.call_extension(&name)?.result;
+            utilities::pager::print_in_pager(&result)
+        }
+    }
 }
