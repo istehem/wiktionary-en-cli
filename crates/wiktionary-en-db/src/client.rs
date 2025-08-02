@@ -73,34 +73,8 @@ impl DbClient {
             .collection::<Document>(&extension_collection!(&self.language, extension_name))
     }
 
-    pub fn history_docs_collection(&self) -> Collection<Document> {
-        self.database
-            .collection::<Document>(&history_collection!(&self.language))
-    }
-
     pub fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
         find_by_word_in_collection(term, &self.collection())
-    }
-
-    pub fn upsert_into_history(&self, term: &str) -> Result<()> {
-        let collection = self.history_collection();
-        if let Some(mut entry) = self.find_in_history_by_word(term)? {
-            entry.tick();
-            collection.update_one(
-                doc! {
-                    "word": &entry.word,
-                },
-                doc! {
-                   "$set": doc!{
-                     "last_seen_at": entry.last_seen_at.timestamp(),
-                     "now_seen_at": entry.now_seen_at.timestamp(),
-                     "count": entry.count as u32,
-                }},
-            )?;
-        } else {
-            collection.insert_one(HistoryEntry::from(term.to_string()))?;
-        }
-        Ok(())
     }
 
     pub fn insert_one_into_extension_collection(
@@ -154,12 +128,6 @@ impl DbClient {
             return Ok(Some(ExtensionDocument::from(document)));
         }
         Ok(None)
-    }
-
-    fn find_in_history_by_word(&self, term: &str) -> Result<Option<HistoryEntry>> {
-        let collection = self.history_collection();
-        let result = collection.find_one(doc! { "word" : term})?;
-        Ok(result)
     }
 
     pub fn delete_history(&self) -> Result<u64> {

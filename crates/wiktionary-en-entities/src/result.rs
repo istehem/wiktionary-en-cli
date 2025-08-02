@@ -1,5 +1,4 @@
 use crate::dictionary_entry::DictionaryEntry;
-use crate::history_entry::HistoryEntry;
 use colored::Colorize;
 use indoc::formatdoc;
 use mlua::FromLua;
@@ -10,10 +9,6 @@ use std::fmt;
 
 pub struct ExtensionResult {
     pub result: String,
-}
-
-pub struct HistoryResult {
-    pub history_entries: Vec<HistoryEntry>,
 }
 
 #[derive(Clone)]
