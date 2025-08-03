@@ -42,6 +42,9 @@ history.main = function(options)
     for _, option in ipairs(options) do
       if option == "delete" then
         return delete()
+      else
+        error_msg = string.format("unknown option '%s'", option)
+        return { result = error_msg }
       end
     end
     return { result = string.format("got option '%s'", options) }
