@@ -55,6 +55,16 @@ impl UserData for DbClientMutex {
                 }
             },
         );
+        methods.add_method(
+            "delete_in_collection",
+            |_, this, (extension_name, query): (String, ExtensionDocument)| {
+                let db_client = lock(this)?;
+                match db_client.delete_many_in_extension_collection(&extension_name, query) {
+                    Ok(delete_count) => Ok(delete_count),
+                    Err(err) => Err(Error::RuntimeError(err.to_string())),
+                }
+            },
+        );
     }
 }
 

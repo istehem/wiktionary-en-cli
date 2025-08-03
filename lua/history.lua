@@ -29,10 +29,20 @@ local function format_all_entries()
   return { result = table.concat(formatted_entries, "\n") }
 end
 
+local function delete()
+  local query = {
+    word = "free",
+  }
+  local count = db_client:delete_in_collection(features.history.name, query)
+  return { result = string.format("deleted %s history entries", count) }
+end
+
 history.main = function(options)
   if not utils.is_empty(options) then
     for _, option in ipairs(options) do
-      print(option)
+      if option == "delete" then
+        return delete()
+      end
     end
     return { result = string.format("got option '%s'", options) }
   else
