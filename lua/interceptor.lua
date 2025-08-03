@@ -22,7 +22,7 @@ interceptor.intercept = function(entry)
       count = existing.count,
     }
     db_client:update_one_in_collection(features.history.name, query, update)
-  else
+  elseif not entry.did_you_mean then
     local now = os.time()
     local history_entry = {
       word = entry.word,
