@@ -23,7 +23,7 @@ impl ExtensionErrorType {
 
 pub struct ExtensionResult {
     pub result: String,
-    pub error: Option<ExtensionErrorType>
+    pub error: Option<ExtensionErrorType>,
 }
 
 #[derive(Clone)]

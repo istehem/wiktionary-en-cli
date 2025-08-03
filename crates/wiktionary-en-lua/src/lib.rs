@@ -105,12 +105,19 @@ impl ExtensionHandler {
         extension_name: &str,
         options: &Vec<String>,
     ) -> Result<ExtensionResult> {
-        match call_extension_lua_function(&self.lua, extension_name, options) {
+        let result = match call_extension_lua_function(&self.lua, extension_name, options) {
             Ok(result) => match result {
                 Some(result) => Ok(result),
                 None => bail!("extension '{}' not found", extension_name),
             },
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
+        }?;
+        match result {
+            ExtensionResult {
+                result,
+                error: Some(_),
+            } => bail!(result),
+            result => Ok(result),
         }
     }
 }
