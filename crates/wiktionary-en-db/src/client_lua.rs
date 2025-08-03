@@ -65,6 +65,16 @@ impl UserData for DbClientMutex {
                 }
             },
         );
+        methods.add_method(
+            "create_index_for_collection",
+            |_, this, (extension_name, keys): (String, ExtensionDocument)| {
+                let db_client = lock(this)?;
+                match db_client.create_index_for_extension_collection(&extension_name, keys) {
+                    Ok(()) => Ok(()),
+                    Err(err) => Err(Error::RuntimeError(err.to_string())),
+                }
+            },
+        );
     }
 }
 

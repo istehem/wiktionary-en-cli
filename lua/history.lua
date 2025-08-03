@@ -37,11 +37,19 @@ local function delete()
   return { result = string.format("deleted %s history entries", count) }
 end
 
+local function index()
+  local keys = { word = 1 }
+  db_client:create_index_for_collection(features.history.name, keys)
+  return { result = "index created on key 'word'" }
+end
+
 history.main = function(options)
   if not utils.is_empty(options) then
     for _, option in ipairs(options) do
       if option == "delete" then
         return delete()
+      elseif option == "index" then
+        return index()
       else
         error_msg = string.format("unknown option '%s'", option)
         return { result = error_msg, error = "unknown_option" }
