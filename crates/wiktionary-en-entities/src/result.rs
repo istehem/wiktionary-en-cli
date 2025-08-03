@@ -21,6 +21,15 @@ impl ExtensionErrorType {
     }
 }
 
+impl fmt::Display for ExtensionErrorType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnknownOption => write!(f, "unknown extension option"),
+            Self::UnknownError => write!(f, "unknown extension error"),
+        }
+    }
+}
+
 pub struct ExtensionResult {
     pub result: String,
     pub error: Option<ExtensionErrorType>,

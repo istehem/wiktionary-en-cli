@@ -115,8 +115,8 @@ impl ExtensionHandler {
         match result {
             ExtensionResult {
                 result,
-                error: Some(_),
-            } => bail!(result),
+                error: Some(error_type),
+            } => Err(anyhow!("{}", result).context(error_type)),
             result => Ok(result),
         }
     }
