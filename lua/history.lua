@@ -44,7 +44,7 @@ history.main = function(options)
         return delete()
       else
         error_msg = string.format("unknown option '%s'", option)
-        return { result = error_msg }
+        return { result = error_msg, error = 1 }
       end
     end
     return { result = string.format("got option '%s'", options) }

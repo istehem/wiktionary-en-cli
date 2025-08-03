@@ -7,8 +7,23 @@ use mlua::Lua;
 use mlua::Value;
 use std::fmt;
 
+pub enum ExtensionErrorType {
+    UnknownOption,
+    UnknownError,
+}
+
+impl ExtensionErrorType {
+    pub fn from(code: i64) -> Self {
+        match code {
+            1 => Self::UnknownOption,
+            _ => Self::UnknownError,
+        }
+    }
+}
+
 pub struct ExtensionResult {
     pub result: String,
+    pub error: Option<ExtensionErrorType>
 }
 
 #[derive(Clone)]

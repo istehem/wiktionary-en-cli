@@ -3,7 +3,7 @@ use mlua::Value;
 use mlua::{FromLua, IntoLua};
 use std::any::type_name;
 
-use crate::result::{DictionaryResult, ExtensionResult};
+use crate::result::{DictionaryResult, ExtensionResult, ExtensionErrorType};
 
 impl IntoLua for DictionaryResult {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
@@ -35,10 +35,24 @@ impl FromLua for ExtensionResult {
         if let Some(table) = value.as_table() {
             return Ok(Self {
                 result: table.get("result")?,
+                error: table.get("error")?,
             });
         }
         Err(mlua::Error::FromLuaConversionError {
             from: "table",
+            to: type_name::<Self>().to_string(),
+            message: None,
+        })
+    }
+}
+
+impl FromLua for ExtensionErrorType {
+    fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
+        if let Some(integer) = value.as_integer() {
+            return Ok(ExtensionErrorType::from(integer))
+        }
+        Err(mlua::Error::FromLuaConversionError {
+            from: "integer",
             to: type_name::<Self>().to_string(),
             message: None,
         })
