@@ -116,7 +116,7 @@ impl ExtensionHandler {
             ExtensionResult {
                 result,
                 error: Some(error_type),
-            } => Err(anyhow!("{}", result).context(error_type)),
+            } => Err(anyhow!(result).context(error_type)),
             result => Ok(result),
         }
     }
