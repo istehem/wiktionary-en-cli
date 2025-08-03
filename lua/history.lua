@@ -47,7 +47,7 @@ history.main = function(options)
         return { result = error_msg, error = 1 }
       end
     end
-    return { result = string.format("got option '%s'", options) }
+    error("should be unreachable")
   else
     return format_all_entries()
   end
