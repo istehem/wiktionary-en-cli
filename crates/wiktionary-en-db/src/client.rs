@@ -137,6 +137,21 @@ impl DbClient {
         }
     }
 
+    pub fn create_index_for_extension_collection(
+        &self,
+        extension_name: &str,
+        keys: ExtensionDocument,
+    ) -> Result<()> {
+        let collection = self.extension_collection(extension_name);
+        match collection.create_index(IndexModel {
+            keys: keys.document,
+            options: None,
+        }) {
+            Ok(()) => Ok(()),
+            Err(err) => bail!(err),
+        }
+    }
+
     pub fn insert_wiktionary_file(
         &self,
         file_reader: BufReader<File>,
