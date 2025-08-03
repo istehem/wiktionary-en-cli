@@ -48,11 +48,11 @@ impl FromLua for ExtensionResult {
 
 impl FromLua for ExtensionErrorType {
     fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
-        if let Some(integer) = value.as_integer() {
-            return Ok(ExtensionErrorType::from(integer));
+        if let Some(error_type) = value.as_string() {
+            return Ok(ExtensionErrorType::from(&error_type.to_str()?));
         }
         Err(mlua::Error::FromLuaConversionError {
-            from: "integer",
+            from: "error_type",
             to: type_name::<Self>().to_string(),
             message: None,
         })

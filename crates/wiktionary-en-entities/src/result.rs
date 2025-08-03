@@ -13,9 +13,9 @@ pub enum ExtensionErrorType {
 }
 
 impl ExtensionErrorType {
-    pub fn from(code: i64) -> Self {
+    pub fn from(code: &str) -> Self {
         match code {
-            1 => Self::UnknownOption,
+            "unknown_option" => Self::UnknownOption,
             _ => Self::UnknownError,
         }
     }
