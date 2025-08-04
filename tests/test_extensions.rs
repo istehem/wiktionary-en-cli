@@ -40,7 +40,7 @@ mod tests {
     fn test_interception(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
 
         for (_index, line) in file_reader.lines().enumerate().take(10) {
@@ -63,7 +63,7 @@ mod tests {
     fn test_format_dictionary_entries(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language().to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut results = Vec::new();
 

@@ -21,7 +21,7 @@ mod tests {
     #[test]
     fn word_is_always_present() -> Result<()> {
         let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate().take(100) {
             match line {
@@ -39,7 +39,7 @@ mod tests {
     #[traced_test]
     fn one_sound_always_set() -> Result<()> {
         let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate().take(1000) {
             match line {
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn lookup_fields() -> Result<()> {
         let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut unique_keys = HashSet::new();
         for (i, line) in file_reader.lines().enumerate().take(100) {
@@ -87,7 +87,7 @@ mod tests {
 
     fn lookup_array_item_fields_for(field: &str) -> Result<()> {
         let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         let mut unique_keys = HashSet::new();
         for (i, line) in file_reader.lines().enumerate().take(100) {
@@ -142,7 +142,7 @@ mod tests {
         inner_field: &str,
     ) -> Result<()> {
         let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate() {
             match line {
@@ -168,7 +168,7 @@ mod tests {
 
     fn explore_definition_of_first_elem_in_an_array(field_name: &str) -> Result<()> {
         let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate() {
             match line {
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn explore_sound_without_pronunciation_fields() -> Result<()> {
         let language = Language::EN;
-        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language.to_string()));
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
         for (i, line) in file_reader.lines().enumerate() {
             match line {
