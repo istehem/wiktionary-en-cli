@@ -30,9 +30,7 @@ local function format_all_entries()
 end
 
 local function delete()
-  local query = {
-    word = "free",
-  }
+  local query = {}
   local count = db_client:delete_in_collection(features.history.name, query)
   return { result = string.format("deleted %s history entries", count) }
 end
