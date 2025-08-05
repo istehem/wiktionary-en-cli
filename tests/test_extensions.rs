@@ -2,6 +2,7 @@
 mod tests {
     use anyhow::{Context, Result};
     use rstest::*;
+    use std::collections::HashSet;
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
@@ -12,6 +13,17 @@ mod tests {
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::ExtensionHandler;
+
+    macro_rules! assert_contains {
+        ($haystack:expr, $needle:expr) => {
+            assert!(
+                $haystack.contains($needle),
+                "the string {:?} does not contain {:?}",
+                $haystack,
+                $needle
+            )
+        };
+    }
 
     fn language() -> Language {
         Language::EN
@@ -105,6 +117,38 @@ mod tests {
         let extension_result = extension_handler.call_extension("history", &vec![])?;
 
         println!("{}", extension_result.result);
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_delete_history_entries(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
+        let call_delete =
+            || extension_handler.call_extension("history", &vec!["delete".to_string()]);
+        call_delete()?;
+        let iterations = 100;
+        let mut found_words = HashSet::new();
+
+        let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
+
+        let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
+
+        for (_index, line) in file_reader.lines().enumerate().take(iterations) {
+            let dictionary_entry = parse_line(&line?)?;
+            let mut dictionary_result = DictionaryResult {
+                hits: vec![dictionary_entry.clone()],
+                did_you_mean: None,
+                word: dictionary_entry.word,
+            };
+            if !found_words.contains(&dictionary_result.word) {
+                extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
+            }
+            found_words.insert(dictionary_result.word);
+        }
+        let extension_result = call_delete()?;
+        assert_contains!(extension_result.result, &format!("{}", found_words.len()));
+
         Ok(())
     }
 }
