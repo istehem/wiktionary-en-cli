@@ -1,18 +1,24 @@
 #[cfg(test)]
 mod tests {
     use anyhow::{Context, Result};
+    use lazy_static::lazy_static;
     use rstest::*;
     use std::collections::HashSet;
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
+    use std::sync::Mutex;
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::ExtensionHandler;
+
+    lazy_static! {
+        static ref TEST_MUTEX: Mutex<()> = Mutex::new(());
+    }
 
     macro_rules! assert_contains {
         ($haystack:expr, $needle:expr) => {
@@ -52,6 +58,8 @@ mod tests {
     fn test_interception(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap();
+
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
 
@@ -124,8 +132,11 @@ mod tests {
     fn test_delete_history_entries(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap();
+
         let call_delete =
             || extension_handler.call_extension("history", &vec!["delete".to_string()]);
+
         call_delete()?;
         let iterations = 100;
         let mut found_words = HashSet::new();
