@@ -37,26 +37,7 @@ mod tests {
         Language::EN
     }
 
-    #[fixture]
-    #[once]
-    fn shared_db_client() -> DbClientMutex {
-        let db_client = DbClient::init(language()).unwrap();
-        DbClientMutex::from(db_client)
-    }
-
-    #[fixture]
-    fn shared_extension_handler(
-        #[from(shared_db_client)] db_client: &DbClientMutex,
-    ) -> ExtensionHandler {
-        ExtensionHandler::init(db_client.clone()).unwrap()
-    }
-
-    fn parse_line(line: &str) -> Result<DictionaryEntry> {
-        line.parse()
-            .with_context(|| "Couldn't parse line in DB file.".to_string())
-    }
-
-    fn insert_entries_into_db(extension_handler: &ExtensionHandler) -> Result<usize> {
+    fn intercept_dictionary_entries(extension_handler: &ExtensionHandler) -> Result<usize> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
 
@@ -75,6 +56,25 @@ mod tests {
             found_words.insert(dictionary_result.word);
         }
         Ok(found_words.len())
+    }
+
+    #[fixture]
+    #[once]
+    fn shared_db_client() -> DbClientMutex {
+        let db_client = DbClient::init(language()).unwrap();
+        DbClientMutex::from(db_client)
+    }
+
+    #[fixture]
+    fn shared_extension_handler(
+        #[from(shared_db_client)] db_client: &DbClientMutex,
+    ) -> ExtensionHandler {
+        ExtensionHandler::init(db_client.clone()).unwrap()
+    }
+
+    fn parse_line(line: &str) -> Result<DictionaryEntry> {
+        line.parse()
+            .with_context(|| "Couldn't parse line in DB file.".to_string())
     }
 
     #[rstest]
@@ -122,7 +122,7 @@ mod tests {
     ) -> Result<()> {
         {
             let _guard = TEST_MUTEX.lock().unwrap();
-            insert_entries_into_db(&extension_handler)?;
+            intercept_dictionary_entries(&extension_handler)?;
         }
         let extension_result = extension_handler.call_extension("history", &vec![])?;
         println!("{}", extension_result.result);
@@ -140,7 +140,7 @@ mod tests {
             || extension_handler.call_extension("history", &vec!["delete".to_string()]);
 
         call_delete()?;
-        let size = insert_entries_into_db(&extension_handler)?;
+        let size = intercept_dictionary_entries(&extension_handler)?;
         let extension_result = call_delete()?;
 
         assert_contains!(extension_result.result, &format!("{}", size));
