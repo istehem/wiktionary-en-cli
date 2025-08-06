@@ -7,6 +7,7 @@ use mlua::Lua;
 use mlua::Value;
 use std::fmt;
 
+#[derive(Debug)]
 pub enum ExtensionErrorType {
     UnknownOption,
     UnknownError,
@@ -30,6 +31,7 @@ impl fmt::Display for ExtensionErrorType {
     }
 }
 
+#[derive(Debug)]
 pub struct ExtensionResult {
     pub result: String,
     pub error: Option<ExtensionErrorType>,

@@ -13,7 +13,7 @@ mod tests {
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-    use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
+    use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, ExtensionErrorType};
     use wiktionary_en_lua::ExtensionHandler;
 
     const ITERATIONS: usize = 100;
@@ -153,7 +153,15 @@ mod tests {
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let result = extension_handler.call_extension("history", &vec!["unknown".to_string()]);
-        assert!(result.is_err());
+        assert_contains!(
+            result
+                .as_ref()
+                .unwrap_err()
+                .chain()
+                .map(|e| e.to_string())
+                .collect::<Vec<_>>(),
+            &ExtensionErrorType::UnknownOption.to_string()
+        );
 
         Ok(())
     }
