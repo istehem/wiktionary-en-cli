@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use anyhow::{Context, Result};
+    use anyhow::{Context, Error, Result};
     use lazy_static::lazy_static;
     use rstest::*;
     use std::collections::HashSet;
@@ -148,19 +148,36 @@ mod tests {
         Ok(())
     }
 
+    fn error_chain_as_strings(error: &Error) -> Vec<String> {
+        error.chain().map(|e| e.to_string()).collect()
+    }
+
     #[rstest]
     fn test_history_with_unknown_argument(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let result = extension_handler.call_extension("history", &vec!["unknown".to_string()]);
+        let error = extension_handler
+            .call_extension("history", &vec!["unknown".to_string()])
+            .unwrap_err();
         assert_contains!(
-            result
-                .as_ref()
-                .unwrap_err()
-                .chain()
-                .map(|e| e.to_string())
-                .collect::<Vec<_>>(),
+            error_chain_as_strings(&error),
             &ExtensionErrorType::UnknownOption.to_string()
+        );
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_calling_unknown_extension(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
+        let extension_name = "unknown";
+        let error = extension_handler
+            .call_extension(extension_name, &vec![])
+            .unwrap_err();
+        assert_contains!(
+            error_chain_as_strings(&error),
+            &format!("extension '{}' not found", extension_name)
         );
 
         Ok(())
