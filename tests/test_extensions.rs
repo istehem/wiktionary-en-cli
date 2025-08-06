@@ -147,4 +147,14 @@ mod tests {
 
         Ok(())
     }
+
+    #[rstest]
+    fn test_history_with_unknown_argument(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
+        let result = extension_handler.call_extension("history", &vec!["unknown".to_string()]);
+        assert!(result.is_err());
+
+        Ok(())
+    }
 }
