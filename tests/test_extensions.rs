@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_history_with_unknown_argument(
+    fn test_history_with_unknown_option(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let error = extension_handler
