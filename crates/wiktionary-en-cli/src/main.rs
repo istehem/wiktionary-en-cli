@@ -165,7 +165,7 @@ fn query_dictionary(
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let config_handler = wiktionary_en_lua::ConfigHandler::init()?;
+    let config_handler = wiktionary_en_lua::config::ConfigHandler::init()?;
     let language_to_use = config_handler
         .config
         .or_use_config_or_default(args.language);

@@ -1,41 +1,19 @@
+pub mod config;
 pub mod extension;
-pub mod extension_lua;
 
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
 use mlua::{FromLua, Function, Lua};
 use utilities::colored_string_utils;
+use utilities::DICTIONARY_EXTENSIONS;
 use utilities::LUA_DIR;
-use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
 use wiktionary_en_db::client::DbClientMutex;
-use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 
 use crate::extension::ExtensionResult;
 
-const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";
-
-pub struct ConfigHandler {
-    pub config: Config,
-}
-
-impl ConfigHandler {
-    pub fn init() -> Result<Self> {
-        let lua = Lua::new();
-        match init_lua_config(&lua) {
-            Ok(_) => {
-                let config = match get_config(&lua) {
-                    Ok(result) => Ok(result),
-                    Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
-                }?;
-                Ok(Self { config })
-            }
-            Err(err) => Err(anyhow!("{}", err).context(LUA_CONFIGURATION_ERROR)),
-        }
-    }
-}
 
 pub struct ExtensionHandler {
     lua: Lua,
@@ -138,11 +116,6 @@ fn init_lua_exentions(lua: &Lua) -> mlua::Result<()> {
         .exec()
 }
 
-fn init_lua_config(lua: &Lua) -> mlua::Result<()> {
-    lua.load(std::fs::read_to_string(DICTIONARY_CONFIG!())?)
-        .exec()
-}
-
 fn create_importable_lua_module(
     lua: &Lua,
     package_name: &str,
@@ -179,20 +152,8 @@ fn add_lua_library_to_path(lua: &Lua) -> mlua::Result<()> {
     package.set("path", format!("{};{}/?.lua", path, LUA_DIR!()))
 }
 
-fn get_config_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
-    lua.globals().get("config")
-}
-
 fn get_extensions_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
     lua.globals().get("extensions")
-}
-
-fn get_config(lua: &Lua) -> mlua::Result<Config> {
-    let config: mlua::Value = get_config_as_lua_value(lua)?;
-    if let Some(config) = config.as_function() {
-        return config.call(());
-    }
-    Config::from_lua(config, lua)
 }
 
 fn call_extension_lua_function<A, B>(
@@ -202,7 +163,7 @@ fn call_extension_lua_function<A, B>(
 ) -> mlua::Result<Option<B>>
 where
     A: mlua::IntoLuaMulti + Clone,
-    B: mlua::FromLua,
+    B: FromLua,
 {
     if let Some(config) = get_extensions_as_lua_value(lua)?.as_table() {
         let function: mlua::Value = config.get(function_name)?;
