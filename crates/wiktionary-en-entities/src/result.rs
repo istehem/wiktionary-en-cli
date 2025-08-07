@@ -1,41 +1,7 @@
 use crate::dictionary_entry::DictionaryEntry;
 use colored::Colorize;
 use indoc::formatdoc;
-use mlua::FromLua;
-use mlua::IntoLua;
-use mlua::Lua;
-use mlua::Value;
 use std::fmt;
-
-#[derive(Debug)]
-pub enum ExtensionErrorType {
-    UnknownOption,
-    UnknownError,
-}
-
-impl ExtensionErrorType {
-    pub fn from(code: &str) -> Self {
-        match code {
-            "unknown_option" => Self::UnknownOption,
-            _ => Self::UnknownError,
-        }
-    }
-}
-
-impl fmt::Display for ExtensionErrorType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::UnknownOption => write!(f, "unknown extension option"),
-            Self::UnknownError => write!(f, "unknown extension error"),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct ExtensionResult {
-    pub result: String,
-    pub error: Option<ExtensionErrorType>,
-}
 
 #[derive(Clone)]
 pub struct DidYouMean {
@@ -50,30 +16,6 @@ impl fmt::Display for DidYouMean {
             "{}",
             &did_you_mean_banner(&self.searched_for, &self.suggestion)
         )
-    }
-}
-
-impl IntoLua for DidYouMean {
-    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-        let did_you_mean = lua.create_table()?;
-        did_you_mean.set("searched_for", self.searched_for)?;
-        did_you_mean.set("suggestion", self.suggestion)?;
-        Ok(mlua::Value::Table(did_you_mean))
-    }
-}
-
-impl FromLua for DidYouMean {
-    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-        if let Some(did_you_mean) = value.as_table() {
-            let entry = DidYouMean {
-                searched_for: did_you_mean.get("searched_for")?,
-                suggestion: did_you_mean.get("suggestion")?,
-            };
-            return Ok(entry);
-        }
-        Err(mlua::Error::RuntimeError(
-            "no valid did-you-mean definition found in lua".to_string(),
-        ))
     }
 }
 

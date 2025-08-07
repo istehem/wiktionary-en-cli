@@ -1,9 +1,8 @@
 use mlua::Lua;
 use mlua::Value;
 use mlua::{FromLua, IntoLua};
-use std::any::type_name;
 
-use crate::result::{DictionaryResult, ExtensionErrorType, ExtensionResult};
+use crate::result::{DictionaryResult, DidYouMean};
 
 impl IntoLua for DictionaryResult {
     fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
@@ -30,31 +29,26 @@ impl FromLua for DictionaryResult {
     }
 }
 
-impl FromLua for ExtensionResult {
-    fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
-        if let Some(table) = value.as_table() {
-            return Ok(Self {
-                result: table.get("result")?,
-                error: table.get("error")?,
-            });
-        }
-        Err(mlua::Error::FromLuaConversionError {
-            from: "table",
-            to: type_name::<Self>().to_string(),
-            message: None,
-        })
+impl IntoLua for DidYouMean {
+    fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+        let did_you_mean = lua.create_table()?;
+        did_you_mean.set("searched_for", self.searched_for)?;
+        did_you_mean.set("suggestion", self.suggestion)?;
+        Ok(mlua::Value::Table(did_you_mean))
     }
 }
 
-impl FromLua for ExtensionErrorType {
-    fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
-        if let Some(error_type) = value.as_string() {
-            return Ok(ExtensionErrorType::from(&error_type.to_str()?));
+impl FromLua for DidYouMean {
+    fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+        if let Some(did_you_mean) = value.as_table() {
+            let entry = DidYouMean {
+                searched_for: did_you_mean.get("searched_for")?,
+                suggestion: did_you_mean.get("suggestion")?,
+            };
+            return Ok(entry);
         }
-        Err(mlua::Error::FromLuaConversionError {
-            from: "error_type",
-            to: type_name::<Self>().to_string(),
-            message: None,
-        })
+        Err(mlua::Error::RuntimeError(
+            "no valid did-you-mean definition found in lua".to_string(),
+        ))
     }
 }

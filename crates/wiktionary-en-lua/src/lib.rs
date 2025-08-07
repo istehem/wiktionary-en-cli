@@ -1,3 +1,6 @@
+pub mod extension;
+pub mod extension_lua;
+
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
 use mlua::{FromLua, Function, Lua};
@@ -7,7 +10,9 @@ use utilities::{DICTIONARY_CONFIG, DICTIONARY_EXTENSIONS};
 use wiktionary_en_db::client::DbClientMutex;
 use wiktionary_en_entities::config::Config;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, ExtensionResult};
+use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
+
+use crate::extension::ExtensionResult;
 
 const LUA_CONFIGURATION_ERROR: &str = "Lua Configuration Error";
 const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";

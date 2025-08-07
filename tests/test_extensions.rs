@@ -13,7 +13,8 @@ mod tests {
     use utilities::language::Language;
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
-    use wiktionary_en_entities::result::{DictionaryResult, DidYouMean, ExtensionErrorType};
+    use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
+    use wiktionary_en_lua::extension::ExtensionErrorType;
     use wiktionary_en_lua::ExtensionHandler;
 
     const ITERATIONS: usize = 100;
