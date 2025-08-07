@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 
 use wiktionary_en_entities::result::DictionaryResult;
-use wiktionary_en_lua::ExtensionHandler;
+use wiktionary_en_lua::extension::ExtensionHandler;
 
 pub enum WiktionaryResult {
     DictionaryResult(DictionaryResult),
@@ -9,7 +9,7 @@ pub enum WiktionaryResult {
 
 pub struct WiktionaryResultWrapper {
     pub result: WiktionaryResult,
-    pub extension_handler: wiktionary_en_lua::ExtensionHandler,
+    pub extension_handler: ExtensionHandler,
 }
 
 impl WiktionaryResultWrapper {

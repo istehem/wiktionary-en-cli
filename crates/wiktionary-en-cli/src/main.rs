@@ -142,7 +142,7 @@ fn search_for_term(
 fn query_dictionary(
     client: &DbClient,
     query_params: QueryParameters,
-    extension_handler: wiktionary_en_lua::ExtensionHandler,
+    extension_handler: wiktionary_en_lua::extension::ExtensionHandler,
 ) -> Result<WiktionaryResultWrapper> {
     if let Some(term) = &query_params.search_term {
         let result = search_for_term(client, term, &query_params)?;
@@ -178,7 +178,8 @@ fn main() -> Result<()> {
         } => {
             let db_client = DbClient::init(language_to_use)?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
-            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+            let extension_handler =
+                wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex)?;
             let mut result = query_dictionary(
                 &db_client,
                 QueryParameters {
@@ -213,7 +214,8 @@ fn main() -> Result<()> {
         Command::Extension { name, options } => {
             let db_client = DbClient::init(language_to_use)?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
-            let extension_handler = wiktionary_en_lua::ExtensionHandler::init(db_client_mutex)?;
+            let extension_handler =
+                wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex)?;
             extension_handler.call_extension(&name, &options)?.result
         }
     };
