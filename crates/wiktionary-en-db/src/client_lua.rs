@@ -1,3 +1,4 @@
+use anyhow;
 use bson::Bson;
 use bson::Document;
 use mlua::{Error, FromLua, IntoLua, Lua, Result, Table, UserData, UserDataMethods, Value};
@@ -13,26 +14,31 @@ fn lock(db_client: &DbClientMutex) -> Result<MutexGuard<'_, DbClient>> {
     }
 }
 
+fn ok_or_runtime_error<T>(result: anyhow::Result<T>) -> Result<T> {
+    match result {
+        Ok(result) => Ok(result),
+        Err(err) => Err(Error::RuntimeError(err.to_string())),
+    }
+}
+
 impl UserData for DbClientMutex {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method(
             "find_in_collection",
             |_, this, (extension_name, document): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
-                match db_client.find_in_extension_collection(&extension_name, document) {
-                    Ok(entry) => Ok(entry),
-                    Err(err) => Err(Error::RuntimeError(err.to_string())),
-                }
+                ok_or_runtime_error(
+                    db_client.find_in_extension_collection(&extension_name, document),
+                )
             },
         );
         methods.add_method(
             "find_one_in_collection",
             |_, this, (extension_name, document): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
-                match db_client.find_one_in_extension_collection(&extension_name, document) {
-                    Ok(entry) => Ok(entry),
-                    Err(err) => Err(Error::RuntimeError(err.to_string())),
-                }
+                ok_or_runtime_error(
+                    db_client.find_one_in_extension_collection(&extension_name, document),
+                )
             },
         );
         methods.add_method(
@@ -49,30 +55,25 @@ impl UserData for DbClientMutex {
             "update_one_in_collection",
             |_, this, (extension_name, query, update): (String, ExtensionDocument, ExtensionDocument)| {
                 let db_client = lock(this)?;
-                match db_client.update_one_in_extension_collection(&extension_name, query, update) {
-                    Ok(update_count) => Ok(update_count),
-                    Err(err) => Err(Error::RuntimeError(err.to_string())),
-                }
+                ok_or_runtime_error(db_client.update_one_in_extension_collection(&extension_name, query, update))
             },
         );
         methods.add_method(
             "delete_in_collection",
             |_, this, (extension_name, query): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
-                match db_client.delete_many_in_extension_collection(&extension_name, query) {
-                    Ok(delete_count) => Ok(delete_count),
-                    Err(err) => Err(Error::RuntimeError(err.to_string())),
-                }
+                ok_or_runtime_error(
+                    db_client.delete_many_in_extension_collection(&extension_name, query),
+                )
             },
         );
         methods.add_method(
             "create_index_for_collection",
             |_, this, (extension_name, keys): (String, ExtensionDocument)| {
                 let db_client = lock(this)?;
-                match db_client.create_index_for_extension_collection(&extension_name, keys) {
-                    Ok(()) => Ok(()),
-                    Err(err) => Err(Error::RuntimeError(err.to_string())),
-                }
+                ok_or_runtime_error(
+                    db_client.create_index_for_extension_collection(&extension_name, keys),
+                )
             },
         );
     }
