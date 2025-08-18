@@ -38,12 +38,18 @@ impl Display for ExtensionErrorType {
 }
 
 #[derive(Debug)]
-pub struct ExtensionResult {
-    pub result: String,
+pub struct ExtensionResult<T>
+where
+    T: Display,
+{
+    pub result: T,
     pub error: Option<ExtensionErrorType>,
 }
 
-impl FromLua for ExtensionResult {
+impl<T> FromLua for ExtensionResult<T>
+where
+    T: Display + FromLua,
+{
     fn from_lua(value: Value, _lua: &Lua) -> mlua::Result<Self> {
         if let Some(table) = value.as_table() {
             return Ok(Self {
@@ -144,14 +150,15 @@ impl ExtensionHandler {
         &self,
         extension_name: &str,
         options: &Vec<String>,
-    ) -> Result<ExtensionResult> {
-        let result = match call_extension_lua_function(&self.lua, extension_name, options) {
-            Ok(result) => match result {
-                Some(result) => Ok(result),
-                None => bail!("extension '{}' not found", extension_name),
-            },
-            Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
-        }?;
+    ) -> Result<ExtensionResult<String>> {
+        let result: ExtensionResult<String> =
+            match call_extension_lua_function(&self.lua, extension_name, options) {
+                Ok(result) => match result {
+                    Some(result) => Ok(result),
+                    None => bail!("extension '{}' not found", extension_name),
+                },
+                Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
+            }?;
         match result {
             ExtensionResult {
                 result,

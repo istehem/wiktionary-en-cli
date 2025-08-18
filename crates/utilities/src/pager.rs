@@ -3,7 +3,10 @@ use minus::Pager;
 use std::fmt::Display;
 use std::fmt::Write;
 
-pub fn print_lines_in_pager<T: Display>(entries: &[T]) -> Result<()> {
+pub fn print_lines_in_pager<T>(entries: &[T]) -> Result<()>
+where
+    T: Display,
+{
     let mut output = Pager::new();
 
     for entry in entries {
@@ -13,7 +16,10 @@ pub fn print_lines_in_pager<T: Display>(entries: &[T]) -> Result<()> {
     Ok(())
 }
 
-pub fn print_in_pager<T: std::fmt::Display>(value: &T) -> Result<()> {
+pub fn print_in_pager<T>(value: &T) -> Result<()>
+where
+    T: Display,
+{
     let mut output = Pager::new();
     writeln!(output, "{}", value)?;
     minus::page_all(output)?;
