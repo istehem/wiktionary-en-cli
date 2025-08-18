@@ -146,12 +146,15 @@ impl ExtensionHandler {
         }
     }
 
-    pub fn call_extension(
+    pub fn call_extension<T>(
         &self,
         extension_name: &str,
         options: &Vec<String>,
-    ) -> Result<ExtensionResult<String>> {
-        let result: ExtensionResult<String> =
+    ) -> Result<ExtensionResult<T>>
+    where
+        T: Display + FromLua,
+    {
+        let result: ExtensionResult<T> =
             match call_extension_lua_function(&self.lua, extension_name, options) {
                 Ok(result) => match result {
                     Some(result) => Ok(result),
@@ -163,7 +166,7 @@ impl ExtensionHandler {
             ExtensionResult {
                 result,
                 error: Some(error_type),
-            } => Err(anyhow!(result).context(error_type)),
+            } => Err(anyhow!(result.to_string()).context(error_type)),
             result => Ok(result),
         }
     }

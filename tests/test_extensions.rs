@@ -14,7 +14,7 @@ mod tests {
     use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
-    use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler};
+    use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler, ExtensionResult};
 
     const ITERATIONS: usize = 100;
 
@@ -124,7 +124,8 @@ mod tests {
             let _guard = TEST_MUTEX.lock().unwrap();
             intercept_dictionary_entries(&extension_handler)?;
         }
-        let extension_result = extension_handler.call_extension("history", &vec![])?;
+        let extension_result: ExtensionResult<String> =
+            extension_handler.call_extension("history", &vec![])?;
         println!("{}", extension_result.result);
 
         Ok(())
@@ -141,7 +142,7 @@ mod tests {
 
         call_delete()?;
         let size = intercept_dictionary_entries(&extension_handler)?;
-        let extension_result = call_delete()?;
+        let extension_result: ExtensionResult<String> = call_delete()?;
 
         assert_contains!(extension_result.result, &format!("{}", size));
 
@@ -156,9 +157,9 @@ mod tests {
     fn test_history_with_unknown_option(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let error = extension_handler
-            .call_extension("history", &vec!["unknown".to_string()])
-            .unwrap_err();
+        let result: Result<ExtensionResult<String>> =
+            extension_handler.call_extension("history", &vec!["unknown".to_string()]);
+        let error = result.unwrap_err();
         assert_contains!(
             error_chain_as_strings(&error),
             &ExtensionErrorType::UnknownOption.to_string()
@@ -172,9 +173,9 @@ mod tests {
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let extension_name = "unknown";
-        let error = extension_handler
-            .call_extension(extension_name, &vec![])
-            .unwrap_err();
+        let result: Result<ExtensionResult<String>> =
+            extension_handler.call_extension(extension_name, &vec![]);
+        let error = result.unwrap_err();
         assert_contains!(
             error_chain_as_strings(&error),
             &format!("extension '{}' not found", extension_name)
