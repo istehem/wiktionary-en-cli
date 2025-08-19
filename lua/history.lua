@@ -42,8 +42,7 @@ local function index()
 end
 
 local function count()
-  local documents = db_client:find_in_collection(features.history.name, {})
-  return { result = #documents }
+  return { result = db_client:count_documents_in_collection(features.history.name) }
 end
 
 history.main = function(options)

@@ -149,6 +149,23 @@ mod tests {
         Ok(())
     }
 
+    #[rstest]
+    fn test_count_history_entries(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap();
+
+        let _: ExtensionResult<String> =
+            extension_handler.call_extension("history", &vec!["delete".to_string()])?;
+        let size = intercept_dictionary_entries(&extension_handler)?;
+        let history_count: ExtensionResult<usize> =
+            extension_handler.call_extension("history", &vec!["count".to_string()])?;
+
+        assert_eq!(size, history_count.result);
+
+        Ok(())
+    }
+
     fn error_chain_as_strings(error: &Error) -> Vec<String> {
         error.chain().map(|e| e.to_string()).collect()
     }
