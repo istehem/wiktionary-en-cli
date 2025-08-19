@@ -41,6 +41,11 @@ local function index()
   return { result = "index created on key 'word'" }
 end
 
+local function count()
+  local documents = db_client:find_in_collection(features.history.name, {})
+  return { result = #documents }
+end
+
 history.main = function(options)
   if not utils.is_empty(options) then
     for _, option in ipairs(options) do
@@ -48,6 +53,8 @@ history.main = function(options)
         return delete()
       elseif option == "index" then
         return index()
+      elseif option == "count" then
+        return count()
       else
         error_msg = string.format("unknown option '%s'", option)
         return { result = error_msg, error = "unknown_option" }

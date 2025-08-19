@@ -152,6 +152,10 @@ impl DbClient {
         }
     }
 
+    pub fn count_documents_in_extension_collection(&self, extension_name: &str) -> Result<u64> {
+        number_of_entries_in_collection(&self.extension_collection(extension_name))
+    }
+
     pub fn insert_wiktionary_file(
         &self,
         file_reader: BufReader<File>,
@@ -222,7 +226,7 @@ fn random_entry_in_collection(collection: &Collection<DictionaryEntry>) -> Resul
     }
 }
 
-fn number_of_entries_in_collection(collection: &Collection<DictionaryEntry>) -> Result<u64> {
+fn number_of_entries_in_collection<T>(collection: &Collection<T>) -> Result<u64> {
     let count: Result<u64, polodb_core::Error> = collection.count_documents();
     match count {
         Ok(count) => Ok(count),

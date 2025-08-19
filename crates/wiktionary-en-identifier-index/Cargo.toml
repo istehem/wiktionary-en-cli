@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 utilities = { path = "../utilities" }
 wiktionary-en-entities = { version = "0.1.0", path = "../wiktionary-en-entities" }
-sonic-channel = { version = "1.1", features = ["ingest", "search"] }
+sonic-channel = { version = "1.1.0", features = ["ingest", "search"] }
 base64 = "0.22.1"
 anyhow = {workspace = true} 
 edit-distance = { workspace = true }

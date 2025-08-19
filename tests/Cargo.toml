@@ -6,8 +6,8 @@ publish = false
 
 [dev-dependencies]
 anyhow = {workspace = true}
-tracing = "0.1"
-tracing-test = "0.2"
+tracing = "0.1.41"
+tracing-test = "0.2.5"
 utilities = { path = "../crates/utilities" }
 wiktionary-en-entities = { path = "../crates/wiktionary-en-entities" }
 wiktionary-en-lua = { path = "../crates/wiktionary-en-lua" }

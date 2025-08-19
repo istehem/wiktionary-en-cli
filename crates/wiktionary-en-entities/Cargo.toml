@@ -10,6 +10,6 @@ utilities = { path = "../utilities" }
 anyhow = { workspace = true }
 serde = { workspace = true }
 colored = "3.0.0"
-indoc = "2.0"
+indoc = "2.0.6"
 textwrap = { workspace = true } 
 mlua = { workspace = true }
