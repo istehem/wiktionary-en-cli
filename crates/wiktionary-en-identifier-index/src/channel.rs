@@ -22,7 +22,7 @@ impl DictionarySearchChannel {
         })
     }
 
-    pub fn query(&self, search_term: &String) -> Result<Vec<String>> {
+    pub fn query(&self, search_term: &str) -> Result<Vec<String>> {
         let objects = self.search_channel.query(
             QueryRequest::new(
                 Dest::col_buc(WIKTIONARY_COLLECTION, self.language.to_string()),
@@ -54,7 +54,7 @@ impl DictionarySearchChannel {
         Ok(suggestions)
     }
 
-    pub fn did_you_mean(&self, search_term: &String) -> Result<Option<String>> {
+    pub fn did_you_mean(&self, search_term: &str) -> Result<Option<String>> {
         let mut alternatives = self
             .query(search_term)
             .context(format!("could't query for term '{}'", search_term))?;
@@ -119,7 +119,7 @@ impl DictionaryIngestChannel {
         Ok(flushdb_count as u64)
     }
 
-    pub fn push(&self, word: &String) -> Result<()> {
+    pub fn push(&self, word: &str) -> Result<()> {
         let obj = STANDARD.encode(word);
         let dest = Dest::col_buc(WIKTIONARY_COLLECTION, self.language.to_string()).obj(&obj);
         self.ingest_channel

@@ -19,12 +19,12 @@ pub fn suggest(language: &Language, search_term: &str) -> Result<Vec<String>> {
     search_channel.suggest(search_term)
 }
 
-pub fn query(language: &Language, search_term: &String) -> Result<Vec<String>> {
+pub fn query(language: &Language, search_term: &str) -> Result<Vec<String>> {
     let search_channel = DictionarySearchChannel::init(language)?;
     search_channel.query(search_term)
 }
 
-pub fn did_you_mean(language: &Language, search_term: &String) -> Result<Option<String>> {
+pub fn did_you_mean(language: &Language, search_term: &str) -> Result<Option<String>> {
     let search_channel = DictionarySearchChannel::init(language)?;
     search_channel.did_you_mean(search_term)
 }

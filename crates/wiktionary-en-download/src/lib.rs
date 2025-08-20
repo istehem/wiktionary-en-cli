@@ -53,7 +53,7 @@ impl Writer {
 }
 
 #[tokio::main]
-async fn stream_download(url: &String, output_filename: &str) -> Result<()> {
+async fn stream_download(url: &str, output_filename: &str) -> Result<()> {
     let client = reqwest::Client::new();
 
     let response = client.get(url).send().await?;
