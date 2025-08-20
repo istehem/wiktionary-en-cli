@@ -1,12 +1,11 @@
 use anyhow::{bail, Result};
-use std::fs::File;
-use std::io::Write;
 use std::path::Path;
 
 use futures_util::StreamExt;
-use std::io::BufWriter;
 
 use indicatif::{ProgressBar, ProgressStyle};
+use tokio::fs::{File, OpenOptions};
+use tokio::io::{AsyncWriteExt, BufWriter};
 use utilities::language::Language;
 
 const PROGRESS_BAR_TEMPLATE: &str = "{wide_bar} {bytes}/{total_bytes}";
@@ -35,16 +34,16 @@ impl Writer {
         Ok(progress_bar)
     }
 
-    fn write(&mut self, data: &[u8]) -> Result<()> {
-        self.writer.write_all(data)?;
+    async fn write_all(&mut self, data: &[u8]) -> Result<()> {
+        self.writer.write_all(data).await?;
         if let Some(progress_bar) = self.progress_bar.as_ref() {
             progress_bar.inc(data.len() as u64);
         }
         Ok(())
     }
 
-    fn flush(&mut self) -> Result<()> {
-        let result = self.writer.flush().map_err(anyhow::Error::new);
+    async fn flush(&mut self) -> Result<()> {
+        let result = self.writer.flush().await.map_err(anyhow::Error::new);
         if let Some(progress_bar) = self.progress_bar.as_ref() {
             progress_bar.finish();
         }
@@ -61,14 +60,19 @@ async fn stream_download(url: &str, output_filename: &str) -> Result<()> {
 
     let mut bytes = response.bytes_stream();
 
-    let file = File::create(output_filename)?;
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(output_filename)
+        .await?;
+
     let buf_writer: BufWriter<File> = BufWriter::new(file);
     let mut writer = Writer::init(buf_writer, content_length)?;
 
     while let Some(chunk) = bytes.next().await {
-        writer.write(&chunk?)?;
+        writer.write_all(&chunk?).await?;
     }
-    return writer.flush();
+    return writer.flush().await;
 }
 
 fn resource_url(language: &Language) -> String {
