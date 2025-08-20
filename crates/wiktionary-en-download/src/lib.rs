@@ -6,6 +6,7 @@ use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
+use tokio::sync::mpsc;
 use utilities::language::Language;
 
 const PROGRESS_BAR_TEMPLATE: &str = "{wide_bar} {bytes}/{total_bytes}";
@@ -58,21 +59,37 @@ async fn stream_download(url: &str, output_filename: &str) -> Result<()> {
     let response = client.get(url).send().await?;
     let content_length: Option<u64> = response.content_length();
 
-    let mut bytes = response.bytes_stream();
+    let (tx, mut rx) = mpsc::channel::<Vec<u8>>(10); // Buffer size of 10
+
+    let reader_task: tokio::task::JoinHandle<Result<()>> = tokio::spawn(async move {
+        let mut bytes = response.bytes_stream();
+        while let Some(chunk) = bytes.next().await {
+            let chunk = chunk?;
+            if tx.send(chunk.to_vec()).await.is_err() {
+                break;
+            }
+        }
+        Ok(())
+    });
 
     let file = OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(true)
         .open(output_filename)
         .await?;
 
     let buf_writer: BufWriter<File> = BufWriter::new(file);
     let mut writer = Writer::init(buf_writer, content_length)?;
 
-    while let Some(chunk) = bytes.next().await {
-        writer.write_all(&chunk?).await?;
+    while let Some(chunk) = rx.recv().await {
+        writer.write_all(&chunk).await?;
     }
-    return writer.flush().await;
+    writer.flush().await?;
+
+    reader_task.await??;
+
+    Ok(())
 }
 
 fn resource_url(language: &Language) -> String {
