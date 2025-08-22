@@ -2006,6 +2006,7 @@ dependencies = [
  "tracing-test",
  "utilities",
  "wiktionary-en-db",
+ "wiktionary-en-download",
  "wiktionary-en-entities",
  "wiktionary-en-lua",
 ]

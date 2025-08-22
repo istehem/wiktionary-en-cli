@@ -122,4 +122,8 @@ impl Downloader {
     pub fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
         download_dictionary_extract(language, force)
     }
+
+    pub fn download(url: &str, output_filename: &str) -> Result<()> {
+        stream_download(url, output_filename)
+    }
 }

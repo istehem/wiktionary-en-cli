@@ -12,6 +12,7 @@ utilities = { path = "../crates/utilities" }
 wiktionary-en-entities = { path = "../crates/wiktionary-en-entities" }
 wiktionary-en-lua = { path = "../crates/wiktionary-en-lua" }
 wiktionary-en-db = { path = "../crates/wiktionary-en-db" }
+wiktionary-en-download = { path = "../crates/wiktionary-en-download" }
 serde_json = { workspace = true }
 rstest = "0.26.1"
 lazy_static = "1.5.0"
@@ -35,3 +36,7 @@ path = "test_data_fields.rs"
 [[test]]
 name = "test-utilities"
 path = "test_utilities.rs"
+
+[[test]]
+name = "test-download"
+path = "test_download.rs"

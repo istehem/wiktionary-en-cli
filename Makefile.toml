@@ -104,3 +104,10 @@ command = "cargo"
 args = [
 	"test", "-p", "tests", "--test", "test-extensions",  "--", "--nocapture"
 ]
+
+[tasks.test-download]
+workspace = false
+command = "cargo"
+args = [
+	"test", "-p", "tests", "--test", "test-download",  "--", "--nocapture", "--include-ignored"
+]
