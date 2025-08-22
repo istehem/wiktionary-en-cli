@@ -59,13 +59,13 @@ async fn stream_download(url: &str, output_filename: &str) -> Result<()> {
     let response = client.get(url).send().await?;
     let content_length: Option<u64> = response.content_length();
 
-    let (tx, mut rx) = mpsc::channel::<Vec<u8>>(10); // Buffer size of 10
+    let (tx, mut rx) = mpsc::channel(1);
 
     let reader_task: tokio::task::JoinHandle<Result<()>> = tokio::spawn(async move {
         let mut bytes = response.bytes_stream();
         while let Some(chunk) = bytes.next().await {
             let chunk = chunk?;
-            if tx.send(chunk.to_vec()).await.is_err() {
+            if tx.send(chunk).await.is_err() {
                 break;
             }
         }
