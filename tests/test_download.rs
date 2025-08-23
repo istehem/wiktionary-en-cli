@@ -1,4 +1,4 @@
-#[cfg(test)]
+#[cfg(feature = "test-download")]
 mod tests {
     use anyhow::Result;
     use rstest::*;
@@ -6,7 +6,6 @@ mod tests {
     use wiktionary_en_download::Downloader;
 
     #[rstest]
-    #[ignore]
     fn test_download() -> Result<()> {
         let url = "https://testfileorg.netwet.net/500MB-CZIPtestfile.org.zip";
         let file_name = "./tmp/download_test.zip";

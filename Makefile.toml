@@ -109,5 +109,5 @@ args = [
 workspace = false
 command = "cargo"
 args = [
-	"test", "-p", "tests", "--test", "test-download",  "--", "--nocapture", "--include-ignored"
+	"test", "-p", "tests", "--test", "test-download", "--features", "test-download", "--", "--nocapture"
 ]

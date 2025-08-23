@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+[features]
+test = []
+test-download = []
+
 [dev-dependencies]
 anyhow = {workspace = true}
 tracing = "0.1.41"
@@ -40,3 +44,4 @@ path = "test_utilities.rs"
 [[test]]
 name = "test-download"
 path = "test_download.rs"
+required-features = ["test-download"]
