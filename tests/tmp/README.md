@@ -1,1 +1,1 @@
-Files created during tests goes here.
+The files created during testing are stored here.
