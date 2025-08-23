@@ -116,7 +116,7 @@ fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
     stream_download(&url, &output_filename)
 }
 
-pub struct Downloader {}
+pub struct Downloader();
 
 impl Downloader {
     pub fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
