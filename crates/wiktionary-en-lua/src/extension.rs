@@ -17,6 +17,7 @@ const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";
 #[derive(Copy, Clone)]
 enum InnerWorkingsExtension {
     FormatEntry,
+    FormatDidYouMeanBanner,
     Intercept,
 }
 
@@ -25,11 +26,14 @@ impl InnerWorkingsExtension {
         match self {
             FormatEntry => "format_entry".to_string(),
             Intercept => "intercept".to_string(),
+            FormatDidYouMeanBanner => "format_did_you_mean_banner".to_string(),
         }
     }
 
     fn iterator() -> impl Iterator<Item = Self> {
-        [FormatEntry, Intercept].iter().copied()
+        [FormatEntry, FormatDidYouMeanBanner, Intercept]
+            .iter()
+            .copied()
     }
 
     fn as_strings() -> Vec<String> {
@@ -304,7 +308,11 @@ fn format_did_you_mean_banner(
     lua: &Lua,
     did_you_mean: &DidYouMean,
 ) -> mlua::Result<Option<String>> {
-    call_extension_lua_function(lua, "format_did_you_mean_banner", did_you_mean)
+    call_extension_lua_function(
+        lua,
+        &InnerWorkingsExtension::FormatDidYouMeanBanner.value(),
+        did_you_mean,
+    )
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {
