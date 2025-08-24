@@ -1,3 +1,4 @@
+use self::InnerWorkingsExtension::*;
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
 use mlua::{FromLua, Function, Lua, Value};
@@ -12,6 +13,37 @@ use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 
 const LUA_EXTENSION_ERROR: &str = "Lua Extension Error";
+
+#[derive(Copy, Clone)]
+enum InnerWorkingsExtension {
+    FormatEntry,
+    Intercept,
+}
+
+impl InnerWorkingsExtension {
+    fn value(&self) -> String {
+        match self {
+            FormatEntry => "format_entry".to_string(),
+            Intercept => "intercept".to_string(),
+        }
+    }
+
+    fn iterator() -> impl Iterator<Item = Self> {
+        [FormatEntry, Intercept].iter().copied()
+    }
+
+    fn as_strings() -> Vec<String> {
+        Self::iterator()
+            .map(|extension| extension.to_string())
+            .collect()
+    }
+}
+
+impl fmt::Display for InnerWorkingsExtension {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.value())
+    }
+}
 
 #[derive(Debug)]
 pub enum ExtensionErrorType {
@@ -154,6 +186,13 @@ impl ExtensionHandler {
     where
         T: Display + FromLua,
     {
+        if InnerWorkingsExtension::as_strings().contains(&extension_name.to_string()) {
+            bail!(
+                "the extension '{}' is used for inner workings only and can't be called directly",
+                extension_name
+            );
+        }
+
         let result: ExtensionResult<T> =
             match call_extension_lua_function(&self.lua, extension_name, options) {
                 Ok(result) => match result {
@@ -246,11 +285,19 @@ fn intercept(
     lua: &Lua,
     dictionary_result: &DictionaryResult,
 ) -> mlua::Result<Option<DictionaryResult>> {
-    call_extension_lua_function(lua, "intercept", dictionary_result)
+    call_extension_lua_function(
+        lua,
+        &InnerWorkingsExtension::Intercept.value(),
+        dictionary_result,
+    )
 }
 
 fn format_entry(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
-    call_extension_lua_function(lua, "format_entry", dictionary_entry)
+    call_extension_lua_function(
+        lua,
+        &InnerWorkingsExtension::FormatEntry.value(),
+        dictionary_entry,
+    )
 }
 
 fn format_did_you_mean_banner(
