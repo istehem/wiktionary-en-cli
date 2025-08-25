@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use rstest::*;
+    use rstest::rstest;
     use utilities::colored_string_utils::{format_integer, Join};
 
     #[rstest]

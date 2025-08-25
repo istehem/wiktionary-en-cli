@@ -2,7 +2,7 @@
 mod tests {
     use anyhow::{Context, Error, Result};
     use lazy_static::lazy_static;
-    use rstest::*;
+    use rstest::{fixture, rstest};
     use std::collections::HashSet;
     use std::fs::File;
     use std::io::BufRead;

@@ -1,7 +1,7 @@
 #[cfg(feature = "test-download")]
 mod tests {
     use anyhow::Result;
-    use rstest::*;
+    use rstest::rstest;
     use std::time::Instant;
     use wiktionary_en_download::Downloader;
 
