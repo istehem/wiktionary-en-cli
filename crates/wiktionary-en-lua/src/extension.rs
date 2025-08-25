@@ -291,7 +291,7 @@ fn intercept(
 ) -> mlua::Result<Option<DictionaryResult>> {
     call_extension_lua_function(
         lua,
-        &InnerWorkingsExtension::Intercept.value(),
+        &InnerWorkingsExtension::Intercept.to_string(),
         dictionary_result,
     )
 }
@@ -299,7 +299,7 @@ fn intercept(
 fn format_entry(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
     call_extension_lua_function(
         lua,
-        &InnerWorkingsExtension::FormatEntry.value(),
+        &InnerWorkingsExtension::FormatEntry.to_string(),
         dictionary_entry,
     )
 }
@@ -310,7 +310,7 @@ fn format_did_you_mean_banner(
 ) -> mlua::Result<Option<String>> {
     call_extension_lua_function(
         lua,
-        &InnerWorkingsExtension::FormatDidYouMeanBanner.value(),
+        &InnerWorkingsExtension::FormatDidYouMeanBanner.to_string(),
         did_you_mean,
     )
 }
