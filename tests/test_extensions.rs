@@ -33,6 +33,15 @@ mod tests {
         };
     }
 
+    macro_rules! directly_calling_inner_workings_extension_error_msg {
+        ($extension_name:expr) => {
+            format!(
+                "the extension '{}' is used for inner workings only and can't be called directly",
+                $extension_name
+            )
+        };
+    }
+
     fn language() -> Language {
         Language::EN
     }
@@ -196,6 +205,54 @@ mod tests {
         assert_contains!(
             error_chain_as_strings(&error),
             &format!("extension '{}' not found", extension_name)
+        );
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_directly_calling_format_entry_extension(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
+        let extension_name = "format_entry";
+        let result: Result<ExtensionResult<String>> =
+            extension_handler.call_extension(extension_name, &vec![]);
+        let error = result.unwrap_err();
+        assert_contains!(
+            error_chain_as_strings(&error),
+            &directly_calling_inner_workings_extension_error_msg!(extension_name)
+        );
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_directly_calling_intercept_extension(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
+        let extension_name = "intercept";
+        let result: Result<ExtensionResult<String>> =
+            extension_handler.call_extension(extension_name, &vec![]);
+        let error = result.unwrap_err();
+        assert_contains!(
+            error_chain_as_strings(&error),
+            &directly_calling_inner_workings_extension_error_msg!(extension_name)
+        );
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_directly_calling_format_did_you_mean_banner_extension(
+        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    ) -> Result<()> {
+        let extension_name = "format_did_you_mean_banner";
+        let result: Result<ExtensionResult<String>> =
+            extension_handler.call_extension(extension_name, &vec![]);
+        let error = result.unwrap_err();
+        assert_contains!(
+            error_chain_as_strings(&error),
+            &directly_calling_inner_workings_extension_error_msg!(extension_name)
         );
 
         Ok(())
