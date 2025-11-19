@@ -59,7 +59,7 @@ async fn stream_download(url: &str, output_filename: &str) -> Result<()> {
     let response = client.get(url).send().await?;
     let content_length: Option<u64> = response.content_length();
 
-    // A buffer isn't needed; the network is much slower than the writing to disk.
+    // A buffer isn't needed; the network is much slower than writing to disk.
     let (tx, mut rx) = mpsc::channel(1);
     let reader_task: tokio::task::JoinHandle<Result<()>> = tokio::spawn(async move {
         let mut bytes = response.bytes_stream();
