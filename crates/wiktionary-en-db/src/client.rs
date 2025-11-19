@@ -246,7 +246,7 @@ fn insert_wiktionary_file_into_collection(
             bail!(
                 "dictionary already contains {} entries for language {}, use force to override",
                 count,
-                language.to_string()
+                language
             );
         }
     }

@@ -21,7 +21,7 @@ pub struct ExhaustiveDictionaryResult {
 
 fn levenshtein_distance(search_term: &str, word: &str, case_insensitive: bool) -> usize {
     if case_insensitive {
-        edit_distance(&search_term.to_uppercase(), &word.to_uppercase())
+        edit_distance(search_term.to_uppercase(), word.to_uppercase())
     } else {
         edit_distance(search_term, word)
     }
