@@ -6,7 +6,7 @@ mod tests {
     use wiktionary_en_download::Downloader;
 
     #[rstest]
-    fn test_download() -> Result<()> {
+    fn download_a_file() -> Result<()> {
         let url = "https://testfileorg.netwet.net/500MB-CZIPtestfile.org.zip";
         let file_name = "./tmp/download_test.zip";
 

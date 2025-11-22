@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_format_dictionary_entries(
+    fn format_dictionary_entries(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_format_did_you_mean_banner(
+    fn format_did_you_mean_banner(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let formatted_banner =
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_format_history_entries(
+    fn format_history_entries(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         {
@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_delete_history_entries(
+    fn delete_history_entries(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let _guard = TEST_MUTEX.lock().unwrap();
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_count_history_entries(
+    fn count_history_entries(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let _guard = TEST_MUTEX.lock().unwrap();
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_history_with_unknown_option(
+    fn history_with_unknown_option(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let result: Result<ExtensionResult<String>> =
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_calling_unknown_extension(
+    fn calling_unknown_extension(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let extension_name = "unknown";
@@ -214,7 +214,7 @@ mod tests {
     #[case::intercept("intercept")]
     #[case::format_entry("format_entry")]
     #[case::format_did_you_mean_banner("format_did_you_mean_banner")]
-    fn test_directly_calling_inner_workings_extension(
+    fn directly_calling_inner_workings_extension(
         #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
         #[case] extension_name: &str,
     ) -> Result<()> {

@@ -7,7 +7,7 @@ mod tests {
 
     #[traced_test]
     #[test]
-    fn test_load_config() -> Result<()> {
+    fn load_config() -> Result<()> {
         let config_handler = ConfigHandler::init()?;
         info!("language configured: {}", config_handler.config.language);
         Ok(())
