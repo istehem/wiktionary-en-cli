@@ -8,5 +8,5 @@ utilities = { path = "../utilities" }
 wiktionary-en-entities = { path = "../wiktionary-en-entities" }
 anyhow = {workspace = true} 
 mlua = { workspace = true }
-colored = "3.0.0"
+colored = "3.1.1"
 wiktionary-en-db = { path = "../wiktionary-en-db" }
