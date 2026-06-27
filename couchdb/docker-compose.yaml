@@ -1,0 +1,14 @@
+services:
+  wiktionary_couchdb:
+    image: docker.io/library/couchdb:3.5.2
+    ports:
+      - 5984:5984
+    volumes:
+      - ./couchdb-data:/opt/couchdb/data:Z
+      - ./single-node.ini:/opt/couchdb/etc/local.d/single-node.ini:Z
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: COUCHDB_PASSWORD
+
+volumes:
+  couchdb_data:
