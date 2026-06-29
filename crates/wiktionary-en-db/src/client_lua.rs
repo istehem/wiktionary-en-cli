@@ -5,7 +5,7 @@ use mlua::{Error, FromLua, IntoLua, Lua, Result, Table, UserData, UserDataMethod
 use std::any::type_name;
 use std::sync::MutexGuard;
 
-use crate::client::{DbClient, DbClientMutex, ExtensionDocument};
+use crate::couchdb_client::{DbClient, DbClientMutex, ExtensionDocument};
 
 fn lock(db_client: &DbClientMutex) -> Result<MutexGuard<'_, DbClient>> {
     match db_client.client.lock() {

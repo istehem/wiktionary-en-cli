@@ -45,3 +45,8 @@ path = "test_utilities.rs"
 name = "test-download"
 path = "test_download.rs"
 required-features = ["test-download"]
+
+[[test]]
+name = "test-couchdb-client"
+path = "test_couchdb_client.rs"
+

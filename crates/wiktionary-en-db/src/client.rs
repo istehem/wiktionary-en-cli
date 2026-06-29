@@ -1,3 +1,4 @@
+/*
 use anyhow::{bail, Context, Result};
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
@@ -292,3 +293,4 @@ fn create_index_on_word(collection: &Collection<DictionaryEntry>) -> Result<()> 
 
     Ok(())
 }
+*/
