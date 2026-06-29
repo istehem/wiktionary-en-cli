@@ -6,7 +6,7 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    async fn download_a_file() -> Result<()> {
+    async fn find_by_word() -> Result<()> {
         let client = DbClient::init(utilities::language::Language::EN).await?;
         let entries = client.find_by_word("test").await?;
         for entry in entries {
