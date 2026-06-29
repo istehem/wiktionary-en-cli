@@ -34,11 +34,7 @@ impl DbClient {
         Ok(Self { database, language })
     }
 
-    pub fn find_by_word(&self, _term: &str) -> Result<Vec<DictionaryEntry>> {
-        Ok(Vec::new())
-    }
-
-    pub async fn find_by_word_async(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
+    pub async fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
         let query = FindQuery::new(
             json!({ "word": term }), // Replace "status" and "active" with your field and term
         );
@@ -54,7 +50,7 @@ impl DbClient {
     ) -> Result<Vec<ExtensionDocument>> {
         Ok(Vec::new())
     }
-    pub fn find_one_in_extension_collection(
+    pub async fn find_one_in_extension_collection(
         &self,
         _extension_name: &str,
         __document: ExtensionDocument,

@@ -32,12 +32,14 @@ impl UserData for DbClientMutex {
                 )
             },
         );
-        methods.add_method(
+        methods.add_async_method(
             "find_one_in_collection",
-            |_, this, (extension_name, document): (String, ExtensionDocument)| {
-                let db_client = lock(this)?;
+            |_, this, (extension_name, document): (String, ExtensionDocument)| async move {
+                let db_client = lock(&this)?;
                 ok_or_runtime_error(
-                    db_client.find_one_in_extension_collection(&extension_name, document),
+                    db_client
+                        .find_one_in_extension_collection(&extension_name, document)
+                        .await,
                 )
             },
         );
