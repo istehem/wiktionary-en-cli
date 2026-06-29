@@ -8,6 +8,8 @@ impl FromLua for DictionaryEntry {
     fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
         if let Some(dictionary_entry) = value.as_table() {
             let entry = DictionaryEntry {
+                _id: "".to_string(),
+                _rev: "".to_string(),
                 lang_code: dictionary_entry.get("lang_code")?,
                 word: dictionary_entry.get("word")?,
                 senses: dictionary_entry.get("senses")?,

@@ -2,7 +2,10 @@ use anyhow::{bail, Ok, Result};
 use bson::document::Document;
 use bson::Bson;
 use couch_rs::database::Database;
+use couch_rs::document::DocumentCollection;
+use couch_rs::types::find::FindQuery;
 use couch_rs::Client;
+use serde_json::json;
 use std::sync::{Arc, Mutex};
 use std::vec::Vec;
 use utilities::language::Language;
@@ -35,6 +38,16 @@ impl DbClient {
     pub fn find_by_word(&self, _term: &str) -> Result<Vec<DictionaryEntry>> {
         Ok(Vec::new())
     }
+
+    pub async fn find_by_word_async(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
+        let query = FindQuery::new(
+            json!({ "word": term }), // Replace "status" and "active" with your field and term
+        );
+
+        let docs: DocumentCollection<DictionaryEntry> = self.database.find(&query).await?;
+        Ok(docs.rows)
+    }
+
     pub fn find_in_extension_collection(
         &self,
         _extension_name: &str,

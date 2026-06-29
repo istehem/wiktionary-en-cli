@@ -2824,6 +2824,7 @@ dependencies = [
  "couch_rs",
  "mlua",
  "rand",
+ "serde_json",
  "utilities",
  "wiktionary-en-entities",
 ]
@@ -2846,6 +2847,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "colored",
+ "couch_rs",
  "indoc",
  "mlua",
  "serde",

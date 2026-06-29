@@ -1,6 +1,8 @@
 use anyhow::Result;
 use colored::ColoredString;
 use colored::Colorize;
+use couch_rs::document::TypedCouchDocument;
+use couch_rs::CouchDocument;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -12,8 +14,12 @@ use utilities::anyhow_serde;
 use utilities::colored_string_utils::{horizontal_line, Join, JoinWrap, LINE_WRAP_AT, NEWLINE};
 use utilities::language::Language;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, CouchDocument)]
 pub struct DictionaryEntry {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _id: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub _rev: String,
     pub lang_code: String,
     pub word: String,
     pub senses: Vec<Sense>,
