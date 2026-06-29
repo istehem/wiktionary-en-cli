@@ -9,7 +9,7 @@ LUA_DIR := PROJECT_ROOT + "/lua"
 # start services needed to run wiktionary-cli
 [group: 'setup']
 start-background-services:
-  podman compose -f ./couchdb/docker-compose.yaml up
+  podman compose -f ./couchdb/docker-compose.yaml up --force-recreate
 
 
 [group: 'test']

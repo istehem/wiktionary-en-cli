@@ -1,6 +1,7 @@
 use anyhow::{bail, Ok, Result};
 use bson::document::Document;
 use bson::Bson;
+use couch_rs::database::Database;
 use couch_rs::Client;
 use std::sync::{Arc, Mutex};
 use std::vec::Vec;
@@ -9,7 +10,7 @@ use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 
 #[derive(Clone)]
 pub struct DbClient {
-    couch_client: Client,
+    database: Database,
     language: Language,
 }
 
@@ -23,6 +24,14 @@ pub struct ExtensionDocument {
 }
 
 impl DbClient {
+    const DB_HOST: &str = "http://localhost:5984";
+
+    pub async fn init(language: Language) -> Result<Self> {
+        let couch_client = couch_rs::Client::new(Self::DB_HOST, "admin", "password")?;
+        let database = couch_client.db(language.to_string().as_str()).await?;
+        Ok(Self { database, language })
+    }
+
     pub fn find_by_word(&self, _term: &str) -> Result<Vec<DictionaryEntry>> {
         Ok(Vec::new())
     }

@@ -2185,6 +2185,7 @@ dependencies = [
  "lazy_static",
  "rstest",
  "serde_json",
+ "tokio",
  "tracing",
  "tracing-test",
  "utilities",

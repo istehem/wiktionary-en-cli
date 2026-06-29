@@ -8,7 +8,7 @@ services:
       - ./single-node.ini:/opt/couchdb/etc/local.d/single-node.ini:Z
     environment:
       COUCHDB_USER: admin
-      COUCHDB_PASSWORD: COUCHDB_PASSWORD
+      COUCHDB_PASSWORD: password
 
 volumes:
   couchdb_data:
