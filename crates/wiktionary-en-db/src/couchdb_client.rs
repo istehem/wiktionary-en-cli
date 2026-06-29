@@ -4,7 +4,6 @@ use bson::Bson;
 use couch_rs::database::Database;
 use couch_rs::document::DocumentCollection;
 use couch_rs::types::find::FindQuery;
-use couch_rs::Client;
 use serde_json::json;
 use std::sync::{Arc, Mutex};
 use std::vec::Vec;
