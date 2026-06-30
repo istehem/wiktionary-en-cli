@@ -11,7 +11,7 @@ mod tests {
     #[tokio::test]
     async fn find_by_word() -> Result<()> {
         let client = DbClient::init(utilities::language::Language::EN).await?;
-        let entries = client.find_by_word("fake").await?;
+        let entries = client.find_by_word("soccer").await?;
         for entry in entries {
             print!("{}", entry.to_pretty_string());
         }

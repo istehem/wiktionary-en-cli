@@ -152,6 +152,11 @@ impl DbClient {
             .await?;
         Ok(result.result.is_some())
     }
+
+    pub async fn random_entry(&self) -> Result<Vec<DictionaryEntry>> {
+        // implement a really random entry
+        self.find_by_word("random").await
+    }
 }
 
 fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {

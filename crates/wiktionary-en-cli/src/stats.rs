@@ -8,7 +8,7 @@ use std::path::Path;
 use utilities::colored_string_utils::*;
 use utilities::file_utils::*;
 use utilities::language::Language;
-use wiktionary_en_db::client::DbClient;
+use wiktionary_en_db::couchdb_client::DbClient;
 
 use utilities::DICTIONARY_POLO_DB_DIR;
 

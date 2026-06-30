@@ -7,7 +7,7 @@ use utilities::language::Language;
 
 use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 
-use wiktionary_en_db::client::{DbClient, DbClientMutex};
+use wiktionary_en_db::couchdb_client::{DbClient, DbClientMutex};
 
 mod stats;
 use stats::Stats;
@@ -151,11 +151,11 @@ fn query_dictionary(
             extension_handler,
         });
     }
-    let hit = client.random_entry()?;
+    let hits = client.random_entry()?;
     let result = DictionaryResult {
-        word: hit.word.clone(),
+        word: "random".to_string(),
         did_you_mean: None,
-        hits: vec![hit],
+        hits: hits,
     };
     Ok(WiktionaryResultWrapper {
         result: result_wrapper::WiktionaryResult::DictionaryResult(result),
