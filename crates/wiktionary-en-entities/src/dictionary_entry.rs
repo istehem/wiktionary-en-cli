@@ -16,9 +16,9 @@ use utilities::language::Language;
 
 #[derive(Serialize, Deserialize, Clone, Debug, CouchDocument)]
 pub struct DictionaryEntry {
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub _id: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub _rev: String,
     pub lang_code: String,
     pub word: String,
