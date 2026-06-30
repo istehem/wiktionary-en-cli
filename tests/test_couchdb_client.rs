@@ -11,7 +11,7 @@ mod tests {
     #[tokio::test]
     async fn find_by_word() -> Result<()> {
         let client = DbClient::init(utilities::language::Language::EN).await?;
-        let entries = client.find_by_word("test").await?;
+        let entries = client.find_by_word("fake").await?;
         for entry in entries {
             print!("{}", entry.to_pretty_string());
         }
@@ -20,6 +20,7 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
+    #[ignore = "db already populated"]
     async fn find_insert_file() -> Result<()> {
         let client = DbClient::init(Language::EN).await?;
 
@@ -28,6 +29,15 @@ mod tests {
             Ok(path) => client.insert_wiktionary_file(path, false).await?,
             Err(err) => bail!(err),
         };
+        Ok(())
+    }
+
+    #[rstest]
+    #[tokio::test]
+    #[ignore = "index already created"]
+    async fn create_index_on_word() -> Result<()> {
+        let client = DbClient::init(Language::EN).await?;
+        assert_eq!(client.create_index_on_word().await?, true);
         Ok(())
     }
 }

@@ -4,6 +4,8 @@ use bson::Bson;
 use couch_rs::database::Database;
 use couch_rs::document::DocumentCollection;
 use couch_rs::types::find::FindQuery;
+use couch_rs::types::find::SortSpec;
+use couch_rs::types::index::IndexFields;
 use serde_json::json;
 use serde_json::Value;
 use std::fs::File;
@@ -139,6 +141,16 @@ impl DbClient {
         }
 
         Ok(total_count)
+    }
+    pub async fn create_index_on_word(&self) -> Result<bool> {
+        let index_def = IndexFields {
+            fields: vec![SortSpec::Simple("word".to_string())],
+        };
+        let result = self
+            .database
+            .insert_index("word-index", index_def, None, None)
+            .await?;
+        Ok(result.result.is_some())
     }
 }
 
