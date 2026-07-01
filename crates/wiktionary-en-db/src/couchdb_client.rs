@@ -6,17 +6,20 @@ use couch_rs::document::DocumentCollection;
 use couch_rs::types::find::FindQuery;
 use couch_rs::types::find::SortSpec;
 use couch_rs::types::index::IndexFields;
+use couch_rs::Client;
 use serde_json::json;
 use serde_json::Value;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::vec::Vec;
+use tokio::sync::Mutex;
 use utilities::language::Language;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 
 #[derive(Clone)]
 pub struct DbClient {
+    client: Client,
     database: Database,
     language: Language,
 }
@@ -45,9 +48,13 @@ impl DbClient {
     const DB_HOST: &str = "http://localhost:5984";
 
     pub async fn init(language: Language) -> Result<Self> {
-        let couch_client = couch_rs::Client::new(Self::DB_HOST, "admin", "password")?;
-        let database = couch_client.db(language.to_string().as_str()).await?;
-        Ok(Self { database, language })
+        let client = couch_rs::Client::new(Self::DB_HOST, "admin", "password")?;
+        let database = client.db(language.to_string().as_str()).await?;
+        Ok(Self {
+            client,
+            database,
+            language,
+        })
     }
 
     pub async fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
@@ -59,7 +66,7 @@ impl DbClient {
         Ok(docs.rows)
     }
 
-    pub fn find_in_extension_collection(
+    pub async fn find_in_extension_collection(
         &self,
         _extension_name: &str,
         _document: ExtensionDocument,

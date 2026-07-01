@@ -3,16 +3,8 @@ use bson::Bson;
 use bson::Document;
 use mlua::{Error, FromLua, IntoLua, Lua, Result, Table, UserData, UserDataMethods, Value};
 use std::any::type_name;
-use std::sync::MutexGuard;
 
-use crate::couchdb_client::{DbClient, DbClientMutex, ExtensionDocument};
-
-fn lock(db_client: &DbClientMutex) -> Result<MutexGuard<'_, DbClient>> {
-    match db_client.client.lock() {
-        Ok(db_client) => Ok(db_client),
-        Err(err) => Err(Error::RuntimeError(err.to_string())),
-    }
-}
+use crate::couchdb_client::{DbClientMutex, ExtensionDocument};
 
 fn ok_or_runtime_error<T>(result: anyhow::Result<T>) -> Result<T> {
     match result {
@@ -23,68 +15,72 @@ fn ok_or_runtime_error<T>(result: anyhow::Result<T>) -> Result<T> {
 
 impl UserData for DbClientMutex {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method(
+        methods.add_async_method(
             "find_in_collection",
-            |_, this, (extension_name, document): (String, ExtensionDocument)| {
-                let db_client = lock(this)?;
+            async |_, this, (extension_name, document): (String, ExtensionDocument)| {
+                let db_client = &this.client.lock().await;
                 ok_or_runtime_error(
-                    db_client.find_in_extension_collection(&extension_name, document),
+                    db_client
+                        .find_in_extension_collection(&extension_name, document)
+                        .await,
                 )
             },
         );
         methods.add_async_method(
             "find_one_in_collection",
-            |_, this, (extension_name, document): (String, ExtensionDocument)| async move {
-                let db_client = lock(&this)?;
+            async |_, this, (extension_name, document): (String, ExtensionDocument)| {
+                let db_client = &this.client.lock().await;
                 ok_or_runtime_error(
                     db_client.find_one_in_extension_collection(&extension_name, document),
                 )
             },
         );
-        methods.add_method(
-            "insert_one_into_collection",
-            |lua, this, (extension_name, document): (String, ExtensionDocument)| {
-                let db_client = lock(this)?;
-                match db_client.insert_one_into_extension_collection(&extension_name, document) {
-                    Ok(result) => bson_to_lua_value(result, lua),
-                    Err(err) => Err(Error::RuntimeError(err.to_string())),
-                }
-            },
-        );
-        methods.add_method(
-            "update_one_in_collection",
-            |_, this, (extension_name, query, update): (String, ExtensionDocument, ExtensionDocument)| {
-                let db_client = lock(this)?;
-                ok_or_runtime_error(db_client.update_one_in_extension_collection(&extension_name, query, update))
-            },
-        );
-        methods.add_method(
-            "delete_in_collection",
-            |_, this, (extension_name, query): (String, ExtensionDocument)| {
-                let db_client = lock(this)?;
-                ok_or_runtime_error(
-                    db_client.delete_many_in_extension_collection(&extension_name, query),
-                )
-            },
-        );
-        methods.add_method(
-            "count_documents_in_collection",
-            |_, this, extension_name: String| {
-                let db_client = lock(this)?;
-                ok_or_runtime_error(
-                    db_client.count_documents_in_extension_collection(&extension_name),
-                )
-            },
-        );
-        methods.add_method(
-            "create_index_for_collection",
-            |_, this, (extension_name, keys): (String, ExtensionDocument)| {
-                let db_client = lock(this)?;
-                ok_or_runtime_error(
-                    db_client.create_index_for_extension_collection(&extension_name, keys),
-                )
-            },
-        );
+        /*
+                methods.add_method(
+                    "insert_one_into_collection",
+                    |lua, this, (extension_name, document): (String, ExtensionDocument)| {
+                        let db_client = lock(this)?;
+                        match db_client.insert_one_into_extension_collection(&extension_name, document) {
+                            Ok(result) => bson_to_lua_value(result, lua),
+                            Err(err) => Err(Error::RuntimeError(err.to_string())),
+                        }
+                    },
+                );
+                methods.add_method(
+                    "update_one_in_collection",
+                    |_, this, (extension_name, query, update): (String, ExtensionDocument, ExtensionDocument)| {
+                        let db_client = lock(this)?;
+                        ok_or_runtime_error(db_client.update_one_in_extension_collection(&extension_name, query, update))
+                    },
+                );
+                methods.add_method(
+                    "delete_in_collection",
+                    |_, this, (extension_name, query): (String, ExtensionDocument)| {
+                        let db_client = lock(this)?;
+                        ok_or_runtime_error(
+                            db_client.delete_many_in_extension_collection(&extension_name, query),
+                        )
+                    },
+                );
+                methods.add_method(
+                    "count_documents_in_collection",
+                    |_, this, extension_name: String| {
+                        let db_client = lock(this)?;
+                        ok_or_runtime_error(
+                            db_client.count_documents_in_extension_collection(&extension_name),
+                        )
+                    },
+                );
+                methods.add_method(
+                    "create_index_for_collection",
+                    |_, this, (extension_name, keys): (String, ExtensionDocument)| {
+                        let db_client = lock(this)?;
+                        ok_or_runtime_error(
+                            db_client.create_index_for_extension_collection(&extension_name, keys),
+                        )
+                    },
+                );
+        */
     }
 }
 

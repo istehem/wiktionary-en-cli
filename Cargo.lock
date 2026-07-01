@@ -2827,6 +2827,7 @@ dependencies = [
  "mlua",
  "rand",
  "serde_json",
+ "tokio",
  "utilities",
  "wiktionary-en-entities",
 ]
