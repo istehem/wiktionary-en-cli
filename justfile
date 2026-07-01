@@ -6,7 +6,10 @@ DICTIONARY_CONFIG := PROJECT_ROOT + "/wiktionary-en-config.lua"
 DICTIONARY_EXTENSIONS := PROJECT_ROOT + "/wiktionary-en-extensions.lua"
 LUA_DIR := PROJECT_ROOT + "/lua"
 
-# start services needed to run wiktionary-cli
+SONIC_HOST := "localhost:1491" 
+SONIC_PASSWORD := "SecretPassword" 
+
+# start services needed to run wiktionary-en-cli
 [group: 'setup']
 start-background-services:
   podman compose -f ./couchdb/docker-compose.yaml up --force-recreate
@@ -15,4 +18,14 @@ start-background-services:
 [group: 'test']
 test-couchdb-client:
   cargo test -p tests --test test-couchdb-client -- --nocapture
+
+# install wiktionary-en-cli without the sonic features
+[group: 'install']
+install-no-sonic:
+  cargo install --path crates/wiktionary-en-cli
+
+# install wiktionary-en-cli with standard features
+[group: 'install']
+install:
+  cargo install --path crates/wiktionary-en-cli --features sonic
 

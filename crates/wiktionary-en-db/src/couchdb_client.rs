@@ -26,6 +26,17 @@ pub struct DbClientMutex {
     pub client: Arc<Mutex<DbClient>>,
 }
 
+impl DbClientMutex {
+    pub fn from(db_client: DbClient) -> Self {
+        let client = Arc::new(Mutex::new(db_client));
+        Self { client }
+    }
+
+    pub async fn init(language: Language) -> Result<Self> {
+        Ok(Self::from(DbClient::init(language).await?))
+    }
+}
+
 pub struct ExtensionDocument {
     pub document: Document,
 }
@@ -100,7 +111,7 @@ impl DbClient {
         Ok(())
     }
 
-    async fn number_of_entries_in_collection(&self) -> Result<u32> {
+    pub async fn number_of_entries(&self) -> Result<u32> {
         let mut query = FindQuery::find_all();
         query.limit = Some(0);
         let result: DocumentCollection<Value> = self.database.find_raw(&query).await?;
@@ -113,7 +124,7 @@ impl DbClient {
         force: bool,
     ) -> Result<usize> {
         if !force {
-            let count = self.number_of_entries_in_collection().await?;
+            let count = self.number_of_entries().await?;
             if count > 0 {
                 bail!(
                     "dictionary already contains {} entries for language {}, use force to override",

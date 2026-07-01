@@ -13,6 +13,7 @@ clap = { workspace = true }
 anyhow = { workspace = true } 
 colored = "3.0.0"
 edit-distance = { workspace = true }
+tokio = { version = "1.48.0", features = ["full"] }
 
 [features]
 sonic = [ "wiktionary-en-identifier-index" ]

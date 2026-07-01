@@ -2809,6 +2809,7 @@ dependencies = [
  "clap",
  "colored",
  "edit-distance",
+ "tokio",
  "utilities",
  "wiktionary-en-db",
  "wiktionary-en-entities",

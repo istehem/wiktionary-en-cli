@@ -87,7 +87,7 @@ struct QueryParameters {
 }
 
 #[cfg(feature = "sonic")]
-fn search_for_alternative_term(
+async fn search_for_alternative_term(
     client: &DbClient,
     query_params: &QueryParameters,
 ) -> Result<Option<DictionaryResult>> {
@@ -95,7 +95,7 @@ fn search_for_alternative_term(
         let did_you_mean =
             wiktionary_en_identifier_index::did_you_mean(&query_params.language, term)?;
         if let Some(did_you_mean) = did_you_mean {
-            let hits = client.find_by_word(&did_you_mean)?;
+            let hits = client.find_by_word(&did_you_mean).await?;
             if !hits.is_empty() {
                 let result = DictionaryResult {
                     word: term.to_string(),
@@ -112,12 +112,12 @@ fn search_for_alternative_term(
     Ok(None)
 }
 
-fn search_for_term(
+async fn search_for_term(
     client: &DbClient,
     term: &str,
     query_params: &QueryParameters,
 ) -> Result<DictionaryResult> {
-    let hits = client.find_by_word(term)?;
+    let hits = client.find_by_word(term).await?;
     match hits.as_slice() {
         [_, ..] => Ok(DictionaryResult {
             word: term.to_string(),
@@ -126,7 +126,7 @@ fn search_for_term(
         }),
         [] => {
             #[cfg(feature = "sonic")]
-            if let Some(result) = search_for_alternative_term(client, query_params)? {
+            if let Some(result) = search_for_alternative_term(client, query_params).await? {
                 return Ok(result);
             }
             exhaustive_search::search(
@@ -139,19 +139,19 @@ fn search_for_term(
     }
 }
 
-fn query_dictionary(
+async fn query_dictionary(
     client: &DbClient,
     query_params: QueryParameters,
     extension_handler: wiktionary_en_lua::extension::ExtensionHandler,
 ) -> Result<WiktionaryResultWrapper> {
     if let Some(term) = &query_params.search_term {
-        let result = search_for_term(client, term, &query_params)?;
+        let result = search_for_term(client, term, &query_params).await?;
         return Ok(WiktionaryResultWrapper {
             result: result_wrapper::WiktionaryResult::DictionaryResult(result),
             extension_handler,
         });
     }
-    let hits = client.random_entry()?;
+    let hits = client.random_entry().await?;
     let result = DictionaryResult {
         word: "random".to_string(),
         did_you_mean: None,
@@ -163,7 +163,8 @@ fn query_dictionary(
     })
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = Cli::parse();
     let config_handler = wiktionary_en_lua::config::ConfigHandler::init()?;
     let language_to_use = config_handler
@@ -176,7 +177,7 @@ fn main() -> Result<()> {
             max_results,
             case_insensitive,
         } => {
-            let db_client = DbClient::init(language_to_use)?;
+            let db_client = DbClient::init(language_to_use).await?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
             let extension_handler =
                 wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex)?;
@@ -190,7 +191,8 @@ fn main() -> Result<()> {
                     path: get_db_path(args.db_path, &language_to_use),
                 },
                 extension_handler,
-            )?;
+            )
+            .await?;
 
             result.intercept()?;
             result.fmt()?
@@ -208,11 +210,11 @@ fn main() -> Result<()> {
         },
         Command::Stats => {
             let input_path = get_db_path(args.db_path, &language_to_use);
-            let stats = Stats::calculate_stats(&input_path, &language_to_use)?;
+            let stats = Stats::calculate_stats(&input_path, &language_to_use).await?;
             stats.to_string()
         }
         Command::Extension { name, options } => {
-            let db_client = DbClient::init(language_to_use)?;
+            let db_client = DbClient::init(language_to_use).await?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
             let extension_handler =
                 wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex)?;
