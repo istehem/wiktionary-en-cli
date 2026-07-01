@@ -66,7 +66,7 @@ impl DbClient {
     ) -> Result<Vec<ExtensionDocument>> {
         Ok(Vec::new())
     }
-    pub async fn find_one_in_extension_collection(
+    pub fn find_one_in_extension_collection(
         &self,
         _extension_name: &str,
         __document: ExtensionDocument,
@@ -148,7 +148,7 @@ impl DbClient {
         let batch_size = 2000;
         for chunk in all_entries.chunks_mut(batch_size) {
             let result = self.database.bulk_docs(chunk).await?;
-            total_count = total_count + result.len();
+            total_count += result.len();
         }
 
         Ok(total_count)

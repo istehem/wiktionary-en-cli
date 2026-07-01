@@ -14,7 +14,6 @@ SONIC_PASSWORD := "SecretPassword"
 start-background-services:
   podman compose -f ./couchdb/docker-compose.yaml up --force-recreate
 
-
 [group: 'test']
 test-couchdb-client:
   cargo test -p tests --test test-couchdb-client -- --nocapture
@@ -28,4 +27,8 @@ install-no-sonic:
 [group: 'install']
 install:
   cargo install --path crates/wiktionary-en-cli --features sonic
+
+[group: 'lint']
+lint:
+  cargo clippy --manifest-path crates/wiktionary-en-cli/Cargo.toml --features sonic
 

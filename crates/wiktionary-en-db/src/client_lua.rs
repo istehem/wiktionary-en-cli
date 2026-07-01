@@ -37,9 +37,7 @@ impl UserData for DbClientMutex {
             |_, this, (extension_name, document): (String, ExtensionDocument)| async move {
                 let db_client = lock(&this)?;
                 ok_or_runtime_error(
-                    db_client
-                        .find_one_in_extension_collection(&extension_name, document)
-                        .await,
+                    db_client.find_one_in_extension_collection(&extension_name, document),
                 )
             },
         );

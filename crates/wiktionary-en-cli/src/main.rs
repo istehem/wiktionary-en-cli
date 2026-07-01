@@ -155,7 +155,7 @@ async fn query_dictionary(
     let result = DictionaryResult {
         word: "random".to_string(),
         did_you_mean: None,
-        hits: hits,
+        hits,
     };
     Ok(WiktionaryResultWrapper {
         result: result_wrapper::WiktionaryResult::DictionaryResult(result),
