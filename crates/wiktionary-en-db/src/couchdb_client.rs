@@ -1,5 +1,4 @@
 use anyhow::{bail, Context, Result};
-use bson::document::Document;
 use bson::Bson;
 use couch_rs::database::Database;
 use couch_rs::document::DocumentCollection;
@@ -40,8 +39,8 @@ impl DbClientMutex {
     }
 }
 
-pub struct ExtensionDocument {
-    pub document: Document,
+pub struct Document {
+    pub document: Value,
 }
 
 impl DbClient {
@@ -68,23 +67,34 @@ impl DbClient {
 
     pub async fn find_in_extension_collection(
         &self,
-        _extension_name: &str,
-        _document: ExtensionDocument,
-    ) -> Result<Vec<ExtensionDocument>> {
-        Ok(Vec::new())
+        extension_name: &str,
+        document: Document,
+    ) -> Result<Vec<Document>> {
+        let extension_db = self.client.db(extension_name).await?;
+        let result = extension_db
+            .find_raw(&FindQuery::new(document.document))
+            .await?;
+
+        Ok(result.rows.into_iter().map(Document::from).collect())
     }
-    pub fn find_one_in_extension_collection(
+
+    pub async fn find_one_in_extension_collection(
         &self,
-        _extension_name: &str,
-        __document: ExtensionDocument,
-    ) -> Result<Option<ExtensionDocument>> {
-        Ok(None)
+        extension_name: &str,
+        document: Document,
+    ) -> Result<Option<Document>> {
+        let extension_db = self.client.db(extension_name).await?;
+        let result = extension_db
+            .find_raw(&FindQuery::new(document.document).limit(1))
+            .await?;
+
+        Ok(result.rows.into_iter().next().map(Document::from))
     }
 
     pub fn insert_one_into_extension_collection(
         &self,
         _extension_name: &str,
-        _document: ExtensionDocument,
+        _document: Document,
     ) -> Result<Bson> {
         bail!("not implemented yet!")
     }
@@ -92,8 +102,8 @@ impl DbClient {
     pub fn update_one_in_extension_collection(
         &self,
         _extension_name: &str,
-        _query: ExtensionDocument,
-        _update: ExtensionDocument,
+        _query: Document,
+        _update: Document,
     ) -> Result<u64> {
         bail!("not implemented yet!")
     }
@@ -101,7 +111,7 @@ impl DbClient {
     pub fn delete_many_in_extension_collection(
         &self,
         _extension_name: &str,
-        _query: ExtensionDocument,
+        _query: Document,
     ) -> Result<u64> {
         Ok(0)
     }
@@ -113,7 +123,7 @@ impl DbClient {
     pub fn create_index_for_extension_collection(
         &self,
         _extension_name: &str,
-        _keys: ExtensionDocument,
+        _keys: Document,
     ) -> Result<()> {
         Ok(())
     }
@@ -182,8 +192,8 @@ fn parse_line(line: &str, i: usize) -> Result<DictionaryEntry> {
         .with_context(|| format!("Couldn't parse line {} in DB file.", i))
 }
 
-impl ExtensionDocument {
-    pub fn from(document: Document) -> Self {
-        Self { document }
+impl Document {
+    pub fn from(value: Value) -> Self {
+        Self { document: value }
     }
 }

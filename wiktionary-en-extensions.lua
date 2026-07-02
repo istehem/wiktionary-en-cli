@@ -8,6 +8,6 @@ extensions.format_entry = formatter.format_entry
 -- format Wiktionary did-you-mean banner
 extensions.format_did_you_mean_banner = formatter.format_did_you_mean_banner
 -- intercept Wiktionary results
---extensions.intercept = interceptor.intercept
+extensions.intercept = interceptor.intercept
 -- handle history
 extensions.history = history.main
