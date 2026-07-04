@@ -1,5 +1,4 @@
 use anyhow::{bail, Context, Result};
-use bson::Bson;
 use couch_rs::database::Database;
 use couch_rs::document::DocumentCollection;
 use couch_rs::types::find::FindQuery;
@@ -91,12 +90,14 @@ impl DbClient {
         Ok(result.rows.into_iter().next().map(Document::from))
     }
 
-    pub fn insert_one_into_extension_collection(
+    pub async fn insert_one_into_extension_collection(
         &self,
-        _extension_name: &str,
-        _document: Document,
-    ) -> Result<Bson> {
-        bail!("not implemented yet!")
+        extension_name: &str,
+        mut document: Document,
+    ) -> Result<Document> {
+        let extension_db = self.client.db(extension_name).await?;
+        let result = extension_db.create(&mut document.document).await?;
+        Ok(Document::from(json!({"id": result.id})))
     }
 
     pub fn update_one_in_extension_collection(
