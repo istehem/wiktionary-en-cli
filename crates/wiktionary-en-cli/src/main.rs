@@ -180,7 +180,7 @@ async fn main() -> Result<()> {
             let db_client = DbClient::init(language_to_use).await?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
             let extension_handler =
-                wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex)?;
+                wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex).await?;
             let mut result = query_dictionary(
                 &db_client,
                 QueryParameters {
@@ -194,8 +194,8 @@ async fn main() -> Result<()> {
             )
             .await?;
 
-            result.intercept()?;
-            result.fmt()?
+            result.intercept().await?;
+            result.fmt().await?
         }
         #[cfg(feature = "sonic")]
         Command::Sonic { command } => match command {
@@ -217,8 +217,11 @@ async fn main() -> Result<()> {
             let db_client = DbClient::init(language_to_use).await?;
             let db_client_mutex = DbClientMutex::from(db_client.clone());
             let extension_handler =
-                wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex)?;
-            extension_handler.call_extension(&name, &options)?.result
+                wiktionary_en_lua::extension::ExtensionHandler::init(db_client_mutex).await?;
+            extension_handler
+                .call_extension(&name, &options)
+                .await?
+                .result
         }
     };
     utilities::pager::print_in_pager(&result)

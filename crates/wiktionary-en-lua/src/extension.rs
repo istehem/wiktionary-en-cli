@@ -119,10 +119,10 @@ pub struct ExtensionHandler {
 }
 
 impl ExtensionHandler {
-    pub fn init(db_client: DbClientMutex) -> Result<Self> {
+    pub async fn init(db_client: DbClientMutex) -> Result<Self> {
         let lua = Lua::new();
         match create_importable_lua_module(&lua, "wiktionary_db_client", db_client) {
-            Ok(_) => match init_lua(&lua) {
+            Ok(_) => match init_lua(&lua).await {
                 Ok(_) => Ok(Self { lua }),
                 Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
             },
@@ -130,18 +130,21 @@ impl ExtensionHandler {
         }
     }
 
-    fn intercept(&self, dictionary_entry: &DictionaryResult) -> Result<Option<DictionaryResult>> {
-        match intercept(&self.lua, dictionary_entry) {
+    async fn intercept(
+        &self,
+        dictionary_entry: &DictionaryResult,
+    ) -> Result<Option<DictionaryResult>> {
+        match intercept(&self.lua, dictionary_entry).await {
             Ok(entry) => Ok(entry),
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
-    pub fn intercept_dictionary_result(
+    pub async fn intercept_dictionary_result(
         &self,
         dictionary_result: &mut DictionaryResult,
     ) -> Result<()> {
-        if let Some(intercepted_result) = self.intercept(dictionary_result)? {
+        if let Some(intercepted_result) = self.intercept(dictionary_result).await? {
             *dictionary_result = intercepted_result;
         } else {
             return Ok(());
@@ -150,20 +153,20 @@ impl ExtensionHandler {
         Ok(())
     }
 
-    fn format_entry(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
-        match format_entry(&self.lua, dictionary_entry) {
+    async fn format_entry(&self, dictionary_entry: &DictionaryEntry) -> Result<Option<String>> {
+        match format_entry(&self.lua, dictionary_entry).await {
             Ok(entry) => Ok(entry),
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
-    pub fn format_dictionary_entries(
+    pub async fn format_dictionary_entries(
         &self,
         result: &[DictionaryEntry],
     ) -> Result<Option<Vec<String>>> {
         let mut formatted_entries = Vec::new();
         for entry in result {
-            if let Some(formatted_entry) = self.format_entry(entry)? {
+            if let Some(formatted_entry) = self.format_entry(entry).await? {
                 formatted_entries.push(formatted_entry);
             } else {
                 return Ok(None);
@@ -172,17 +175,17 @@ impl ExtensionHandler {
         Ok(Some(formatted_entries))
     }
 
-    pub fn format_dictionary_did_you_mean_banner(
+    pub async fn format_dictionary_did_you_mean_banner(
         &self,
         did_you_mean: &DidYouMean,
     ) -> Result<Option<String>> {
-        match format_did_you_mean_banner(&self.lua, did_you_mean) {
+        match format_did_you_mean_banner(&self.lua, did_you_mean).await {
             Ok(result) => Ok(result),
             Err(err) => Err(anyhow!("{}", err).context(LUA_EXTENSION_ERROR)),
         }
     }
 
-    pub fn call_extension<T>(
+    pub async fn call_extension<T>(
         &self,
         extension_name: &str,
         options: &Vec<String>,
@@ -198,7 +201,7 @@ impl ExtensionHandler {
         }
 
         let result: ExtensionResult<T> =
-            match call_extension_lua_function(&self.lua, extension_name, options) {
+            match call_extension_lua_function(&self.lua, extension_name, options).await {
                 Ok(result) => match result {
                     Some(result) => Ok(result),
                     None => bail!("extension '{}' not found", extension_name),
@@ -215,15 +218,16 @@ impl ExtensionHandler {
     }
 }
 
-fn init_lua(lua: &Lua) -> mlua::Result<()> {
+async fn init_lua(lua: &Lua) -> mlua::Result<()> {
     load_lua_api(lua)?;
     add_lua_library_to_path(lua)?;
-    init_lua_exentions(lua)
+    init_lua_exentions(lua).await
 }
 
-fn init_lua_exentions(lua: &Lua) -> mlua::Result<()> {
+async fn init_lua_exentions(lua: &Lua) -> mlua::Result<()> {
     lua.load(std::fs::read_to_string(DICTIONARY_EXTENSIONS!())?)
-        .exec()
+        .exec_async()
+        .await
 }
 
 fn create_importable_lua_module(
@@ -266,7 +270,7 @@ fn get_extensions_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
     lua.globals().get("extensions")
 }
 
-fn call_extension_lua_function<A, B>(
+async fn call_extension_lua_function<A, B>(
     lua: &Lua,
     function_name: &str,
     argument: &A,
@@ -278,14 +282,14 @@ where
     if let Some(config) = get_extensions_as_lua_value(lua)?.as_table() {
         let function: mlua::Value = config.get(function_name)?;
         if let Some(function) = function.as_function() {
-            return Ok(Some(function.call(argument.clone())?));
+            return Ok(Some(function.call_async(argument.clone()).await?));
         }
     }
 
     Ok(None)
 }
 
-fn intercept(
+async fn intercept(
     lua: &Lua,
     dictionary_result: &DictionaryResult,
 ) -> mlua::Result<Option<DictionaryResult>> {
@@ -294,17 +298,22 @@ fn intercept(
         &InnerWorkingsExtension::Intercept.to_string(),
         dictionary_result,
     )
+    .await
 }
 
-fn format_entry(lua: &Lua, dictionary_entry: &DictionaryEntry) -> mlua::Result<Option<String>> {
+async fn format_entry(
+    lua: &Lua,
+    dictionary_entry: &DictionaryEntry,
+) -> mlua::Result<Option<String>> {
     call_extension_lua_function(
         lua,
         &InnerWorkingsExtension::FormatEntry.to_string(),
         dictionary_entry,
     )
+    .await
 }
 
-fn format_did_you_mean_banner(
+async fn format_did_you_mean_banner(
     lua: &Lua,
     did_you_mean: &DidYouMean,
 ) -> mlua::Result<Option<String>> {
@@ -313,6 +322,7 @@ fn format_did_you_mean_banner(
         &InnerWorkingsExtension::FormatDidYouMeanBanner.to_string(),
         did_you_mean,
     )
+    .await
 }
 
 fn apply_color(lua: &Lua) -> mlua::Result<Function> {

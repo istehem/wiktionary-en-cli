@@ -13,30 +13,35 @@ pub struct WiktionaryResultWrapper {
 }
 
 impl WiktionaryResultWrapper {
-    pub fn intercept(&mut self) -> Result<()> {
+    pub async fn intercept(&mut self) -> Result<()> {
         match &mut self.result {
             WiktionaryResult::DictionaryResult(result) => {
-                self.extension_handler.intercept_dictionary_result(result)
+                self.extension_handler
+                    .intercept_dictionary_result(result)
+                    .await
             }
         }
     }
 
-    pub fn fmt(&self) -> Result<String> {
+    pub async fn fmt(&self) -> Result<String> {
         match &self.result {
             WiktionaryResult::DictionaryResult(result) => {
-                fmt_dictionary_result(&self.extension_handler, result)
+                fmt_dictionary_result(&self.extension_handler, result).await
             }
         }
     }
 }
 
-fn fmt_dictionary_result(
+async fn fmt_dictionary_result(
     extension_handler: &ExtensionHandler,
     dictionary_result: &DictionaryResult,
 ) -> Result<String> {
     let mut formatted = Vec::new();
     if let Some(did_you_mean) = &dictionary_result.did_you_mean {
-        match extension_handler.format_dictionary_did_you_mean_banner(did_you_mean) {
+        match extension_handler
+            .format_dictionary_did_you_mean_banner(did_you_mean)
+            .await
+        {
             Ok(Some(formatted_banner)) => {
                 formatted.push(formatted_banner.to_string());
             }
@@ -49,7 +54,10 @@ fn fmt_dictionary_result(
         }
     }
 
-    match extension_handler.format_dictionary_entries(&dictionary_result.hits) {
+    match extension_handler
+        .format_dictionary_entries(&dictionary_result.hits)
+        .await
+    {
         Ok(Some(formated_hits)) => {
             for hit in &formated_hits {
                 formatted.push(hit.to_string());
