@@ -112,7 +112,7 @@ local function format_glosses(glosses)
 end
 
 local function examples_to_strings(examples)
-  result = {}
+  local result = {}
   for i, v in ipairs(examples) do
     if v.text then
       local formatted =
@@ -209,13 +209,13 @@ local function format_left_side_header(word, pos)
 end
 
 local function format_header(word, pos)
-  local history = history(word)
-  local last_seen = utils.format_date(history.last_seen_at)
+  local history_of_word = history(word)
+  local last_seen = utils.format_date(history_of_word.last_seen_at)
 
   local colored_word = api.apply_color(word, "cyan")
   local left = format_left_side_header(colored_word, pos)
   local left_width = #format_left_side_header(word, pos)
-  local right = string.format("Last seen: %s (%s)", last_seen, history.count)
+  local right = string.format("Last seen: %s (%s)", last_seen, history_of_word.count)
   local total_width = constants.max_line_width
 
   local padding_length = math.max(total_width - left_width - #right, 1)
