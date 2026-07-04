@@ -97,16 +97,17 @@ impl DbClient {
     ) -> Result<Document> {
         let extension_db = self.client.db(extension_name).await?;
         let result = extension_db.create(&mut document.document).await?;
-        Ok(Document::from(json!({"id": result.id})))
+        Ok(Document::from(json!({"_id": result.id})))
     }
 
-    pub fn update_one_in_extension_collection(
+    pub async fn update_one_in_extension_collection(
         &self,
-        _extension_name: &str,
-        _query: Document,
-        _update: Document,
-    ) -> Result<u64> {
-        bail!("not implemented yet!")
+        extension_name: &str,
+        mut document: Document,
+    ) -> Result<Document> {
+        let extension_db = self.client.db(extension_name).await?;
+        let result = extension_db.save(&mut document.document).await?;
+        Ok(Document::from(json!({"_rev": result.rev})))
     }
 
     pub fn delete_many_in_extension_collection(

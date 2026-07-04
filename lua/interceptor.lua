@@ -17,11 +17,14 @@ interceptor.intercept = function(entry)
   if existing then
     tick(existing)
     local update = {
+      _id = existing._id,
+      _rev = existing._rev,
+      word = entry.word,
       last_seen_at = existing.last_seen_at,
       now_seen_at = existing.now_seen_at,
       count = existing.count,
     }
-    db_client:update_one_in_collection(features.history.name, query, update)
+    db_client:update_one_in_collection(features.history.name, update)
   elseif not entry.did_you_mean then
     local now = os.time()
     local history_entry = {
