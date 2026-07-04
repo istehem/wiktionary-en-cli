@@ -12,7 +12,7 @@ local function format_history_entry(history_entry)
   local colored_word = api.apply_color(word, "cyan")
   local left_width = #word
   local right = string.format("Last seen: %s count: %s", last_seen, history_entry.count)
-  total_width = constants.max_line_width
+  local total_width = constants.max_line_width
 
   local padding_length = math.max(total_width / 2 - left_width, 1)
   return colored_word .. string.rep(" ", padding_length) .. right
@@ -55,7 +55,7 @@ history.main = function(options)
       elseif option == "count" then
         return count()
       else
-        error_msg = string.format("unknown option '%s'", option)
+        local error_msg = string.format("unknown option '%s'", option)
         return { result = error_msg, error = "unknown_option" }
       end
     end

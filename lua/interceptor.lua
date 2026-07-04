@@ -1,6 +1,5 @@
 local db_client = require("wiktionary_db_client")
 local features = require("features")
-local utils = require("utils")
 
 local interceptor = {}
 

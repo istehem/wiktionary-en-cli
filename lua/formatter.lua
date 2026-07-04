@@ -216,7 +216,7 @@ local function format_header(word, pos)
   local left = format_left_side_header(colored_word, pos)
   local left_width = #format_left_side_header(word, pos)
   local right = string.format("Last seen: %s (%s)", last_seen, history.count)
-  total_width = constants.max_line_width
+  local total_width = constants.max_line_width
 
   local padding_length = math.max(total_width - left_width - #right, 1)
   return left .. string.rep(" ", padding_length) .. right
