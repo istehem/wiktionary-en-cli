@@ -56,16 +56,18 @@ impl UserData for DbClientMutex {
                 )
             },
         );
+        methods.add_async_method(
+            "delete_in_collection",
+            async |_, this, (extension_name, query): (String, Document)| {
+                let db_client = &this.client.lock().await;
+                ok_or_runtime_error(
+                    db_client
+                        .delete_many_in_extension_collection(&extension_name, query)
+                        .await,
+                )
+            },
+        );
         /*
-                methods.add_method(
-                    "delete_in_collection",
-                    |_, this, (extension_name, query): (String, ExtensionDocument)| {
-                        let db_client = lock(this)?;
-                        ok_or_runtime_error(
-                            db_client.delete_many_in_extension_collection(&extension_name, query),
-                        )
-                    },
-                );
                 methods.add_method(
                     "count_documents_in_collection",
                     |_, this, extension_name: String| {

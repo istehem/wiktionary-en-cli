@@ -67,11 +67,11 @@ impl DbClient {
     pub async fn find_in_extension_collection(
         &self,
         extension_name: &str,
-        document: Document,
+        query: Document,
     ) -> Result<Vec<Document>> {
         let extension_db = self.client.db(extension_name).await?;
         let result = extension_db
-            .find_raw(&FindQuery::new(document.document))
+            .find_raw(&FindQuery::new(query.document))
             .await?;
 
         Ok(result.rows.into_iter().map(Document::from).collect())
@@ -110,12 +110,21 @@ impl DbClient {
         Ok(Document::from(json!({"_rev": result.rev})))
     }
 
-    pub fn delete_many_in_extension_collection(
+    pub async fn delete_many_in_extension_collection(
         &self,
-        _extension_name: &str,
-        _query: Document,
-    ) -> Result<u64> {
-        Ok(0)
+        extension_name: &str,
+        query: Document,
+    ) -> Result<usize> {
+        let extension_db = self.client.db(extension_name).await?;
+        let mut documents = extension_db
+            .find::<Value>(&FindQuery::new(query.document))
+            .await?
+            .rows;
+        for document in &mut documents {
+            document["_deleted"] = json!(true);
+        }
+        extension_db.bulk_docs(&mut documents).await?;
+        Ok(documents.len())
     }
 
     pub fn count_documents_in_extension_collection(&self, _extension_name: &str) -> Result<u64> {
