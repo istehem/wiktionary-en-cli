@@ -8,8 +8,8 @@ services:
       - ./single-node.ini:/opt/couchdb/etc/local.d/single-node.ini:Z
     restart: always
     environment:
-      COUCHDB_USER: admin
-      COUCHDB_PASSWORD: password
+      COUCHDB_USER: ${COUCH_DB_USER}
+      COUCHDB_PASSWORD: ${COUCH_DB_PASSWORD}
 
 volumes:
   couchdb_data:
