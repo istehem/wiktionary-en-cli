@@ -34,7 +34,7 @@ struct Cli {
 }
 
 async fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<usize> {
-    let db_client = DbClient::init(*language).await?;
+    let mut db_client = DbClient::init(*language).await?;
 
     match file_utils::get_file_reader(path) {
         Ok(path) => db_client.insert_wiktionary_file(path, force).await,

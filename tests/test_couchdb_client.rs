@@ -37,7 +37,7 @@ mod tests {
     #[ignore = "index already created"]
     async fn create_index_on_word() -> Result<()> {
         let client = DbClient::init(Language::EN).await?;
-        assert_eq!(client.create_index_on_word().await?, true);
+        assert!(client.create_index_on_word().await?);
         Ok(())
     }
 }

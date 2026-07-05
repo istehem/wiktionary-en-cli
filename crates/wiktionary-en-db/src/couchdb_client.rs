@@ -201,19 +201,17 @@ impl DbClient {
     }
 
     pub async fn insert_wiktionary_file(
-        &self,
+        &mut self,
         file_reader: BufReader<File>,
         force: bool,
     ) -> Result<usize> {
-        if !force {
-            let count = self.number_of_entries().await?;
-            if count > 0 {
-                bail!(
-                    "dictionary already contains {} entries for language {}, use force to override",
-                    count,
-                    self.language
-                );
-            }
+        let count = self.number_of_entries().await?;
+        if !force && count > 0 {
+            bail!(
+                "dictionary already contains {} entries for language {}, use force to override",
+                count,
+                self.language
+            );
         }
         let mut all_entries = Vec::new();
         for (i, line) in file_reader.lines().enumerate() {
@@ -225,15 +223,19 @@ impl DbClient {
                 _ => bail!("couldn't read line {}", i),
             }
         }
+
+        if count > 0 {
+            self.recreate_database().await?;
+        }
+        self.create_index_on_word().await?;
+
         let mut total_count = 0;
 
-        let batch_size = 2000;
+        let batch_size = 5000;
         for chunk in all_entries.chunks_mut(batch_size) {
             let result = self.database.bulk_docs(chunk).await?;
             total_count += result.len();
         }
-        //delete_all_in_collection(collection)?;
-        self.create_index_on_word().await?;
 
         Ok(total_count)
     }
@@ -251,6 +253,13 @@ impl DbClient {
     pub async fn random_entry(&self) -> Result<Vec<DictionaryEntry>> {
         // implement a really random entry
         self.find_by_word("random").await
+    }
+
+    async fn recreate_database(&mut self) -> Result<()> {
+        let database_name = self.database.name();
+        self.client.destroy_db(self.database.name()).await?;
+        self.database = self.client.db(database_name).await?;
+        Ok(())
     }
 }
 
