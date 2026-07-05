@@ -39,5 +39,5 @@ fn get_config(lua: &Lua) -> mlua::Result<Config> {
 }
 
 fn get_config_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
-    lua.globals().get("config")
+    lua.globals().get("Config")
 }

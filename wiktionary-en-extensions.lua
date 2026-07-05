@@ -2,12 +2,12 @@ local formatter = require("formatter")
 local interceptor = require("interceptor")
 local history = require("history")
 
-extensions = {}
+Extensions = {}
 -- format Wiktionary results
-extensions.format_entry = formatter.format_entry
+Extensions.format_entry = formatter.format_entry
 -- format Wiktionary did-you-mean banner
-extensions.format_did_you_mean_banner = formatter.format_did_you_mean_banner
+Extensions.format_did_you_mean_banner = formatter.format_did_you_mean_banner
 -- intercept Wiktionary results
-extensions.intercept = interceptor.intercept
+Extensions.intercept = interceptor.intercept
 -- handle history
-extensions.history = history.main
+Extensions.history = history.main

@@ -267,7 +267,7 @@ fn add_lua_library_to_path(lua: &Lua) -> mlua::Result<()> {
 }
 
 fn get_extensions_as_lua_value(lua: &Lua) -> mlua::Result<mlua::Value> {
-    lua.globals().get("extensions")
+    lua.globals().get("Extensions")
 }
 
 async fn call_extension_lua_function<A, B>(

@@ -1,3 +1,3 @@
-config = {}
+Config = {}
 -- set a default language
-config.language = "en"
+Config.language = "en"
