@@ -127,21 +127,46 @@ impl DbClient {
         Ok(documents.len())
     }
 
-    pub fn count_documents_in_extension_collection(&self, _extension_name: &str) -> Result<u64> {
-        Ok(0)
+    pub async fn count_documents_in_extension_collection(
+        &self,
+        extension_name: &str,
+    ) -> Result<u32> {
+        let extension_db = self.client.db(extension_name).await?;
+        let query = FindQuery::find_all();
+        let result: DocumentCollection<Value> = extension_db.find_raw(&query).await?;
+        Ok(result.total_rows)
     }
 
-    pub fn create_index_for_extension_collection(
+    pub async fn create_index_for_extension_collection(
         &self,
-        _extension_name: &str,
-        _keys: Document,
+        extension_name: &str,
+        keys: Document,
     ) -> Result<()> {
+        let extension_db = self.client.db(extension_name).await?;
+        let mut fields = Vec::new();
+
+        if let Some(key_values) = keys.document.as_object() {
+            for (key, _) in key_values {
+                fields.push(SortSpec::Simple(key.to_string()));
+            }
+        } else {
+            bail!("no index keys supplied.")
+        }
+
+        let index_def = IndexFields { fields };
+        let result = extension_db
+            .insert_index("extension-index", index_def, None, None)
+            .await?;
+        if let Some(error) = result.error {
+            bail!(error);
+        }
         Ok(())
     }
 
+    // TODO this query will return a maximum of 1
     pub async fn number_of_entries(&self) -> Result<u32> {
         let mut query = FindQuery::find_all();
-        query.limit = Some(0);
+        query.limit = Some(1);
         let result: DocumentCollection<Value> = self.database.find_raw(&query).await?;
         Ok(result.total_rows)
     }

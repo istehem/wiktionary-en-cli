@@ -67,26 +67,28 @@ impl UserData for DbClientMutex {
                 )
             },
         );
-        /*
-                methods.add_method(
-                    "count_documents_in_collection",
-                    |_, this, extension_name: String| {
-                        let db_client = lock(this)?;
-                        ok_or_runtime_error(
-                            db_client.count_documents_in_extension_collection(&extension_name),
-                        )
-                    },
-                );
-                methods.add_method(
-                    "create_index_for_collection",
-                    |_, this, (extension_name, keys): (String, ExtensionDocument)| {
-                        let db_client = lock(this)?;
-                        ok_or_runtime_error(
-                            db_client.create_index_for_extension_collection(&extension_name, keys),
-                        )
-                    },
-                );
-        */
+        methods.add_async_method(
+            "count_documents_in_collection",
+            async |_, this, extension_name: String| {
+                let db_client = &this.client.lock().await;
+                ok_or_runtime_error(
+                    db_client
+                        .count_documents_in_extension_collection(&extension_name)
+                        .await,
+                )
+            },
+        );
+        methods.add_async_method(
+            "create_index_for_collection",
+            async |_, this, (extension_name, keys): (String, Document)| {
+                let db_client = &this.client.lock().await;
+                ok_or_runtime_error(
+                    db_client
+                        .create_index_for_extension_collection(&extension_name, keys)
+                        .await,
+                )
+            },
+        );
     }
 }
 
