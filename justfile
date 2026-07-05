@@ -22,6 +22,10 @@ start-background-services:
 test-couchdb-client:
   cargo test -p tests --test test-couchdb-client -- --nocapture
 
+[group: 'test']
+test-config:
+  cargo test -p tests --test test-config -- --nocapture
+
 # install wiktionary-en-import with standard features
 [group: 'install']
 install-wiktionary-en-import:
