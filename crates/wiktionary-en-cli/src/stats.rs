@@ -10,8 +10,6 @@ use utilities::file_utils::*;
 use utilities::language::Language;
 use wiktionary_en_db::couchdb_client::DbClient;
 
-use utilities::DICTIONARY_POLO_DB_DIR;
-
 macro_rules! format_key_value {
     ($key:expr, $value:expr) => {
         format!("{:<19}: {}", $key.green(), $value).normal()
@@ -28,7 +26,6 @@ const MEGABYTE: f64 = 1024.0 * 1024.0;
 
 pub struct Stats {
     path: String,
-    database_dir: String,
     database_entries: usize,
     number_of_entries: usize,
     file_size: Option<f64>,
@@ -44,7 +41,6 @@ impl Stats {
     fn to_pretty_string(&self) -> ColoredString {
         let mut res: Vec<ColoredString> = Vec::new();
         res.push(format_key_value!("dictionary file", self.path));
-        res.push(format_key_value!("database dir", self.database_dir));
 
         res.push(format_key_value!(
             "dabase entries",
@@ -72,7 +68,6 @@ async fn calculate_stats(dictionary_path: &Path, language: &Language) -> Result<
     let client = DbClient::init(*language).await?;
     Ok(Stats {
         path: dictionary_path.display().to_string(),
-        database_dir: String::from(DICTIONARY_POLO_DB_DIR!()),
         database_entries: client.number_of_entries().await? as usize,
         file_size: file_size_in_megabytes(dictionary_path),
         number_of_entries: number_of_entries(dictionary_path)?,
