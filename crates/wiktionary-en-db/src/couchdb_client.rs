@@ -49,10 +49,12 @@ pub struct Document {
 }
 
 impl DbClient {
-    const DB_HOST: &str = "http://localhost:5984";
-
     pub async fn init(language: Language) -> Result<Self> {
-        let client = couch_rs::Client::new(Self::DB_HOST, "admin", "password")?;
+        let client = couch_rs::Client::new(
+            env!("COUCH_DB_HOST"),
+            env!("COUCH_DB_USER"),
+            env!("COUCH_DB_PASSWORD"),
+        )?;
         let database = client.db(language.to_string().as_str()).await?;
         Ok(Self {
             client,
