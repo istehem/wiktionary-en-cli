@@ -22,7 +22,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "db already populated"]
     async fn find_insert_file() -> Result<()> {
-        let client = DbClient::init(Language::EN).await?;
+        let mut client = DbClient::init(Language::EN).await?;
 
         let db_path: PathBuf = file_utils::get_db_path(None, &Language::EN);
         match file_utils::get_file_reader(&db_path) {

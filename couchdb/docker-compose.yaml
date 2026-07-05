@@ -6,6 +6,7 @@ services:
     volumes:
       - ./couchdb-data:/opt/couchdb/data:Z
       - ./single-node.ini:/opt/couchdb/etc/local.d/single-node.ini:Z
+    restart: always
     environment:
       COUCHDB_USER: admin
       COUCHDB_PASSWORD: password

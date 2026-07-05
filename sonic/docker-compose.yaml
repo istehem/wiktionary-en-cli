@@ -1,6 +1,7 @@
 services:
   wiktionary_sonic:
-    image: valeriansaliou/sonic
+    image: docker.io/valeriansaliou/sonic
+    restart: always
     ports:
       - 1491:1491
     volumes:
