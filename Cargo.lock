@@ -2918,6 +2918,7 @@ dependencies = [
  "clap",
  "indicatif",
  "streaming-iterator",
+ "tokio",
  "utilities",
  "wiktionary-en-db",
  "wiktionary-en-download",

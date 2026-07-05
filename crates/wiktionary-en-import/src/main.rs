@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use utilities::file_utils;
 use utilities::language::Language;
 
-use wiktionary_en_db::client::DbClient;
+use wiktionary_en_db::couchdb_client::DbClient;
 use wiktionary_en_download::Downloader;
 
 use clap::Parser;
@@ -33,16 +33,17 @@ struct Cli {
     download: bool,
 }
 
-fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<usize> {
-    let db_client = DbClient::init(*language)?;
+async fn import_wiktionary_extract(path: &Path, language: &Language, force: bool) -> Result<usize> {
+    let db_client = DbClient::init(*language).await?;
 
     match file_utils::get_file_reader(path) {
-        Ok(path) => db_client.insert_wiktionary_file(path, force),
+        Ok(path) => db_client.insert_wiktionary_file(path, force).await,
         Err(err) => bail!(err),
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = Cli::parse();
     let config_handler = wiktionary_en_lua::config::ConfigHandler::init()?;
 
@@ -64,7 +65,7 @@ fn main() -> Result<()> {
     if args.download {
         return Downloader::download_dictionary_extract(&language_to_use, args.force);
     }
-    let count = import_wiktionary_extract(&db_path, &language_to_use, args.force)?;
+    let count = import_wiktionary_extract(&db_path, &language_to_use, args.force).await?;
     utilities::pager::print_in_pager(&format!(
         "inserted {} entries for language {}",
         count, &language_to_use

@@ -15,6 +15,12 @@ use tokio::sync::Mutex;
 use utilities::language::Language;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 
+macro_rules! extension_database {
+    ($language:expr, $extension_name:expr) => {
+        format!("extension_{}_{}", $language, $extension_name).as_str()
+    };
+}
+
 #[derive(Clone)]
 pub struct DbClient {
     client: Client,
@@ -69,7 +75,10 @@ impl DbClient {
         extension_name: &str,
         query: Document,
     ) -> Result<Vec<Document>> {
-        let extension_db = self.client.db(extension_name).await?;
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
         let result = extension_db
             .find_raw(&FindQuery::new(query.document))
             .await?;
@@ -82,7 +91,10 @@ impl DbClient {
         extension_name: &str,
         document: Document,
     ) -> Result<Option<Document>> {
-        let extension_db = self.client.db(extension_name).await?;
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
         let result = extension_db
             .find_raw(&FindQuery::new(document.document).limit(1))
             .await?;
@@ -95,7 +107,10 @@ impl DbClient {
         extension_name: &str,
         mut document: Document,
     ) -> Result<Document> {
-        let extension_db = self.client.db(extension_name).await?;
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
         let result = extension_db.create(&mut document.document).await?;
         Ok(Document::from(json!({"_id": result.id})))
     }
@@ -105,7 +120,10 @@ impl DbClient {
         extension_name: &str,
         mut document: Document,
     ) -> Result<Document> {
-        let extension_db = self.client.db(extension_name).await?;
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
         let result = extension_db.save(&mut document.document).await?;
         Ok(Document::from(json!({"_rev": result.rev})))
     }
@@ -115,7 +133,10 @@ impl DbClient {
         extension_name: &str,
         query: Document,
     ) -> Result<usize> {
-        let extension_db = self.client.db(extension_name).await?;
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
         let mut documents = extension_db
             .find::<Value>(&FindQuery::new(query.document))
             .await?
@@ -127,12 +148,17 @@ impl DbClient {
         Ok(documents.len())
     }
 
+    // TODO the query will never return more than one
     pub async fn count_documents_in_extension_collection(
         &self,
         extension_name: &str,
     ) -> Result<u32> {
-        let extension_db = self.client.db(extension_name).await?;
-        let query = FindQuery::find_all();
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
+        let mut query = FindQuery::find_all();
+        query.limit = Some(1);
         let result: DocumentCollection<Value> = extension_db.find_raw(&query).await?;
         Ok(result.total_rows)
     }
@@ -142,7 +168,10 @@ impl DbClient {
         extension_name: &str,
         keys: Document,
     ) -> Result<()> {
-        let extension_db = self.client.db(extension_name).await?;
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
         let mut fields = Vec::new();
 
         if let Some(key_values) = keys.document.as_object() {
@@ -163,7 +192,7 @@ impl DbClient {
         Ok(())
     }
 
-    // TODO this query will return a maximum of 1
+    // TODO the query will never return more than one
     pub async fn number_of_entries(&self) -> Result<u32> {
         let mut query = FindQuery::find_all();
         query.limit = Some(1);
@@ -203,6 +232,8 @@ impl DbClient {
             let result = self.database.bulk_docs(chunk).await?;
             total_count += result.len();
         }
+        //delete_all_in_collection(collection)?;
+        self.create_index_on_word().await?;
 
         Ok(total_count)
     }

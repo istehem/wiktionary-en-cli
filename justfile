@@ -23,6 +23,11 @@ test-couchdb-client:
 install-no-sonic:
   cargo install --path crates/wiktionary-en-cli
 
+# install wiktionary-en-import with standard features
+[group: 'install']
+install-wiktionary-en-import:
+  cargo install --path crates/wiktionary-en-import --features sonic
+
 # install wiktionary-en-cli with standard features
 [group: 'install']
 install:
