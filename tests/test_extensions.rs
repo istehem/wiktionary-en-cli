@@ -9,9 +9,10 @@ mod tests {
     use std::io::BufReader;
     use std::path::PathBuf;
     use std::sync::Mutex;
+    use tokio::runtime::Runtime;
     use utilities::file_utils;
     use utilities::language::Language;
-    use wiktionary_en_db::client::{DbClient, DbClientMutex};
+    use wiktionary_en_db::couchdb_client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler, ExtensionResult};
@@ -46,7 +47,7 @@ mod tests {
         Language::EN
     }
 
-    fn intercept_dictionary_entries(extension_handler: &ExtensionHandler) -> Result<usize> {
+    async fn intercept_dictionary_entries(extension_handler: &ExtensionHandler) -> Result<usize> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
 
@@ -60,7 +61,9 @@ mod tests {
                 word: dictionary_entry.word,
             };
             if !found_words.contains(&dictionary_result.word) {
-                extension_handler.intercept_dictionary_result(&mut dictionary_result)?;
+                extension_handler
+                    .intercept_dictionary_result(&mut dictionary_result)
+                    .await?;
             }
             found_words.insert(dictionary_result.word);
         }
@@ -70,15 +73,18 @@ mod tests {
     #[fixture]
     #[once]
     fn shared_db_client() -> DbClientMutex {
-        let db_client = DbClient::init(language()).unwrap();
-        DbClientMutex::from(db_client)
+        let rt = Runtime::new().unwrap();
+        rt.block_on(async {
+            let db_client = DbClient::init(language()).await.unwrap();
+            DbClientMutex::from(db_client)
+        })
     }
 
     #[fixture]
-    fn shared_extension_handler(
+    async fn shared_extension_handler(
         #[from(shared_db_client)] db_client: &DbClientMutex,
     ) -> ExtensionHandler {
-        ExtensionHandler::init(db_client.clone()).unwrap()
+        ExtensionHandler::init(db_client.clone()).await.unwrap()
     }
 
     fn parse_line(line: &str) -> Result<DictionaryEntry> {
@@ -87,8 +93,11 @@ mod tests {
     }
 
     #[rstest]
-    fn format_dictionary_entries(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    #[tokio::test]
+    async fn format_dictionary_entries(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -99,7 +108,10 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let formatted_entries = extension_handler.format_dictionary_entries(&results)?;
+        let formatted_entries = extension_handler
+            .await
+            .format_dictionary_entries(&results)
+            .await?;
         if let Some(formatted_entries) = formatted_entries {
             for formatted_entry in formatted_entries {
                 println!("{}", formatted_entry);
@@ -110,14 +122,19 @@ mod tests {
     }
 
     #[rstest]
-    fn format_did_you_mean_banner(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    #[tokio::test]
+    async fn format_did_you_mean_banner(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let formatted_banner =
-            extension_handler.format_dictionary_did_you_mean_banner(&DidYouMean {
+        let formatted_banner = extension_handler
+            .await
+            .format_dictionary_did_you_mean_banner(&DidYouMean {
                 searched_for: "You searched for".to_string(),
                 suggestion: "... but probably meant".to_string(),
-            })?;
+            })
+            .await?;
         if let Some(formatted_banner) = formatted_banner {
             println!("{}", formatted_banner);
         }
@@ -126,32 +143,44 @@ mod tests {
     }
 
     #[rstest]
-    fn format_history_entries(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    #[tokio::test]
+    async fn format_history_entries(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
     ) -> Result<()> {
+        let awaited_extension_handler = extension_handler.await;
         {
             let _guard = TEST_MUTEX.lock().unwrap();
-            intercept_dictionary_entries(&extension_handler)?;
+            intercept_dictionary_entries(&awaited_extension_handler).await?;
         }
-        let extension_result: ExtensionResult<String> =
-            extension_handler.call_extension("history", &vec![])?;
+        let extension_result: ExtensionResult<String> = awaited_extension_handler
+            .call_extension("history", &vec![])
+            .await?;
         println!("{}", extension_result.result);
 
         Ok(())
     }
 
     #[rstest]
-    fn delete_history_entries(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    #[tokio::test]
+    async fn delete_history_entries(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
     ) -> Result<()> {
+        let awaited_extension_handler = extension_handler.await;
         let _guard = TEST_MUTEX.lock().unwrap();
 
-        let call_delete =
-            || extension_handler.call_extension("history", &vec!["delete".to_string()]);
+        let call_delete = async || {
+            awaited_extension_handler
+                .call_extension("history", &vec!["delete".to_string()])
+                .await
+        };
 
-        call_delete()?;
-        let size = intercept_dictionary_entries(&extension_handler)?;
-        let extension_result: ExtensionResult<String> = call_delete()?;
+        call_delete().await?;
+        let size = intercept_dictionary_entries(&awaited_extension_handler).await?;
+        let extension_result: ExtensionResult<String> = call_delete().await?;
 
         assert_contains!(extension_result.result, &format!("{}", size));
 
