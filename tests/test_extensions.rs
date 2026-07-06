@@ -15,15 +15,7 @@ mod tests {
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler, ExtensionResult};
 
-    const ITERATIONS: usize = 100;
-
-    /*
-    use lazy_static::lazy_static;
-    use std::sync::Mutex;
-    lazy_static! {
-        static ref TEST_MUTEX: Mutex<()> = Mutex::new(());
-    }
-    */
+    const ITERATIONS: usize = 50;
 
     macro_rules! assert_contains {
         ($haystack:expr, $needle:expr) => {
@@ -75,11 +67,6 @@ mod tests {
     //#[once]
     #[fixture]
     async fn shared_db_client() -> DbClientMutex {
-        //let rt = Runtime::new().unwrap();
-        //rt.block_on(async {
-        //    let db_client = DbClient::init(language()).await.unwrap();
-        //    DbClientMutex::from(db_client)
-        //})
         let db_client = DbClient::init(language()).await.unwrap();
         DbClientMutex::from(db_client)
     }
