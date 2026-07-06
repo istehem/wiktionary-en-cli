@@ -150,7 +150,7 @@ impl DbClient {
         Ok(documents.len())
     }
 
-    // TODO the query will never return more than one
+    // TODO this will query all documents and leads to bad performance
     pub async fn count_documents_in_extension_collection(
         &self,
         extension_name: &str,
@@ -159,8 +159,8 @@ impl DbClient {
             .client
             .db(extension_database!(self.language, extension_name))
             .await?;
-        let mut query = FindQuery::find_all();
-        query.limit = Some(1);
+        let query = FindQuery::find_all();
+        //query.limit = Some(1);
         let result: DocumentCollection<Value> = extension_db.find_raw(&query).await?;
         Ok(result.total_rows)
     }

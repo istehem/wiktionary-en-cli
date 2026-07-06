@@ -21,6 +21,7 @@ serde_json = { workspace = true }
 rstest = "0.26.1"
 lazy_static = "1.5.0"
 tokio = { version = "1.48.0", features = ["full"] }
+serial_test = { version = "3.0", features = ["async"] }
 
 [[test]]
 name = "test-uniqueness"

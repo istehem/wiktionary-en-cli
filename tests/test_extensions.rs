@@ -2,6 +2,7 @@
 mod tests {
     use anyhow::{Context, Error, Result};
     use rstest::{fixture, rstest};
+    use serial_test::serial;
     use std::collections::HashSet;
     use std::fs::File;
     use std::io::BufRead;
@@ -149,15 +150,14 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
+    #[serial]
     async fn format_history_entries(
         #[from(shared_extension_handler)]
         #[future]
         extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let awaited_extension_handler = extension_handler.await;
-        {
-            intercept_dictionary_entries(&awaited_extension_handler).await?;
-        }
+        intercept_dictionary_entries(&awaited_extension_handler).await?;
         let extension_result: ExtensionResult<String> = awaited_extension_handler
             .call_extension("history", &vec![])
             .await?;
@@ -168,6 +168,7 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
+    #[serial]
     async fn delete_history_entries(
         #[from(shared_extension_handler)]
         #[future]
@@ -193,6 +194,7 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
+    #[serial]
     async fn count_history_entries(
         #[from(shared_extension_handler)]
         #[future]
