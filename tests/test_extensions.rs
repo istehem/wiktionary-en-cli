@@ -162,7 +162,6 @@ mod tests {
         extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let awaited_extension_handler = extension_handler.await;
-        //let _guard = TEST_MUTEX.lock().unwrap();
 
         let call_delete = async || {
             awaited_extension_handler
@@ -188,7 +187,6 @@ mod tests {
         extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let awaited_extension_handler = extension_handler.await;
-        //let _guard = TEST_MUTEX.lock().unwrap();
         let _: ExtensionResult<String> = awaited_extension_handler
             .call_extension("history", &vec!["delete".to_string()])
             .await?;
