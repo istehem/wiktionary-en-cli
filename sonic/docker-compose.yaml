@@ -1,9 +1,11 @@
 services:
   wiktionary_sonic:
-    image: docker.io/valeriansaliou/sonic
+    image: docker.io/valeriansaliou/sonic:v1.7.1
     restart: always
     ports:
       - 1491:1491
+    environment:
+      SONIC_CHANNEL__AUTH_PASSWORD: ${SONIC_PASSWORD}
     volumes:
       - ./config.cfg:/etc/sonic.cfg
       - ./store/:/var/lib/sonic/store/
