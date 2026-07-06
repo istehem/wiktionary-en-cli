@@ -6,12 +6,13 @@ mod tests {
     use wiktionary_en_download::Downloader;
 
     #[rstest]
-    fn download_a_file() -> Result<()> {
+    #[tokio::test]
+    async fn download_a_file() -> Result<()> {
         let url = "https://testfileorg.netwet.net/500MB-CZIPtestfile.org.zip";
         let file_name = "./tmp/download_test.zip";
 
         let start = Instant::now();
-        Downloader::download(url, file_name)?;
+        Downloader::download(url, file_name).await?;
         let duration = start.elapsed();
         println!("Download of {} took: {:?}", url, duration);
         Ok(())
