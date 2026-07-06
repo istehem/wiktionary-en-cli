@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
         return utilities::pager::print_lines_in_pager(&errors?);
     }
     if args.download {
-        return Downloader::download_dictionary_extract(&language_to_use, args.force);
+        return Downloader::download_dictionary_extract(&language_to_use, args.force).await;
     }
     let count = import_wiktionary_extract(&db_path, &language_to_use, args.force).await?;
     utilities::pager::print_in_pager(&format!(

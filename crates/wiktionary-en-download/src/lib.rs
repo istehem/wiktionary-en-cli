@@ -52,7 +52,6 @@ impl Writer {
     }
 }
 
-#[tokio::main]
 async fn stream_download(url: &str, output_filename: &str) -> Result<()> {
     let client = reqwest::Client::new();
 
@@ -103,7 +102,7 @@ fn resource_url(language: &Language) -> String {
     String::from(url)
 }
 
-fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
+async fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
     let url = resource_url(language);
     let output_filename = utilities::DICTIONARY_DB_PATH!(language);
     if Path::new(&output_filename).exists() && !force {
@@ -113,17 +112,17 @@ fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
         );
     }
 
-    stream_download(&url, &output_filename)
+    stream_download(&url, &output_filename).await
 }
 
 pub struct Downloader();
 
 impl Downloader {
-    pub fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
-        download_dictionary_extract(language, force)
+    pub async fn download_dictionary_extract(language: &Language, force: bool) -> Result<()> {
+        download_dictionary_extract(language, force).await
     }
 
-    pub fn download(url: &str, output_filename: &str) -> Result<()> {
-        stream_download(url, output_filename)
+    pub async fn download(url: &str, output_filename: &str) -> Result<()> {
+        stream_download(url, output_filename).await
     }
 }
