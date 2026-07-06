@@ -15,7 +15,7 @@ mod tests {
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler, ExtensionResult};
 
-    const ITERATIONS: usize = 50;
+    const ITERATIONS: usize = 74;
 
     macro_rules! assert_contains {
         ($haystack:expr, $needle:expr) => {
