@@ -30,6 +30,10 @@ test-config:
 test-download:
   cargo test -p tests --test test-download --features="test-download" -- --nocapture
 
+[group: 'test']
+test-extensions:
+  cargo test -p tests --test test-extensions -- --nocapture
+
 # install wiktionary-en-import with standard features
 [group: 'install']
 install-wiktionary-en-import:

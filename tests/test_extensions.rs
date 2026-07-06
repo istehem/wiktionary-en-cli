@@ -1,15 +1,12 @@
 #[cfg(test)]
 mod tests {
     use anyhow::{Context, Error, Result};
-    use lazy_static::lazy_static;
     use rstest::{fixture, rstest};
     use std::collections::HashSet;
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
-    use std::sync::Mutex;
-    use tokio::runtime::Runtime;
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::couchdb_client::{DbClient, DbClientMutex};
@@ -19,9 +16,13 @@ mod tests {
 
     const ITERATIONS: usize = 100;
 
+    /*
+    use lazy_static::lazy_static;
+    use std::sync::Mutex;
     lazy_static! {
         static ref TEST_MUTEX: Mutex<()> = Mutex::new(());
     }
+    */
 
     macro_rules! assert_contains {
         ($haystack:expr, $needle:expr) => {
@@ -70,21 +71,25 @@ mod tests {
         Ok(found_words.len())
     }
 
+    //#[once]
     #[fixture]
-    #[once]
-    fn shared_db_client() -> DbClientMutex {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(async {
-            let db_client = DbClient::init(language()).await.unwrap();
-            DbClientMutex::from(db_client)
-        })
+    async fn shared_db_client() -> DbClientMutex {
+        //let rt = Runtime::new().unwrap();
+        //rt.block_on(async {
+        //    let db_client = DbClient::init(language()).await.unwrap();
+        //    DbClientMutex::from(db_client)
+        //})
+        let db_client = DbClient::init(language()).await.unwrap();
+        DbClientMutex::from(db_client)
     }
 
     #[fixture]
     async fn shared_extension_handler(
-        #[from(shared_db_client)] db_client: &DbClientMutex,
+        #[from(shared_db_client)]
+        #[future]
+        db_client: DbClientMutex,
     ) -> ExtensionHandler {
-        ExtensionHandler::init(db_client.clone()).await.unwrap()
+        ExtensionHandler::init(db_client.await).await.unwrap()
     }
 
     fn parse_line(line: &str) -> Result<DictionaryEntry> {
@@ -151,7 +156,6 @@ mod tests {
     ) -> Result<()> {
         let awaited_extension_handler = extension_handler.await;
         {
-            let _guard = TEST_MUTEX.lock().unwrap();
             intercept_dictionary_entries(&awaited_extension_handler).await?;
         }
         let extension_result: ExtensionResult<String> = awaited_extension_handler
@@ -170,7 +174,7 @@ mod tests {
         extension_handler: ExtensionHandler,
     ) -> Result<()> {
         let awaited_extension_handler = extension_handler.await;
-        let _guard = TEST_MUTEX.lock().unwrap();
+        //let _guard = TEST_MUTEX.lock().unwrap();
 
         let call_delete = async || {
             awaited_extension_handler
@@ -188,16 +192,21 @@ mod tests {
     }
 
     #[rstest]
-    fn count_history_entries(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    #[tokio::test]
+    async fn count_history_entries(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap();
-
-        let _: ExtensionResult<String> =
-            extension_handler.call_extension("history", &vec!["delete".to_string()])?;
-        let size = intercept_dictionary_entries(&extension_handler)?;
-        let history_count: ExtensionResult<usize> =
-            extension_handler.call_extension("history", &vec!["count".to_string()])?;
+        let awaited_extension_handler = extension_handler.await;
+        //let _guard = TEST_MUTEX.lock().unwrap();
+        let _: ExtensionResult<String> = awaited_extension_handler
+            .call_extension("history", &vec!["delete".to_string()])
+            .await?;
+        let size = intercept_dictionary_entries(&awaited_extension_handler).await?;
+        let history_count: ExtensionResult<usize> = awaited_extension_handler
+            .call_extension("history", &vec!["count".to_string()])
+            .await?;
 
         assert_eq!(size, history_count.result);
 
@@ -209,11 +218,16 @@ mod tests {
     }
 
     #[rstest]
-    fn history_with_unknown_option(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    #[tokio::test]
+    async fn history_with_unknown_option(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
     ) -> Result<()> {
-        let result: Result<ExtensionResult<String>> =
-            extension_handler.call_extension("history", &vec!["unknown".to_string()]);
+        let awaited_extension_handler = extension_handler.await;
+        let result: Result<ExtensionResult<String>> = awaited_extension_handler
+            .call_extension("history", &vec!["unknown".to_string()])
+            .await;
         let error = result.unwrap_err();
         assert_contains!(
             error_chain_as_strings(&error),
@@ -224,12 +238,17 @@ mod tests {
     }
 
     #[rstest]
-    fn calling_unknown_extension(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    #[tokio::test]
+    async fn calling_unknown_extension(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
     ) -> Result<()> {
+        let awaited_extension_handler = extension_handler.await;
         let extension_name = "unknown";
-        let result: Result<ExtensionResult<String>> =
-            extension_handler.call_extension(extension_name, &vec![]);
+        let result: Result<ExtensionResult<String>> = awaited_extension_handler
+            .call_extension(extension_name, &vec![])
+            .await;
         let error = result.unwrap_err();
         assert_contains!(
             error_chain_as_strings(&error),
@@ -240,15 +259,20 @@ mod tests {
     }
 
     #[rstest]
+    #[tokio::test]
     #[case::intercept("intercept")]
     #[case::format_entry("format_entry")]
     #[case::format_did_you_mean_banner("format_did_you_mean_banner")]
-    fn directly_calling_inner_workings_extension(
-        #[from(shared_extension_handler)] extension_handler: ExtensionHandler,
+    async fn directly_calling_inner_workings_extension(
+        #[from(shared_extension_handler)]
+        #[future]
+        extension_handler: ExtensionHandler,
         #[case] extension_name: &str,
     ) -> Result<()> {
-        let result: Result<ExtensionResult<String>> =
-            extension_handler.call_extension(extension_name, &vec![]);
+        let awaited_extension_handler = extension_handler.await;
+        let result: Result<ExtensionResult<String>> = awaited_extension_handler
+            .call_extension(extension_name, &vec![])
+            .await;
         let error = result.unwrap_err();
         assert_contains!(
             error_chain_as_strings(&error),
