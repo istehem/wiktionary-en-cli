@@ -72,6 +72,7 @@ impl DbClient {
         Ok(docs.rows)
     }
 
+    // TODO handle pagination for select all history queries
     pub async fn find_in_extension_collection(
         &self,
         extension_name: &str,
@@ -84,7 +85,6 @@ impl DbClient {
         let result = extension_db
             .find_raw(&FindQuery::new(query.document))
             .await?;
-
         Ok(result.rows.into_iter().map(Document::from).collect())
     }
 
