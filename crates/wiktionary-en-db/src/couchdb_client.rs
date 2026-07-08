@@ -72,24 +72,24 @@ impl DbClient {
         Ok(docs.rows)
     }
 
-    pub async fn find_in_extension_collection(
+    async fn find_raw_in_extension_collection(
         &self,
         extension_name: &str,
         query: Document,
-    ) -> Result<Vec<Document>> {
+    ) -> Result<Vec<Value>> {
         let extension_db = self
             .client
             .db(extension_database!(self.language, extension_name))
             .await?;
 
-        let mut result: Vec<Document> = Vec::new();
+        let mut result: Vec<Value> = Vec::new();
         let mut bookmark: Option<String> = None;
         let mut find_query = FindQuery::new(query.document);
 
         loop {
             find_query.bookmark = bookmark;
             let query_result = extension_db.find_raw(&find_query).await?;
-            let page: Vec<Document> = query_result.rows.into_iter().map(Document::from).collect();
+            let page: Vec<Value> = query_result.rows;
             if page.is_empty() {
                 break;
             }
@@ -97,6 +97,19 @@ impl DbClient {
             bookmark = query_result.bookmark;
         }
         Ok(result)
+    }
+
+    pub async fn find_in_extension_collection(
+        &self,
+        extension_name: &str,
+        query: Document,
+    ) -> Result<Vec<Document>> {
+        Ok(self
+            .find_raw_in_extension_collection(extension_name, query)
+            .await?
+            .into_iter()
+            .map(Document::from)
+            .collect())
     }
 
     pub async fn find_one_in_extension_collection(
@@ -141,19 +154,19 @@ impl DbClient {
         Ok(Document::from(json!({"_rev": result.rev})))
     }
 
+    // TODO this will query all documents and leads to bad performance
     pub async fn delete_many_in_extension_collection(
         &self,
         extension_name: &str,
         query: Document,
     ) -> Result<usize> {
+        let mut documents = self
+            .find_raw_in_extension_collection(extension_name, query)
+            .await?;
         let extension_db = self
             .client
             .db(extension_database!(self.language, extension_name))
             .await?;
-        let mut documents = extension_db
-            .find::<Value>(&FindQuery::new(query.document))
-            .await?
-            .rows;
         for document in &mut documents {
             document["_deleted"] = json!(true);
         }
@@ -165,15 +178,16 @@ impl DbClient {
     pub async fn count_documents_in_extension_collection(
         &self,
         extension_name: &str,
-    ) -> Result<u32> {
-        let extension_db = self
-            .client
-            .db(extension_database!(self.language, extension_name))
-            .await?;
-        let query = FindQuery::find_all();
-        //query.limit = Some(1);
-        let result: DocumentCollection<Value> = extension_db.find_raw(&query).await?;
-        Ok(result.total_rows)
+    ) -> Result<usize> {
+        Ok(self
+            .find_raw_in_extension_collection(
+                extension_name,
+                Document {
+                    document: json!({}),
+                },
+            )
+            .await?
+            .len())
     }
 
     pub async fn create_index_for_extension_collection(
