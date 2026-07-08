@@ -15,8 +15,8 @@ set dotenv-path := "wiktionary-en.env"
 # start services needed to run wiktionary-en-cli
 [group: 'setup']
 start-background-services:
-  podman compose -f ./couchdb/docker-compose.yaml up --force-recreate -d
-  podman compose -f ./sonic/docker-compose.yaml up --force-recreate -d
+  podman compose -f {{PROJECT_ROOT}}/couchdb/docker-compose.yaml up --force-recreate -d
+  podman compose -f {{PROJECT_ROOT}}/sonic/docker-compose.yaml up --force-recreate -d
 
 [group: 'test']
 test-couchdb-client:
