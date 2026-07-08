@@ -72,7 +72,6 @@ impl DbClient {
         Ok(docs.rows)
     }
 
-    // TODO handle pagination for select all history queries
     pub async fn find_in_extension_collection(
         &self,
         extension_name: &str,
@@ -82,10 +81,22 @@ impl DbClient {
             .client
             .db(extension_database!(self.language, extension_name))
             .await?;
-        let result = extension_db
-            .find_raw(&FindQuery::new(query.document))
-            .await?;
-        Ok(result.rows.into_iter().map(Document::from).collect())
+
+        let mut result: Vec<Document> = Vec::new();
+        let mut bookmark: Option<String> = None;
+        let mut find_query = FindQuery::new(query.document);
+
+        loop {
+            find_query.bookmark = bookmark;
+            let query_result = extension_db.find_raw(&find_query).await?;
+            let page: Vec<Document> = query_result.rows.into_iter().map(Document::from).collect();
+            if page.is_empty() {
+                break;
+            }
+            result.extend(page);
+            bookmark = query_result.bookmark;
+        }
+        Ok(result)
     }
 
     pub async fn find_one_in_extension_collection(
