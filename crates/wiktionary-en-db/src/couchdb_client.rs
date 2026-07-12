@@ -7,6 +7,7 @@ use couch_rs::types::index::IndexFields;
 use couch_rs::Client;
 use serde_json::json;
 use serde_json::Value;
+use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::sync::Arc;
@@ -51,7 +52,7 @@ pub struct Document {
 impl DbClient {
     pub async fn init(language: Language) -> Result<Self> {
         let client = couch_rs::Client::new(
-            env!("COUCH_DB_HOST"),
+            &env::var("COUCH_DB_HOST").unwrap_or(env!("COUCH_DB_HOST").to_string()),
             env!("COUCH_DB_USER"),
             env!("COUCH_DB_PASSWORD"),
         )?;
