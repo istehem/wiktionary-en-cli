@@ -114,7 +114,7 @@ mod tests {
     async fn test_setup(
         #[from(start_couchdb)]
         #[future]
-        couchdb_container: Container<GenericImage>,
+        couchdb_container: CouchDBContainer,
     ) -> TestSetup {
         let container = couchdb_container.await;
         let port = container.host_port(COUCH_DB_PORT).await.unwrap();
