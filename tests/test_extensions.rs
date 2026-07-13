@@ -3,7 +3,7 @@ mod tests {
     use anyhow::{Context, Error, Result};
     use rstest::{fixture, rstest};
     use rustainers::images::GenericImage;
-    use rustainers::runner::Runner;
+    use rustainers::runner::{RunOption, Runner};
     use rustainers::Container;
     use rustainers::{ImageName, WaitStrategy};
     use std::collections::HashSet;
@@ -100,8 +100,9 @@ mod tests {
             require_valid_certs: false,
         });
 
-        let runner = Runner::auto().unwrap();
-        let container = runner.start(image).await.unwrap();
+        let run_option = RunOption::builder().with_remove(true).build();
+        let runner = Runner::podman().unwrap();
+        let container = runner.start_with_options(image, run_option).await.unwrap();
 
         container
     }
