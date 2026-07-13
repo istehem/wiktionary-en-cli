@@ -23,6 +23,11 @@ mod tests {
     const ITERATIONS: usize = 201;
     const CONTAINER_PORT: u16 = 5984;
 
+    struct TestSetup {
+        extension_handler: ExtensionHandler,
+        couchdb_container: Container<GenericImage>,
+    }
+
     fn language() -> Language {
         Language::EN
     }
@@ -68,26 +73,22 @@ mod tests {
     }
 
     #[fixture]
-    async fn shared_db_client(
+    async fn test_setup(
         #[from(start_couchdb)]
         #[future]
         couchdb_container: Container<GenericImage>,
-    ) -> DbClientMutex {
+    ) -> TestSetup {
         let container = couchdb_container.await;
         let port = container.host_port(CONTAINER_PORT).await.unwrap();
         env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
         println!("port is {}", port);
         let db_client = DbClient::init(language()).await.unwrap();
-        DbClientMutex::from(db_client)
-    }
-
-    #[fixture]
-    async fn shared_extension_handler(
-        #[from(shared_db_client)]
-        #[future]
-        db_client: DbClientMutex,
-    ) -> ExtensionHandler {
-        ExtensionHandler::init(db_client.await).await.unwrap()
+        TestSetup {
+            extension_handler: ExtensionHandler::init(DbClientMutex::from(db_client))
+                .await
+                .unwrap(),
+            couchdb_container: container,
+        }
     }
 
     fn parse_line(line: &str) -> Result<DictionaryEntry> {
@@ -99,11 +100,13 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn count_history_entries(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
-        let awaited_extension_handler = extension_handler.await;
+        let awaited_test_setup = test_setup.await;
+        let _container = awaited_test_setup.couchdb_container;
+        let awaited_extension_handler = awaited_test_setup.extension_handler;
         let _: ExtensionResult<String> = awaited_extension_handler
             .call_extension("history", &vec!["delete".to_string()])
             .await?;
