@@ -20,12 +20,14 @@ mod tests {
     use wiktionary_en_entities::result::DictionaryResult;
     use wiktionary_en_lua::extension::{ExtensionHandler, ExtensionResult};
 
-    const ITERATIONS: usize = 201;
-    const CONTAINER_PORT: u16 = 5984;
+    const ITERATIONS: usize = 301;
+    const COUCH_DB_PORT: u16 = 5984;
+
+    type CouchDBContainer = Container<GenericImage>;
 
     struct TestSetup {
         extension_handler: ExtensionHandler,
-        couchdb_container: Container<GenericImage>,
+        couchdb_container: CouchDBContainer,
     }
 
     fn language() -> Language {
@@ -55,14 +57,17 @@ mod tests {
     }
 
     #[fixture]
-    async fn start_couchdb() -> Container<GenericImage> {
+    async fn start_couchdb() -> CouchDBContainer {
         let name = ImageName::new_with_tag("docker.io/couchdb", "3.5.2");
         let mut image = GenericImage::new(name);
         image.add_env_var("COUCHDB_PASSWORD", env!("COUCH_DB_PASSWORD"));
         image.add_env_var("COUCHDB_USER", env!("COUCH_DB_USER"));
-        image.add_port_mapping(CONTAINER_PORT);
+        image.add_port_mapping(COUCH_DB_PORT);
         let health_check = HealthCheck::builder()
-            .with_command(format!("bash -c 'echo > /dev/tcp/127.0.0.1/{}'", 5984))
+            .with_command(format!(
+                "bash -c 'echo > /dev/tcp/127.0.0.1/{}'",
+                COUCH_DB_PORT
+            ))
             .build();
         image.set_wait_strategy(WaitStrategy::custom_health_check(health_check));
 
@@ -79,9 +84,8 @@ mod tests {
         couchdb_container: Container<GenericImage>,
     ) -> TestSetup {
         let container = couchdb_container.await;
-        let port = container.host_port(CONTAINER_PORT).await.unwrap();
+        let port = container.host_port(COUCH_DB_PORT).await.unwrap();
         env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
-        println!("port is {}", port);
         let db_client = DbClient::init(language()).await.unwrap();
         TestSetup {
             extension_handler: ExtensionHandler::init(DbClientMutex::from(db_client))
@@ -107,9 +111,6 @@ mod tests {
         let awaited_test_setup = test_setup.await;
         let _container = awaited_test_setup.couchdb_container;
         let awaited_extension_handler = awaited_test_setup.extension_handler;
-        let _: ExtensionResult<String> = awaited_extension_handler
-            .call_extension("history", &vec!["delete".to_string()])
-            .await?;
         let size = intercept_dictionary_entries(&awaited_extension_handler).await?;
         let history_count: ExtensionResult<usize> = awaited_extension_handler
             .call_extension("history", &vec!["count".to_string()])
