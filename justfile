@@ -34,11 +34,6 @@ test-download:
 test-extensions:
   cargo test -p tests --test test-extensions -- --nocapture
 
-[group: 'test']
-test-with-containers $COUCH_DB_HOST="http://localhost:6984":
-  cargo test -p tests --test test-with-containers -- --nocapture
-  #echo {{COUCH_DB_HOST}}
-
 # install wiktionary-en-import with standard features
 [group: 'install']
 install-wiktionary-en-import:
