@@ -5,7 +5,7 @@ mod tests {
     use rustainers::images::GenericImage;
     use rustainers::runner::Runner;
     use rustainers::Container;
-    use rustainers::{HealthCheck, ImageName, WaitStrategy};
+    use rustainers::{ImageName, WaitStrategy};
     use serial_test::serial;
     use std::collections::HashSet;
     use std::env;
@@ -63,13 +63,12 @@ mod tests {
         image.add_env_var("COUCHDB_PASSWORD", env!("COUCH_DB_PASSWORD"));
         image.add_env_var("COUCHDB_USER", env!("COUCH_DB_USER"));
         image.add_port_mapping(COUCH_DB_PORT);
-        let health_check = HealthCheck::builder()
-            .with_command(format!(
-                "bash -c 'echo > /dev/tcp/127.0.0.1/{}'",
-                COUCH_DB_PORT
-            ))
-            .build();
-        image.set_wait_strategy(WaitStrategy::custom_health_check(health_check));
+        image.set_wait_strategy(WaitStrategy::HttpSuccess {
+            path: "/_up".to_string(),
+            container_port: COUCH_DB_PORT.into(),
+            https: false,
+            require_valid_certs: false,
+        });
 
         let runner = Runner::auto().unwrap();
         let container = runner.start(image).await.unwrap();
@@ -118,14 +117,6 @@ mod tests {
 
         assert_eq!(size, history_count.result);
 
-        Ok(())
-    }
-
-    #[rstest]
-    #[tokio::test]
-    #[ignore]
-    async fn start_containers() -> Result<()> {
-        start_couchdb().await;
         Ok(())
     }
 }
