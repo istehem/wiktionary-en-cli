@@ -145,6 +145,7 @@ mod tests {
             .extension_handler
             .format_dictionary_entries(&results)
             .await?;
+
         if let Some(formatted_entries) = formatted_entries {
             for formatted_entry in formatted_entries {
                 println!("{}", formatted_entry);
@@ -169,6 +170,7 @@ mod tests {
                 suggestion: "... but probably meant".to_string(),
             })
             .await?;
+
         if let Some(formatted_banner) = formatted_banner {
             println!("{}", formatted_banner);
         }
@@ -189,6 +191,7 @@ mod tests {
         intercept_dictionary_entries(&extension_handler).await?;
         let extension_result: ExtensionResult<String> =
             extension_handler.call_extension("history", &vec![]).await?;
+
         println!("{}", extension_result.result);
 
         Ok(())
@@ -204,14 +207,10 @@ mod tests {
         let awaited_test_setup = test_setup.await;
         let extension_handler = awaited_test_setup.extension_handler;
 
-        let call_delete = async || {
-            extension_handler
-                .call_extension("history", &vec!["delete".to_string()])
-                .await
-        };
-
         let size = intercept_dictionary_entries(&extension_handler).await?;
-        let extension_result: ExtensionResult<String> = call_delete().await?;
+        let extension_result: ExtensionResult<String> = extension_handler
+            .call_extension("history", &vec!["delete".to_string()])
+            .await?;
 
         assert_contains!(extension_result.result, &format!("{}", size));
 
@@ -252,6 +251,7 @@ mod tests {
             .call_extension("history", &vec!["unknown".to_string()])
             .await;
         let error = result.unwrap_err();
+
         assert_contains!(
             error_chain_as_strings(&error),
             &ExtensionErrorType::UnknownOption.to_string()
@@ -275,6 +275,7 @@ mod tests {
             .call_extension(extension_name, &vec![])
             .await;
         let error = result.unwrap_err();
+
         assert_contains!(
             error_chain_as_strings(&error),
             &format!("extension '{}' not found", extension_name)
@@ -301,6 +302,7 @@ mod tests {
             .call_extension(extension_name, &vec![])
             .await;
         let error = result.unwrap_err();
+
         assert_contains!(
             error_chain_as_strings(&error),
             &directly_calling_inner_workings_extension_error_msg!(extension_name)
