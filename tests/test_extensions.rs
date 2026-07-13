@@ -45,6 +45,8 @@ mod tests {
 
     struct TestSetup {
         extension_handler: ExtensionHandler,
+        // The reference to the container must not go out of scope; that would shut down the container.
+        #[allow(dead_code)]
         couchdb_container: CouchDBContainer,
     }
 
@@ -182,8 +184,8 @@ mod tests {
         test_setup: TestSetup,
     ) -> Result<()> {
         let awaited_test_setup = test_setup.await;
-        let _container = awaited_test_setup.couchdb_container;
         let extension_handler = awaited_test_setup.extension_handler;
+
         intercept_dictionary_entries(&extension_handler).await?;
         let extension_result: ExtensionResult<String> =
             extension_handler.call_extension("history", &vec![]).await?;
@@ -200,7 +202,6 @@ mod tests {
         test_setup: TestSetup,
     ) -> Result<()> {
         let awaited_test_setup = test_setup.await;
-        let _container = awaited_test_setup.couchdb_container;
         let extension_handler = awaited_test_setup.extension_handler;
 
         let call_delete = async || {
@@ -225,7 +226,6 @@ mod tests {
         test_setup: TestSetup,
     ) -> Result<()> {
         let awaited_test_setup = test_setup.await;
-        let _container = awaited_test_setup.couchdb_container;
         let extension_handler = awaited_test_setup.extension_handler;
 
         let size = intercept_dictionary_entries(&extension_handler).await?;

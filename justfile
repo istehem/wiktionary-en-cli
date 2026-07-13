@@ -53,4 +53,5 @@ install: install-wiktionary-en-import install-wiktionary-en-cli
 lint:
   cargo clippy --manifest-path crates/wiktionary-en-cli/Cargo.toml --features sonic
   cargo clippy --manifest-path crates/wiktionary-en-import/Cargo.toml --features sonic
+  cargo clippy --manifest-path tests/Cargo.toml
 
