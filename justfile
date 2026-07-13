@@ -34,6 +34,10 @@ test-download:
 test-extensions:
   cargo test -p tests --test test-extensions -- --nocapture
 
+[group: 'test']
+test:
+  cargo test -p tests -- --nocapture
+
 # install wiktionary-en-import with standard features
 [group: 'install']
 install-wiktionary-en-import:
