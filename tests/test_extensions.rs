@@ -2,8 +2,12 @@
 mod tests {
     use anyhow::{Context, Error, Result};
     use rstest::{fixture, rstest};
-    use serial_test::serial;
+    use rustainers::images::GenericImage;
+    use rustainers::runner::Runner;
+    use rustainers::Container;
+    use rustainers::{ImageName, WaitStrategy};
     use std::collections::HashSet;
+    use std::env;
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
@@ -15,7 +19,8 @@ mod tests {
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler, ExtensionResult};
 
-    const ITERATIONS: usize = 201;
+    const ITERATIONS: usize = 301;
+    const COUCH_DB_PORT: u16 = 5984;
 
     macro_rules! assert_contains {
         ($haystack:expr, $needle:expr) => {
@@ -36,9 +41,24 @@ mod tests {
             )
         };
     }
+    type CouchDBContainer = Container<GenericImage>;
+
+    struct TestSetup {
+        extension_handler: ExtensionHandler,
+        couchdb_container: CouchDBContainer,
+    }
 
     fn language() -> Language {
         Language::EN
+    }
+
+    fn parse_line(line: &str) -> Result<DictionaryEntry> {
+        line.parse()
+            .with_context(|| "Couldn't parse line in DB file.".to_string())
+    }
+
+    fn error_chain_as_strings(error: &Error) -> Vec<String> {
+        error.chain().map(|e| e.to_string()).collect()
     }
 
     async fn intercept_dictionary_entries(extension_handler: &ExtensionHandler) -> Result<usize> {
@@ -64,33 +84,50 @@ mod tests {
         Ok(found_words.len())
     }
 
-    //#[once]
     #[fixture]
-    async fn shared_db_client() -> DbClientMutex {
-        let db_client = DbClient::init(language()).await.unwrap();
-        DbClientMutex::from(db_client)
+    async fn start_couchdb() -> CouchDBContainer {
+        let name = ImageName::new_with_tag("docker.io/couchdb", "3.5.2");
+        let mut image = GenericImage::new(name);
+        image.add_env_var("COUCHDB_PASSWORD", env!("COUCH_DB_PASSWORD"));
+        image.add_env_var("COUCHDB_USER", env!("COUCH_DB_USER"));
+        image.add_port_mapping(COUCH_DB_PORT);
+        image.set_wait_strategy(WaitStrategy::HttpSuccess {
+            path: "/_up".to_string(),
+            container_port: COUCH_DB_PORT.into(),
+            https: false,
+            require_valid_certs: false,
+        });
+
+        let runner = Runner::auto().unwrap();
+        let container = runner.start(image).await.unwrap();
+
+        container
     }
 
     #[fixture]
-    async fn shared_extension_handler(
-        #[from(shared_db_client)]
+    async fn test_setup(
+        #[from(start_couchdb)]
         #[future]
-        db_client: DbClientMutex,
-    ) -> ExtensionHandler {
-        ExtensionHandler::init(db_client.await).await.unwrap()
-    }
-
-    fn parse_line(line: &str) -> Result<DictionaryEntry> {
-        line.parse()
-            .with_context(|| "Couldn't parse line in DB file.".to_string())
+        couchdb_container: Container<GenericImage>,
+    ) -> TestSetup {
+        let container = couchdb_container.await;
+        let port = container.host_port(COUCH_DB_PORT).await.unwrap();
+        env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
+        let db_client = DbClient::init(language()).await.unwrap();
+        TestSetup {
+            extension_handler: ExtensionHandler::init(DbClientMutex::from(db_client))
+                .await
+                .unwrap(),
+            couchdb_container: container,
+        }
     }
 
     #[rstest]
     #[tokio::test]
     async fn format_dictionary_entries(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
         let db_path = PathBuf::from(utilities::DICTIONARY_DB_PATH!(language()));
         let file_reader: BufReader<File> = file_utils::get_file_reader(&db_path)?;
@@ -101,8 +138,9 @@ mod tests {
             results.push(dictionary_entry);
         }
 
-        let formatted_entries = extension_handler
-            .await
+        let awaited_test_setup = test_setup.await;
+        let formatted_entries = awaited_test_setup
+            .extension_handler
             .format_dictionary_entries(&results)
             .await?;
         if let Some(formatted_entries) = formatted_entries {
@@ -117,12 +155,13 @@ mod tests {
     #[rstest]
     #[tokio::test]
     async fn format_did_you_mean_banner(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
-        let formatted_banner = extension_handler
-            .await
+        let awaited_test_setup = test_setup.await;
+        let formatted_banner = awaited_test_setup
+            .extension_handler
             .format_dictionary_did_you_mean_banner(&DidYouMean {
                 searched_for: "You searched for".to_string(),
                 suggestion: "... but probably meant".to_string(),
@@ -137,17 +176,17 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    #[serial]
     async fn format_history_entries(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
-        let awaited_extension_handler = extension_handler.await;
-        intercept_dictionary_entries(&awaited_extension_handler).await?;
-        let extension_result: ExtensionResult<String> = awaited_extension_handler
-            .call_extension("history", &vec![])
-            .await?;
+        let awaited_test_setup = test_setup.await;
+        let _container = awaited_test_setup.couchdb_container;
+        let extension_handler = awaited_test_setup.extension_handler;
+        intercept_dictionary_entries(&extension_handler).await?;
+        let extension_result: ExtensionResult<String> =
+            extension_handler.call_extension("history", &vec![]).await?;
         println!("{}", extension_result.result);
 
         Ok(())
@@ -155,22 +194,22 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    #[serial]
     async fn delete_history_entries(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
-        let awaited_extension_handler = extension_handler.await;
+        let awaited_test_setup = test_setup.await;
+        let _container = awaited_test_setup.couchdb_container;
+        let extension_handler = awaited_test_setup.extension_handler;
 
         let call_delete = async || {
-            awaited_extension_handler
+            extension_handler
                 .call_extension("history", &vec!["delete".to_string()])
                 .await
         };
 
-        call_delete().await?;
-        let size = intercept_dictionary_entries(&awaited_extension_handler).await?;
+        let size = intercept_dictionary_entries(&extension_handler).await?;
         let extension_result: ExtensionResult<String> = call_delete().await?;
 
         assert_contains!(extension_result.result, &format!("{}", size));
@@ -180,18 +219,17 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    #[serial]
     async fn count_history_entries(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
-        let awaited_extension_handler = extension_handler.await;
-        let _: ExtensionResult<String> = awaited_extension_handler
-            .call_extension("history", &vec!["delete".to_string()])
-            .await?;
-        let size = intercept_dictionary_entries(&awaited_extension_handler).await?;
-        let history_count: ExtensionResult<usize> = awaited_extension_handler
+        let awaited_test_setup = test_setup.await;
+        let _container = awaited_test_setup.couchdb_container;
+        let extension_handler = awaited_test_setup.extension_handler;
+
+        let size = intercept_dictionary_entries(&extension_handler).await?;
+        let history_count: ExtensionResult<usize> = extension_handler
             .call_extension("history", &vec!["count".to_string()])
             .await?;
 
@@ -200,19 +238,17 @@ mod tests {
         Ok(())
     }
 
-    fn error_chain_as_strings(error: &Error) -> Vec<String> {
-        error.chain().map(|e| e.to_string()).collect()
-    }
-
     #[rstest]
     #[tokio::test]
     async fn history_with_unknown_option(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
-        let awaited_extension_handler = extension_handler.await;
-        let result: Result<ExtensionResult<String>> = awaited_extension_handler
+        let awaited_test_setup = test_setup.await;
+        let extension_handler = awaited_test_setup.extension_handler;
+
+        let result: Result<ExtensionResult<String>> = extension_handler
             .call_extension("history", &vec!["unknown".to_string()])
             .await;
         let error = result.unwrap_err();
@@ -227,13 +263,15 @@ mod tests {
     #[rstest]
     #[tokio::test]
     async fn calling_unknown_extension(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
     ) -> Result<()> {
-        let awaited_extension_handler = extension_handler.await;
+        let awaited_test_setup = test_setup.await;
+        let extension_handler = awaited_test_setup.extension_handler;
+
         let extension_name = "unknown";
-        let result: Result<ExtensionResult<String>> = awaited_extension_handler
+        let result: Result<ExtensionResult<String>> = extension_handler
             .call_extension(extension_name, &vec![])
             .await;
         let error = result.unwrap_err();
@@ -251,13 +289,15 @@ mod tests {
     #[case::format_entry("format_entry")]
     #[case::format_did_you_mean_banner("format_did_you_mean_banner")]
     async fn directly_calling_inner_workings_extension(
-        #[from(shared_extension_handler)]
+        #[from(test_setup)]
         #[future]
-        extension_handler: ExtensionHandler,
+        test_setup: TestSetup,
         #[case] extension_name: &str,
     ) -> Result<()> {
-        let awaited_extension_handler = extension_handler.await;
-        let result: Result<ExtensionResult<String>> = awaited_extension_handler
+        let awaited_test_setup = test_setup.await;
+        let extension_handler = awaited_test_setup.extension_handler;
+
+        let result: Result<ExtensionResult<String>> = extension_handler
             .call_extension(extension_name, &vec![])
             .await;
         let error = result.unwrap_err();
