@@ -12,6 +12,7 @@ mod tests {
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
+    use tokio::time::{sleep, Duration};
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::couchdb_client::{DbClient, DbClientMutex};
@@ -104,6 +105,8 @@ mod tests {
         let runner = Runner::podman().unwrap();
         let container = runner.start_with_options(image, run_option).await.unwrap();
 
+        // couchdb /up endpoint returs ok before users are initialized; this may cause 401.
+        sleep(Duration::from_millis(2000)).await;
         container
     }
 
@@ -115,7 +118,9 @@ mod tests {
     ) -> TestSetup {
         let container = couchdb_container.await;
         let port = container.host_port(COUCH_DB_PORT).await.unwrap();
-        env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
+        unsafe {
+            env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
+        }
         let db_client = DbClient::init(language()).await.unwrap();
         TestSetup {
             extension_handler: ExtensionHandler::init(DbClientMutex::from(db_client))
