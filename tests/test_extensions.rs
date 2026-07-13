@@ -105,7 +105,7 @@ mod tests {
         let runner = Runner::podman().unwrap();
         let container = runner.start_with_options(image, run_option).await.unwrap();
 
-        // couchdb /up endpoint returs ok before users are initialized; this may cause 401.
+        // couchdb /up endpoint returns ok before users are initialized; this may cause 401.
         sleep(Duration::from_millis(2000)).await;
         container
     }
