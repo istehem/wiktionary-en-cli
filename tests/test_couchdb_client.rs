@@ -20,6 +20,15 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
+    async fn create_analytics() -> Result<()> {
+        // use with "curl  http://<user>:<password>@localhost:5984/en/_design/analytics/_view/word_count | jq"
+        let client = DbClient::init(utilities::language::Language::EN).await?;
+        client.create_analytics().await?;
+        Ok(())
+    }
+
+    #[rstest]
+    #[tokio::test]
     #[ignore = "db already populated"]
     async fn find_insert_file() -> Result<()> {
         let mut client = DbClient::init(Language::EN).await?;

@@ -4,6 +4,7 @@ use couch_rs::document::DocumentCollection;
 use couch_rs::types::find::FindQuery;
 use couch_rs::types::find::SortSpec;
 use couch_rs::types::index::IndexFields;
+use couch_rs::types::view::{CouchFunc, CouchViews};
 use couch_rs::Client;
 use serde_json::json;
 use serde_json::Value;
@@ -281,6 +282,16 @@ impl DbClient {
         let database_name = self.database.name();
         self.client.destroy_db(self.database.name()).await?;
         self.database = self.client.db(database_name).await?;
+        Ok(())
+    }
+
+    pub async fn create_analytics(&self) -> Result<()> {
+        let count_function = CouchFunc {
+            map: "function(doc) { doc.word && emit(doc._id, 1); }".to_string(),
+            reduce: Some("_count".to_string()),
+        };
+        let definitions = CouchViews::new("word_count", count_function);
+        self.database.create_view("analytics", definitions).await?;
         Ok(())
     }
 }
