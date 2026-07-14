@@ -278,11 +278,6 @@ impl DbClient {
         Ok(result.result.is_some())
     }
 
-    pub async fn random_entry(&self) -> Result<Vec<DictionaryEntry>> {
-        // implement a really random entry
-        self.find_by_word("random").await
-    }
-
     async fn recreate_database(&mut self) -> Result<()> {
         let database_name = self.database.name();
         self.client.destroy_db(self.database.name()).await?;

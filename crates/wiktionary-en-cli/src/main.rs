@@ -35,8 +35,8 @@ struct Cli {
 enum Command {
     /// Search in the dictionary
     Search {
-        /// A word to search for; omitting it will yield a random entry
-        search_term: Option<String>,
+        /// A word to search for
+        search_term: String,
         /// Maximal number of results
         #[clap(short, long, default_value = "1")]
         max_results: usize,
@@ -79,7 +79,7 @@ enum SonicCommand {
 }
 
 struct QueryParameters {
-    search_term: Option<String>,
+    search_term: String,
     language: Language,
     max_results: usize,
     case_insensitive: bool,
@@ -91,22 +91,22 @@ async fn search_for_alternative_term(
     client: &DbClient,
     query_params: &QueryParameters,
 ) -> Result<Option<DictionaryResult>> {
-    if let Some(term) = &query_params.search_term {
-        let did_you_mean =
-            wiktionary_en_identifier_index::did_you_mean(&query_params.language, term)?;
-        if let Some(did_you_mean) = did_you_mean {
-            let hits = client.find_by_word(&did_you_mean).await?;
-            if !hits.is_empty() {
-                let result = DictionaryResult {
-                    word: term.to_string(),
-                    did_you_mean: Some(DidYouMean {
-                        searched_for: term.to_string(),
-                        suggestion: did_you_mean,
-                    }),
-                    hits,
-                };
-                return Ok(Some(result));
-            }
+    let did_you_mean = wiktionary_en_identifier_index::did_you_mean(
+        &query_params.language,
+        &query_params.search_term,
+    )?;
+    if let Some(did_you_mean) = did_you_mean {
+        let hits = client.find_by_word(&did_you_mean).await?;
+        if !hits.is_empty() {
+            let result = DictionaryResult {
+                word: query_params.search_term.clone(),
+                did_you_mean: Some(DidYouMean {
+                    searched_for: query_params.search_term.clone(),
+                    suggestion: did_you_mean,
+                }),
+                hits,
+            };
+            return Ok(Some(result));
         }
     }
     Ok(None)
@@ -144,19 +144,7 @@ async fn query_dictionary(
     query_params: QueryParameters,
     extension_handler: wiktionary_en_lua::extension::ExtensionHandler,
 ) -> Result<WiktionaryResultWrapper> {
-    if let Some(term) = &query_params.search_term {
-        let result = search_for_term(client, term, &query_params).await?;
-        return Ok(WiktionaryResultWrapper {
-            result: result_wrapper::WiktionaryResult::DictionaryResult(result),
-            extension_handler,
-        });
-    }
-    let hits = client.random_entry().await?;
-    let result = DictionaryResult {
-        word: "random".to_string(),
-        did_you_mean: None,
-        hits,
-    };
+    let result = search_for_term(client, &query_params.search_term, &query_params).await?;
     Ok(WiktionaryResultWrapper {
         result: result_wrapper::WiktionaryResult::DictionaryResult(result),
         extension_handler,
