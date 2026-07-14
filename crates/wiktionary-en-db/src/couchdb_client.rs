@@ -175,20 +175,17 @@ impl DbClient {
         Ok(documents.len())
     }
 
-    // TODO this will query all documents and leads to bad performance
+    // TODO this returns more than the actual number of pure extension entries
     pub async fn count_documents_in_extension_collection(
         &self,
         extension_name: &str,
-    ) -> Result<usize> {
-        Ok(self
-            .find_raw_in_extension_collection(
-                extension_name,
-                Document {
-                    document: json!({}),
-                },
-            )
-            .await?
-            .len())
+    ) -> Result<u64> {
+        let info = self
+            .client
+            .get_info(extension_database!(self.language, extension_name))
+            .await?;
+
+        Ok(info.doc_count)
     }
 
     pub async fn create_index_for_extension_collection(
@@ -220,12 +217,14 @@ impl DbClient {
         Ok(())
     }
 
-    // TODO the query will never return more than one
-    pub async fn number_of_entries(&self) -> Result<u32> {
-        let mut query = FindQuery::find_all();
-        query.limit = Some(1);
-        let result: DocumentCollection<Value> = self.database.find_raw(&query).await?;
-        Ok(result.total_rows)
+    // TODO this returns more than the actual number of word entries
+    pub async fn number_of_entries(&self) -> Result<u64> {
+        let info = self
+            .client
+            .get_info(self.language.to_string().as_str())
+            .await?;
+
+        Ok(info.doc_count)
     }
 
     pub async fn insert_wiktionary_file(
