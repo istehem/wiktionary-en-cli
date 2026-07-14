@@ -23,7 +23,12 @@ mod tests {
     async fn create_analytics() -> Result<()> {
         // use with "curl  http://<user>:<password>@localhost:5984/en/_design/analytics/_view/word_count | jq"
         let client = DbClient::init(utilities::language::Language::EN).await?;
-        client.create_analytics().await?;
+        let result = client.create_analytics().await?;
+        if result {
+            println!("created an analytics design document");
+        } else {
+            println!("an analytics design document already exists");
+        }
         Ok(())
     }
 

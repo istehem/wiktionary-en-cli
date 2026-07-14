@@ -1,6 +1,9 @@
 use anyhow::{bail, Context, Result};
 use couch_rs::database::Database;
 use couch_rs::document::DocumentCollection;
+use couch_rs::error::CouchError;
+use couch_rs::error::ErrorDetails;
+use couch_rs::http::StatusCode;
 use couch_rs::types::find::FindQuery;
 use couch_rs::types::find::SortSpec;
 use couch_rs::types::index::IndexFields;
@@ -285,14 +288,23 @@ impl DbClient {
         Ok(())
     }
 
-    pub async fn create_analytics(&self) -> Result<()> {
+    pub async fn create_analytics(&self) -> Result<bool> {
         let count_function = CouchFunc {
             map: "function(doc) { doc.word && emit(doc._id, 1); }".to_string(),
             reduce: Some("_count".to_string()),
         };
         let definitions = CouchViews::new("word_count", count_function);
-        self.database.create_view("analytics", definitions).await?;
-        Ok(())
+        let result = self.database.create_view("analytics", definitions).await;
+        match result {
+            Ok(_) => Ok(true),
+            Err(CouchError::OperationFailed(ErrorDetails {
+                id: _,
+                status: StatusCode::CONFLICT,
+                message: _,
+                ..
+            })) => Ok(false),
+            Err(error) => bail!(error),
+        }
     }
 }
 
