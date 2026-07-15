@@ -68,7 +68,7 @@ async fn calculate_stats(dictionary_path: &Path, language: &Language) -> Result<
     let client = DbClient::init(*language).await?;
     Ok(Stats {
         path: dictionary_path.display().to_string(),
-        database_entries: client.number_of_entries().await? as usize,
+        database_entries: client.word_document_count().await? as usize,
         file_size: file_size_in_megabytes(dictionary_path),
         number_of_entries: number_of_entries(dictionary_path)?,
     })

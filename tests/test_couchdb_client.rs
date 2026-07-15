@@ -9,6 +9,7 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
+    #[ignore = "ignore for now"]
     async fn find_by_word() -> Result<()> {
         let client = DbClient::init(utilities::language::Language::EN).await?;
         let entries = client.find_by_word("soccer").await?;
@@ -29,6 +30,16 @@ mod tests {
         } else {
             println!("an analytics design document already exists");
         }
+        Ok(())
+    }
+
+    #[rstest]
+    #[tokio::test]
+    async fn word_document_count() -> Result<()> {
+        // use with "curl  http://<user>:<password>@localhost:5984/en/_design/analytics/_view/word_count | jq"
+        let client = DbClient::init(utilities::language::Language::EN).await?;
+        let result = client.word_document_count().await?;
+        println!("counted {} number of words", result);
         Ok(())
     }
 

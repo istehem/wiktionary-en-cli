@@ -222,7 +222,7 @@ impl DbClient {
     }
 
     // TODO this returns more than the actual number of word entries
-    pub async fn number_of_entries(&self) -> Result<u64> {
+    pub async fn word_document_count(&self) -> Result<u64> {
         let info = self
             .client
             .get_info(self.language.to_string().as_str())
@@ -236,8 +236,9 @@ impl DbClient {
         file_reader: BufReader<File>,
         force: bool,
     ) -> Result<usize> {
-        let count = self.number_of_entries().await?;
-        if !force && count > 0 {
+        let count = self.word_document_count().await?;
+        let database_exists = count > 0;
+        if !force && database_exists {
             bail!(
                 "dictionary already contains {} entries for language {}, use force to override",
                 count,
@@ -255,10 +256,11 @@ impl DbClient {
             }
         }
 
-        if count > 0 {
+        if database_exists {
             self.recreate_database().await?;
         }
         self.create_index_on_word().await?;
+        self.create_analytics().await?;
 
         let mut total_count = 0;
 
