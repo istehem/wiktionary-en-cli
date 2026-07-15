@@ -9,8 +9,7 @@ use couch_rs::types::find::SortSpec;
 use couch_rs::types::index::IndexFields;
 use couch_rs::types::view::{CouchFunc, CouchViews};
 use couch_rs::Client;
-use serde_json::json;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -25,6 +24,9 @@ macro_rules! extension_database {
         format!("extension_{}_{}", $language, $extension_name).as_str()
     };
 }
+
+const ANALYTICS_DESIGN_DOC_NAME: &str = "analytics";
+const WORD_COUNT_VIEW_NAME: &str = "word_count";
 
 #[derive(Clone)]
 pub struct DbClient {
@@ -221,14 +223,18 @@ impl DbClient {
         Ok(())
     }
 
-    // TODO this returns more than the actual number of word entries
     pub async fn word_document_count(&self) -> Result<u64> {
-        let info = self
-            .client
-            .get_info(self.language.to_string().as_str())
+        let result = self
+            .database
+            .query_raw(ANALYTICS_DESIGN_DOC_NAME, WORD_COUNT_VIEW_NAME, None)
             .await?;
+        let maybe_count = result
+            .rows
+            .first()
+            .and_then(|item| item.value.as_number())
+            .and_then(|number| number.as_u64());
 
-        Ok(info.doc_count)
+        Ok(maybe_count.unwrap_or_default())
     }
 
     pub async fn insert_wiktionary_file(
@@ -295,8 +301,11 @@ impl DbClient {
             map: "function(doc) { doc.word && emit(doc._id, 1); }".to_string(),
             reduce: Some("_count".to_string()),
         };
-        let definitions = CouchViews::new("word_count", count_function);
-        let result = self.database.create_view("analytics", definitions).await;
+        let definitions = CouchViews::new(WORD_COUNT_VIEW_NAME, count_function);
+        let result = self
+            .database
+            .create_view(ANALYTICS_DESIGN_DOC_NAME, definitions)
+            .await;
         match result {
             Ok(_) => Ok(true),
             Err(CouchError::OperationFailed(ErrorDetails {
