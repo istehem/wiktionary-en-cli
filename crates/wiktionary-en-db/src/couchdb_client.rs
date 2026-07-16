@@ -7,6 +7,7 @@ use couch_rs::http::StatusCode;
 use couch_rs::types::find::FindQuery;
 use couch_rs::types::find::SortSpec;
 use couch_rs::types::index::IndexFields;
+use couch_rs::types::view::ViewCollection;
 use couch_rs::types::view::{CouchFunc, CouchViews};
 use couch_rs::Client;
 use serde_json::{json, Value};
@@ -228,13 +229,7 @@ impl DbClient {
             .database
             .query_raw(ANALYTICS_DESIGN_DOC_NAME, WORD_COUNT_VIEW_NAME, None)
             .await?;
-        let maybe_count = result
-            .rows
-            .first()
-            .and_then(|item| item.value.as_number())
-            .and_then(|number| number.as_u64());
-
-        Ok(maybe_count.unwrap_or_default())
+        Ok(word_count_view_as_u64(result))
     }
 
     pub async fn insert_wiktionary_file(
@@ -297,11 +292,7 @@ impl DbClient {
     }
 
     pub async fn create_analytics(&self) -> Result<bool> {
-        let count_function = CouchFunc {
-            map: "function(doc) { doc.word && emit(doc._id, 1); }".to_string(),
-            reduce: Some("_count".to_string()),
-        };
-        let definitions = CouchViews::new(WORD_COUNT_VIEW_NAME, count_function);
+        let definitions = CouchViews::new(WORD_COUNT_VIEW_NAME, count_words_function());
         let result = self
             .database
             .create_view(ANALYTICS_DESIGN_DOC_NAME, definitions)
@@ -316,6 +307,23 @@ impl DbClient {
             })) => Ok(false),
             Err(error) => bail!(error),
         }
+    }
+}
+
+pub fn word_count_view_as_u64(view_collection: ViewCollection<Value, Value, Value>) -> u64 {
+    let maybe_count = view_collection
+        .rows
+        .first()
+        .and_then(|item| item.value.as_number())
+        .and_then(|number| number.as_u64());
+
+    maybe_count.unwrap_or_default()
+}
+
+fn count_words_function() -> CouchFunc {
+    CouchFunc {
+        map: "function(doc) { doc.word && emit(doc._id, 1); }".to_string(),
+        reduce: Some("_count".to_string()),
     }
 }
 
