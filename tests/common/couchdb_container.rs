@@ -5,7 +5,7 @@ use rustainers::Container;
 use rustainers::{ImageName, WaitStrategy};
 use tokio::time::{sleep, Duration};
 
-const COUCH_DB_PORT: u16 = 5984;
+pub const COUCH_DB_PORT: u16 = 5984;
 
 pub type CouchDBContainer = Container<GenericImage>;
 

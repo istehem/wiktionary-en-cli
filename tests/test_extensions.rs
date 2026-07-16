@@ -28,7 +28,6 @@ mod tests {
     }
 
     const ITERATIONS: usize = 301;
-    const COUCH_DB_PORT: u16 = 5984;
 
     macro_rules! assert_contains {
         ($haystack:expr, $needle:expr) => {
@@ -87,7 +86,7 @@ mod tests {
     }
 
     #[fixture]
-    async fn start_couchdb() -> common::CouchDBContainer {
+    async fn start_couchdb() -> CouchDBContainer {
         common::start_couchdb().await.unwrap()
     }
 
@@ -98,7 +97,7 @@ mod tests {
         couchdb_container: CouchDBContainer,
     ) -> TestSetup {
         let container = couchdb_container.await;
-        let port = container.host_port(COUCH_DB_PORT).await.unwrap();
+        let port = container.host_port(common::COUCH_DB_PORT).await.unwrap();
         unsafe {
             env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
         }

@@ -1,11 +1,47 @@
 #[cfg(test)]
 mod tests {
     use anyhow::{bail, Result};
-    use rstest::rstest;
+    use rstest::{fixture, rstest};
+    use std::env;
     use std::path::PathBuf;
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::couchdb_client::DbClient;
+
+    mod common {
+        include!("common/couchdb_container.rs");
+    }
+    use common::CouchDBContainer;
+
+    struct TestSetup {
+        db_client: DbClient,
+        // The reference to the container must not go out of scope; that would shut down the container.
+        #[allow(dead_code)]
+        couchdb_container: CouchDBContainer,
+    }
+
+    #[fixture]
+    async fn start_couchdb() -> CouchDBContainer {
+        common::start_couchdb().await.unwrap()
+    }
+
+    #[fixture]
+    async fn test_setup(
+        #[from(start_couchdb)]
+        #[future]
+        couchdb_container: CouchDBContainer,
+    ) -> TestSetup {
+        let container = couchdb_container.await;
+        let port = container.host_port(common::COUCH_DB_PORT).await.unwrap();
+        unsafe {
+            env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
+        }
+        let db_client = DbClient::init(Language::EN).await.unwrap();
+        TestSetup {
+            db_client,
+            couchdb_container: container,
+        }
+    }
 
     #[rstest]
     #[tokio::test]
@@ -21,9 +57,19 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    async fn create_analytics() -> Result<()> {
+    async fn create_analytics(
+        #[from(test_setup)]
+        #[future]
+        test_setup: TestSetup,
+    ) -> Result<()> {
+        let awaited_test_setup = test_setup.await;
         // use with "curl  http://<user>:<password>@localhost:5984/en/_design/analytics/_view/word_count | jq"
-        let client = DbClient::init(utilities::language::Language::EN).await?;
+        let container = awaited_test_setup.couchdb_container;
+        let port = container.host_port(common::COUCH_DB_PORT).await.unwrap();
+        unsafe {
+            env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
+        }
+        let client = DbClient::init(Language::EN).await.unwrap();
         let result = client.create_analytics().await?;
         if result {
             println!("created an analytics design document");
@@ -35,9 +81,14 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    async fn word_document_count() -> Result<()> {
-        // use with "curl  http://<user>:<password>@localhost:5984/en/_design/analytics/_view/word_count | jq"
-        let client = DbClient::init(utilities::language::Language::EN).await?;
+    async fn word_document_count(
+        #[from(test_setup)]
+        #[future]
+        test_setup: TestSetup,
+    ) -> Result<()> {
+        let awaited_test_setup = test_setup.await;
+        let client = awaited_test_setup.db_client;
+        client.create_analytics().await?;
         let result = client.word_document_count().await?;
         println!("counted {} number of words", result);
         Ok(())
