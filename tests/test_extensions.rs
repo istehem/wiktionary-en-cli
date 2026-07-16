@@ -2,23 +2,30 @@
 mod tests {
     use anyhow::{Context, Error, Result};
     use rstest::{fixture, rstest};
-    use rustainers::images::GenericImage;
-    use rustainers::runner::{RunOption, Runner};
-    use rustainers::Container;
-    use rustainers::{ImageName, WaitStrategy};
     use std::collections::HashSet;
     use std::env;
     use std::fs::File;
     use std::io::BufRead;
     use std::io::BufReader;
     use std::path::PathBuf;
-    use tokio::time::{sleep, Duration};
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::couchdb_client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler, ExtensionResult};
+
+    mod common {
+        include!("common/couchdb_container.rs");
+    }
+    use common::CouchDBContainer;
+
+    struct TestSetup {
+        extension_handler: ExtensionHandler,
+        // The reference to the container must not go out of scope; that would shut down the container.
+        #[allow(dead_code)]
+        couchdb_container: CouchDBContainer,
+    }
 
     const ITERATIONS: usize = 301;
     const COUCH_DB_PORT: u16 = 5984;
@@ -41,14 +48,6 @@ mod tests {
                 $extension_name
             )
         };
-    }
-    type CouchDBContainer = Container<GenericImage>;
-
-    struct TestSetup {
-        extension_handler: ExtensionHandler,
-        // The reference to the container must not go out of scope; that would shut down the container.
-        #[allow(dead_code)]
-        couchdb_container: CouchDBContainer,
     }
 
     fn language() -> Language {
@@ -88,26 +87,8 @@ mod tests {
     }
 
     #[fixture]
-    async fn start_couchdb() -> CouchDBContainer {
-        let name = ImageName::new_with_tag("docker.io/couchdb", "3.5.2");
-        let mut image = GenericImage::new(name);
-        image.add_env_var("COUCHDB_PASSWORD", env!("COUCH_DB_PASSWORD"));
-        image.add_env_var("COUCHDB_USER", env!("COUCH_DB_USER"));
-        image.add_port_mapping(COUCH_DB_PORT);
-        image.set_wait_strategy(WaitStrategy::HttpSuccess {
-            path: "/_up".to_string(),
-            container_port: COUCH_DB_PORT.into(),
-            https: false,
-            require_valid_certs: false,
-        });
-
-        let run_option = RunOption::builder().with_remove(true).build();
-        let runner = Runner::podman().unwrap();
-        let container = runner.start_with_options(image, run_option).await.unwrap();
-
-        // couchdb /up endpoint returns ok before users are initialized; this may cause 401.
-        sleep(Duration::from_millis(2000)).await;
-        container
+    async fn start_couchdb() -> common::CouchDBContainer {
+        common::start_couchdb().await.unwrap()
     }
 
     #[fixture]
