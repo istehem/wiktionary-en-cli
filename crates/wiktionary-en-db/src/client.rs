@@ -53,6 +53,37 @@ impl DbClientMutex {
     }
 }
 
+struct ExtensionCollectionViewDefinition {
+    document_name: String,
+    view_name: String,
+}
+
+impl ExtensionCollectionViewDefinition {
+    pub fn init(value: &Value) -> Result<Self> {
+        let Some(key_values) = value.as_object() else {
+            bail!("no view definition supplied")
+        };
+        let Some(document_name) = key_values
+            .get("document_name")
+            .and_then(|value| value.as_str())
+            .map(|str| str.to_string())
+        else {
+            bail!("a field 'document_name' must be supplied")
+        };
+        let Some(view_name) = key_values
+            .get("view_name")
+            .and_then(|value| value.as_str())
+            .map(|str| str.to_string())
+        else {
+            bail!("a field 'view_name' must be supplied")
+        };
+        Ok(Self {
+            document_name,
+            view_name,
+        })
+    }
+}
+
 pub struct Document {
     pub document: Value,
 }
@@ -191,20 +222,15 @@ impl DbClient {
             .db(extension_database!(self.language, extension_name))
             .await?;
 
-        let Some(key_values) = view.document.as_object() else {
-            bail!("no view definition supplied")
-        };
-        let Some(document_name) = key_values
-            .get("document_name")
-            .and_then(|value| value.as_str())
-        else {
-            bail!("a field 'document_name' must be supplied")
-        };
-        let Some(view_name) = key_values.get("view_name").and_then(|value| value.as_str()) else {
-            bail!("a field 'view_name' must be supplied")
-        };
+        let view_definition = ExtensionCollectionViewDefinition::init(&view.document)?;
 
-        let result = extension_db.query_raw(document_name, view_name, None).await;
+        let result = extension_db
+            .query_raw(
+                &view_definition.document_name,
+                &view_definition.view_name,
+                None,
+            )
+            .await;
 
         match result {
             Ok(result) => {
@@ -237,25 +263,22 @@ impl DbClient {
             .db(extension_database!(self.language, extension_name))
             .await?;
 
+        let view_definition = ExtensionCollectionViewDefinition::init(&definition.document)?;
         let Some(key_values) = definition.document.as_object() else {
             bail!("no view definition supplied")
-        };
-        let Some(document_name) = key_values
-            .get("document_name")
-            .and_then(|value| value.as_str())
-        else {
-            bail!("a field 'document_name' must be supplied")
-        };
-        let Some(view_name) = key_values.get("view_name").and_then(|value| value.as_str()) else {
-            bail!("a field 'view_name' must be supplied")
         };
         let Some(map) = key_values.get("map").and_then(|value| value.as_str()) else {
             bail!("a field 'map' must be supplied")
         };
         let reduce = key_values.get("reduce").and_then(|value| value.as_str());
 
-        let definitions = CouchViews::new(view_name, custom_couch_function(map, reduce));
-        let result = extension_db.create_view(document_name, definitions).await;
+        let definitions = CouchViews::new(
+            &view_definition.view_name,
+            custom_couch_function(map, reduce),
+        );
+        let result = extension_db
+            .create_view(&view_definition.document_name, definitions)
+            .await;
         match result {
             Ok(_) => Ok(Document::from(json!({"created": true}))),
 
