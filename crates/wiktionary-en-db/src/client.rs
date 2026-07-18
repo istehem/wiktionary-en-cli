@@ -15,6 +15,7 @@ use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::sync::Arc;
+use std::vec;
 use std::vec::Vec;
 use tokio::sync::Mutex;
 use utilities::language::Language;
@@ -180,20 +181,53 @@ impl DbClient {
         Ok(documents.len())
     }
 
-    // TODO this returns more than the actual number of pure extension entries
-    pub async fn count_documents_in_extension_collection(
+    pub async fn get_view_in_extension_collection(
         &self,
         extension_name: &str,
-    ) -> Result<u64> {
-        let info = self
+        view: Document,
+    ) -> Result<Document> {
+        let extension_db = self
             .client
-            .get_info(extension_database!(self.language, extension_name))
+            .db(extension_database!(self.language, extension_name))
             .await?;
 
-        Ok(info.doc_count)
+        let Some(key_values) = view.document.as_object() else {
+            bail!("no view definition supplied")
+        };
+        let Some(document_name) = key_values
+            .get("document_name")
+            .and_then(|value| value.as_str())
+        else {
+            bail!("a field 'document_name' must be supplied")
+        };
+        let Some(view_name) = key_values.get("view_name").and_then(|value| value.as_str()) else {
+            bail!("a field 'view_name' must be supplied")
+        };
+
+        let result = extension_db.query_raw(document_name, view_name, None).await;
+
+        match result {
+            Ok(result) => {
+                let mut rows: Vec<Value> = vec![];
+
+                for item in result.rows {
+                    rows.push(
+                json!({"id": item.id, "key": item.key, "value": item.value, "doc": item.doc}),
+            );
+                }
+                Ok(Document::from(json!({"exists": true, "rows": rows})))
+            }
+            Err(CouchError::OperationFailed(ErrorDetails {
+                id: _,
+                status: StatusCode::NOT_FOUND,
+                message: _,
+                ..
+            })) => Ok(Document::from(json!({"exists": false}))),
+            Err(error) => bail!(error),
+        }
     }
 
-    pub async fn create_view_for_extension_collection(
+    pub async fn create_view_in_extension_collection(
         &self,
         extension_name: &str,
         definition: Document,

@@ -68,12 +68,12 @@ impl UserData for DbClientMutex {
             },
         );
         methods.add_async_method(
-            "count_documents_in_collection",
-            async |_, this, extension_name: String| {
+            "get_view_in_collection",
+            async |_, this, (extension_name, view): (String, Document)| {
                 let db_client = &this.client.lock().await;
                 ok_or_runtime_error(
                     db_client
-                        .count_documents_in_extension_collection(&extension_name)
+                        .get_view_in_extension_collection(&extension_name, view)
                         .await,
                 )
             },
@@ -90,12 +90,12 @@ impl UserData for DbClientMutex {
             },
         );
         methods.add_async_method(
-            "create_view_for_collection",
+            "create_view_in_collection",
             async |_, this, (extension_name, definition): (String, Document)| {
                 let db_client = &this.client.lock().await;
                 ok_or_runtime_error(
                     db_client
-                        .create_view_for_extension_collection(&extension_name, definition)
+                        .create_view_in_extension_collection(&extension_name, definition)
                         .await,
                 )
             },

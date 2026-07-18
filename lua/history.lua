@@ -42,17 +42,31 @@ local function index()
 end
 
 local function count()
-  return { result = db_client:count_documents_in_collection(features.history.name) }
+  local view = {
+    document_name = "analytics",
+    view_name = "word_count",
+  }
+  local view_content = db_client:get_view_in_collection(features.history.name, view)
+  if not view_content.exists then
+    return {
+      result = "a count view doesn't exist yet, please create it by using the history extension 'create_count_view' option",
+    }
+  end
+  local rows = view_content.rows
+  if utils.is_empty(rows) then
+    return { result = 0 }
+  end
+  return { result = view_content.rows[1].value.count }
 end
 
-local function view()
+local function create_count_view()
   local definition = {
     document_name = "analytics",
     view_name = "word_count",
-    map = "function(doc) { doc.word && emit(doc._id, 1); }",
-    reduce = "_count",
+    map = "function(doc) { doc.word && emit(doc.word, 1); }",
+    reduce = "_stats",
   }
-  local result = db_client:create_view_for_collection(features.history.name, definition)
+  local result = db_client:create_view_in_collection(features.history.name, definition)
   if result.created then
     return { result = "view created" }
   end
@@ -68,8 +82,8 @@ history.main = function(options)
         return index()
       elseif option == "count" then
         return count()
-      elseif option == "view" then
-        return view()
+      elseif option == "create_count_view" then
+        return create_count_view()
       else
         local error_msg = string.format("unknown option '%s'", option)
         return { result = error_msg, error = "unknown_option" }
