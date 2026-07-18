@@ -4,10 +4,7 @@ use mlua::{Error, FromLua, IntoLua, Lua, LuaSerdeExt, Result, UserData, UserData
 use crate::client::{DbClientMutex, Document};
 
 fn ok_or_runtime_error<T>(result: anyhow::Result<T>) -> Result<T> {
-    match result {
-        Ok(result) => Ok(result),
-        Err(err) => Err(Error::RuntimeError(err.to_string())),
-    }
+    result.map_err(|err| Error::RuntimeError(err.to_string()))
 }
 
 impl UserData for DbClientMutex {
