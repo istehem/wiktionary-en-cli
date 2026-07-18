@@ -49,6 +49,8 @@ local function view()
   local definition = {
     document_name = "analytics",
     view_name = "word_count",
+    map = "function(doc) { doc.word && emit(doc._id, 1); }",
+    reduce = "_count",
   }
   local result = db_client:create_view_for_collection(features.history.name, definition)
   if result.created then

@@ -206,17 +206,21 @@ impl DbClient {
         let Some(key_values) = definition.document.as_object() else {
             bail!("no view definition supplied")
         };
-        let Some(view_name) = key_values.get("view_name").and_then(|value| value.as_str()) else {
-            bail!("a field 'view_name' must be supplied")
-        };
         let Some(document_name) = key_values
             .get("document_name")
             .and_then(|value| value.as_str())
         else {
             bail!("a field 'document_name' must be supplied")
         };
+        let Some(view_name) = key_values.get("view_name").and_then(|value| value.as_str()) else {
+            bail!("a field 'view_name' must be supplied")
+        };
+        let Some(map) = key_values.get("map").and_then(|value| value.as_str()) else {
+            bail!("a field 'map' must be supplied")
+        };
+        let reduce = key_values.get("reduce").and_then(|value| value.as_str());
 
-        let definitions = CouchViews::new(view_name, count_words_function());
+        let definitions = CouchViews::new(view_name, custom_couch_function(map, reduce));
         let result = extension_db.create_view(document_name, definitions).await;
         match result {
             Ok(_) => Ok(Document::from(json!({"created": true}))),
@@ -362,6 +366,13 @@ fn count_words_function() -> CouchFunc {
     CouchFunc {
         map: "function(doc) { doc.word && emit(doc._id, 1); }".to_string(),
         reduce: Some("_count".to_string()),
+    }
+}
+
+fn custom_couch_function(map: &str, reduce: Option<&str>) -> CouchFunc {
+    CouchFunc {
+        map: map.to_string(),
+        reduce: reduce.map(|reduce| reduce.to_string()),
     }
 }
 
