@@ -18,6 +18,12 @@ start-background-services:
   podman compose -f {{PROJECT_ROOT}}/couchdb/docker-compose.yaml up --force-recreate -d
   podman compose -f {{PROJECT_ROOT}}/sonic/docker-compose.yaml up --force-recreate -d
 
+# check for outdated dependencies
+[group: 'maintenance']
+outdated:
+  # run `cargo upgrade --dry-run` to check versions defined in [workspace.dependencies]
+  cargo outdated -w --root-deps-only
+
 [group: 'test']
 test-couchdb-client:
   cargo test -p tests --test test-couchdb-client -- --nocapture

@@ -10,8 +10,8 @@ test-download = []
 
 [dev-dependencies]
 anyhow = {workspace = true}
-tracing = "0.1.41"
-tracing-test = "0.2.5"
+tracing = "0.1.44"
+tracing-test = "0.2.6"
 utilities = { path = "../crates/utilities" }
 wiktionary-en-entities = { path = "../crates/wiktionary-en-entities" }
 wiktionary-en-lua = { path = "../crates/wiktionary-en-lua" }

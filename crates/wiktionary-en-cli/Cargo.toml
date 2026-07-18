@@ -11,9 +11,9 @@ wiktionary-en-lua = { path = "../wiktionary-en-lua" }
 utilities = { path = "../utilities" }
 clap = { workspace = true }
 anyhow = { workspace = true } 
-colored = "3.0.0"
 edit-distance = { workspace = true }
 tokio = { workspace = true }
+colored = { workspace = true }
 
 [features]
 sonic = [ "wiktionary-en-identifier-index" ]
