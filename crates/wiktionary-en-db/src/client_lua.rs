@@ -1,7 +1,7 @@
 use anyhow;
 use mlua::{Error, FromLua, IntoLua, Lua, LuaSerdeExt, Result, UserData, UserDataMethods, Value};
 
-use crate::couchdb_client::{DbClientMutex, Document};
+use crate::client::{DbClientMutex, Document};
 
 fn ok_or_runtime_error<T>(result: anyhow::Result<T>) -> Result<T> {
     match result {

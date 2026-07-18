@@ -8,7 +8,7 @@ use std::fmt::{Display, Formatter};
 use utilities::colored_string_utils;
 use utilities::DICTIONARY_EXTENSIONS;
 use utilities::LUA_DIR;
-use wiktionary_en_db::couchdb_client::DbClientMutex;
+use wiktionary_en_db::client::DbClientMutex;
 use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
 use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 

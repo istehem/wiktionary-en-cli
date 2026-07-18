@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use utilities::file_utils;
 use utilities::language::Language;
 
-use wiktionary_en_db::couchdb_client::DbClient;
+use wiktionary_en_db::client::DbClient;
 use wiktionary_en_download::Downloader;
 
 use clap::Parser;

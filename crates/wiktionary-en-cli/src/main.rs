@@ -7,7 +7,7 @@ use utilities::language::Language;
 
 use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
 
-use wiktionary_en_db::couchdb_client::{DbClient, DbClientMutex};
+use wiktionary_en_db::client::{DbClient, DbClientMutex};
 
 mod stats;
 use stats::Stats;

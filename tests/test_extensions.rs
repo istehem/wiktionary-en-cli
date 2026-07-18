@@ -10,7 +10,7 @@ mod tests {
     use std::path::PathBuf;
     use utilities::file_utils;
     use utilities::language::Language;
-    use wiktionary_en_db::couchdb_client::{DbClient, DbClientMutex};
+    use wiktionary_en_db::client::{DbClient, DbClientMutex};
     use wiktionary_en_entities::dictionary_entry::DictionaryEntry;
     use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
     use wiktionary_en_lua::extension::{ExtensionErrorType, ExtensionHandler, ExtensionResult};
