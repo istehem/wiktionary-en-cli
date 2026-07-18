@@ -52,14 +52,14 @@ impl fmt::Display for InnerWorkingsExtension {
 #[derive(Debug)]
 pub enum ExtensionErrorType {
     UnknownOption,
-    UnknownError,
+    CustomError(String),
 }
 
 impl ExtensionErrorType {
     pub fn from(code: &str) -> Self {
         match code {
             "unknown_option" => Self::UnknownOption,
-            _ => Self::UnknownError,
+            _ => Self::CustomError(code.to_string()),
         }
     }
 }
@@ -68,7 +68,7 @@ impl Display for ExtensionErrorType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::UnknownOption => write!(f, "unknown extension option"),
-            Self::UnknownError => write!(f, "unknown extension error"),
+            Self::CustomError(error) => write!(f, "{}", error),
         }
     }
 }

@@ -50,6 +50,7 @@ local function count()
   if not view_content.exists then
     return {
       result = "a count view doesn't exist yet, please create it by using the history extension 'create_count_view' option",
+      error = "view_not_found",
     }
   end
   local rows = view_content.rows
@@ -70,7 +71,7 @@ local function create_count_view()
   if result.created then
     return { result = "view created" }
   end
-  return { result = result.message or "unkwon error" }
+  return { result = result.message or "unkwon error", error = "view_creation_error" }
 end
 
 history.main = function(options)
