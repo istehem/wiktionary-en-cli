@@ -13,4 +13,4 @@ colored = "3.0.0"
 indoc = "2.0.7"
 textwrap = { workspace = true } 
 mlua = { workspace = true }
-couch_rs = "0.13.0"
+couch_rs = { workspace = true }
