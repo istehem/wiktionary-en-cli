@@ -13,4 +13,3 @@ base64 = "0.22.1"
 anyhow = {workspace = true} 
 edit-distance = { workspace = true }
 streaming-iterator = { version = "0.1.9" }
-couch_rs = { workspace = true }

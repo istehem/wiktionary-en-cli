@@ -9,7 +9,7 @@ edition = "2021"
 utilities = { path = "../utilities" }
 anyhow = { workspace = true }
 serde = { workspace = true }
-colored = "3.0.0"
+colored = { workspace = true }
 indoc = "2.0.7"
 textwrap = { workspace = true } 
 mlua = { workspace = true }
