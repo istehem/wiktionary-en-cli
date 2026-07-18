@@ -45,6 +45,18 @@ local function count()
   return { result = db_client:count_documents_in_collection(features.history.name) }
 end
 
+local function view()
+  local definition = {
+    document_name = "analytics",
+    view_name = "word_count",
+  }
+  local result = db_client:create_view_for_collection(features.history.name, definition)
+  if result.created then
+    return { result = "view created" }
+  end
+  return { result = result.message or "unkwon error" }
+end
+
 history.main = function(options)
   if not utils.is_empty(options) then
     for _, option in ipairs(options) do
@@ -54,6 +66,8 @@ history.main = function(options)
         return index()
       elseif option == "count" then
         return count()
+      elseif option == "view" then
+        return view()
       else
         local error_msg = string.format("unknown option '%s'", option)
         return { result = error_msg, error = "unknown_option" }

@@ -193,6 +193,46 @@ impl DbClient {
         Ok(info.doc_count)
     }
 
+    pub async fn create_view_for_extension_collection(
+        &self,
+        extension_name: &str,
+        definition: Document,
+    ) -> Result<Document> {
+        let extension_db = self
+            .client
+            .db(extension_database!(self.language, extension_name))
+            .await?;
+
+        let Some(key_values) = definition.document.as_object() else {
+            bail!("no view definition supplied")
+        };
+        let Some(view_name) = key_values.get("view_name").and_then(|value| value.as_str()) else {
+            bail!("a field 'view_name' must be supplied")
+        };
+        let Some(document_name) = key_values
+            .get("document_name")
+            .and_then(|value| value.as_str())
+        else {
+            bail!("a field 'document_name' must be supplied")
+        };
+
+        let definitions = CouchViews::new(view_name, count_words_function());
+        let result = extension_db.create_view(document_name, definitions).await;
+        match result {
+            Ok(_) => Ok(Document::from(json!({"created": true}))),
+
+            Err(CouchError::OperationFailed(ErrorDetails {
+                id: _,
+                status: StatusCode::CONFLICT,
+                message: _,
+                ..
+            })) => Ok(Document::from(
+                json!({"created": false, "message": "view already exists"}),
+            )),
+            Err(error) => bail!(error),
+        }
+    }
+
     pub async fn create_index_for_extension_collection(
         &self,
         extension_name: &str,
