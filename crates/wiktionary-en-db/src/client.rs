@@ -72,9 +72,7 @@ impl DbClient {
     }
 
     pub async fn find_by_word(&self, term: &str) -> Result<Vec<DictionaryEntry>> {
-        let query = FindQuery::new(
-            json!({ "word": term }), // Replace "status" and "active" with your field and term
-        );
+        let query = FindQuery::new(json!({ "word": term }));
 
         let docs: DocumentCollection<DictionaryEntry> = self.database.find(&query).await?;
         Ok(docs.rows)
