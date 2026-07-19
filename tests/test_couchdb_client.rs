@@ -1,9 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use anyhow::{bail, Result};
+    use anyhow::Result;
     use rstest::{fixture, rstest};
     use std::env;
-    use std::path::PathBuf;
     use utilities::file_utils;
     use utilities::language::Language;
     use wiktionary_en_db::client::DbClient;
@@ -104,15 +103,16 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    #[ignore = "db already populated"]
-    async fn find_insert_file() -> Result<()> {
-        let mut client = DbClient::init(Language::EN).await?;
-
-        let db_path: PathBuf = file_utils::get_db_path(None, &Language::EN);
-        match file_utils::get_file_reader(&db_path) {
-            Ok(path) => client.insert_wiktionary_file(path, false).await?,
-            Err(err) => bail!(err),
-        };
+    async fn find_insert_file(
+        #[from(test_setup)]
+        #[future]
+        test_setup: TestSetup,
+    ) -> Result<()> {
+        let awaited_test_setup = test_setup.await;
+        let mut client = awaited_test_setup.db_client;
+        client.create_analytics().await?;
+        let entries = insert_test_data(&mut client).await?;
+        assert_eq!(entries, 1);
         Ok(())
     }
 
