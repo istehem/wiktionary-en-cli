@@ -16,7 +16,6 @@ mod tests {
     struct TestSetup {
         db_client: DbClient,
         // The reference to the container must not go out of scope; that would shut down the container.
-        #[allow(dead_code)]
         couchdb_container: CouchDBContainer,
     }
 

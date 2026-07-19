@@ -5,7 +5,9 @@ use std::path::PathBuf;
 use utilities::file_utils::get_db_path;
 use utilities::language::Language;
 
-use wiktionary_en_entities::result::{DictionaryResult, DidYouMean};
+use wiktionary_en_entities::result::DictionaryResult;
+#[cfg(feature = "sonic")]
+use wiktionary_en_entities::result::DidYouMean;
 
 use wiktionary_en_db::client::{DbClient, DbClientMutex};
 

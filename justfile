@@ -49,10 +49,20 @@ test-extensions:
 test:
   cargo test -p tests -- --nocapture
 
+# install wiktionary-en-import without the sonic feature
+[group: 'install']
+install-wiktionary-en-import-no-sonic:
+  cargo install --path crates/wiktionary-en-import
+
 # install wiktionary-en-import with standard features
 [group: 'install']
 install-wiktionary-en-import:
   cargo install --path crates/wiktionary-en-import --features sonic
+
+# install wiktionary-en-cli without the sonic sonic feature
+[group: 'install']
+install-wiktionary-en-cli-no-sonic:
+  cargo install --path crates/wiktionary-en-cli
 
 # install wiktionary-en-cli with standard features
 [group: 'install']
@@ -62,6 +72,11 @@ install-wiktionary-en-cli:
 # install all binaries with standard features
 [group: 'install']
 install: install-wiktionary-en-import install-wiktionary-en-cli
+
+# install all binaries without the standard feature
+[group: 'install']
+install-no-sonic: install-wiktionary-en-import-no-sonic install-wiktionary-en-cli-no-sonic
+
 
 # lint using clippy
 [group: 'lint']
