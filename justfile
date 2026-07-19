@@ -46,6 +46,10 @@ test-extensions:
   cargo test -p tests --test test-extensions -- --nocapture
 
 [group: 'test']
+test-single-extensions-test-case TEST_CASE:
+  cargo test -p tests --test test-extensions {{TEST_CASE}} -- --nocapture
+
+[group: 'test']
 test:
   cargo test -p tests -- --nocapture
 

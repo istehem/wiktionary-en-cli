@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use anyhow::bail;
     use anyhow::{Context, Error, Result};
     use rstest::{fixture, rstest};
     use std::collections::HashSet;
@@ -212,6 +213,17 @@ mod tests {
     ) -> Result<()> {
         let awaited_test_setup = test_setup.await;
         let extension_handler = awaited_test_setup.extension_handler;
+
+        let create_view_result: ExtensionResult<String> = extension_handler
+            .call_extension("history", &vec!["create_count_view".to_string()])
+            .await?;
+        if let Some(error) = create_view_result.error {
+            bail!(error);
+        }
+        println!(
+            "create view call exited with message: '{}'",
+            create_view_result.result
+        );
 
         let size = intercept_dictionary_entries(&extension_handler).await?;
         let history_count: ExtensionResult<usize> = extension_handler
