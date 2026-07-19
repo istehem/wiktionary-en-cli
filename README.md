@@ -5,7 +5,7 @@ The easiest way to install wiktionary-en-cli is to use the just command runner:
 just install
 ```
 
-For this to work properly some environment variables need to be set in the environment file.
+For this to work properly some environment variables need to be set in the environment file:
 ```console
 touch wiktionary-en.env
 ```
@@ -14,8 +14,6 @@ Then, in your favorite editor, add the following to this environment file:
 ```env
 COUCH_DB_PASSWORD="<your-couchdb-password>"
 SONIC_PASSWORD="<your-sonic-password>"
-```
-```
 ```
 ## Infrastructure
 
