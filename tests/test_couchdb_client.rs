@@ -16,7 +16,18 @@ mod tests {
     struct TestSetup {
         db_client: DbClient,
         // The reference to the container must not go out of scope; that would shut down the container.
+        #[allow(dead_code)]
         couchdb_container: CouchDBContainer,
+    }
+
+    async fn insert_test_data(client: &mut DbClient) -> Result<usize> {
+        let path = file_utils::get_db_path(
+            Some("./data/wiktionary-en-test.jsonl".to_string()),
+            &Language::EN,
+        );
+        client
+            .insert_wiktionary_file(file_utils::get_file_reader(&path)?, false)
+            .await
     }
 
     #[fixture]
@@ -44,13 +55,17 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    #[ignore = "ignore for now"]
-    async fn find_by_word() -> Result<()> {
-        let client = DbClient::init(utilities::language::Language::EN).await?;
-        let entries = client.find_by_word("soccer").await?;
-        for entry in entries {
-            print!("{}", entry.to_pretty_string());
-        }
+    async fn find_by_word(
+        #[from(test_setup)]
+        #[future]
+        test_setup: TestSetup,
+    ) -> Result<()> {
+        let awaited_test_setup = test_setup.await;
+        let mut client = awaited_test_setup.db_client;
+        client.create_analytics().await?;
+        insert_test_data(&mut client).await?;
+        let entries = client.find_by_word("dictionary").await?;
+        assert_eq!(entries.len(), 1);
         Ok(())
     }
 
@@ -62,13 +77,7 @@ mod tests {
         test_setup: TestSetup,
     ) -> Result<()> {
         let awaited_test_setup = test_setup.await;
-        // use with "curl  http://<user>:<password>@localhost:5984/en/_design/analytics/_view/word_count | jq"
-        let container = awaited_test_setup.couchdb_container;
-        let port = container.host_port(common::COUCH_DB_PORT).await.unwrap();
-        unsafe {
-            env::set_var("COUCH_DB_HOST", format!("http://localhost:{}", port));
-        }
-        let client = DbClient::init(Language::EN).await.unwrap();
+        let client = awaited_test_setup.db_client;
         let result = client.create_analytics().await?;
         if result {
             println!("created an analytics design document");
