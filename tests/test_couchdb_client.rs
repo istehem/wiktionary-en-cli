@@ -118,9 +118,13 @@ mod tests {
 
     #[rstest]
     #[tokio::test]
-    #[ignore = "index already created"]
-    async fn create_index_on_word() -> Result<()> {
-        let client = DbClient::init(Language::EN).await?;
+    async fn create_index_on_word(
+        #[from(test_setup)]
+        #[future]
+        test_setup: TestSetup,
+    ) -> Result<()> {
+        let awaited_test_client = test_setup.await;
+        let client = awaited_test_client.db_client;
         assert!(client.create_index_on_word().await?);
         Ok(())
     }
