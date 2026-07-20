@@ -68,6 +68,6 @@ async fn main() -> Result<()> {
     let count = import_wiktionary_extract(&db_path, &language_to_use, args.force).await?;
     utilities::pager::print_in_pager(&format!(
         "inserted {} entries for language {}",
-        count, &language_to_use
+        count, language_to_use
     ))
 }

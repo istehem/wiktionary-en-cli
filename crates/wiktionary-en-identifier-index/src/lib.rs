@@ -40,7 +40,7 @@ pub fn generate_indices(
         bail!(
             "{} indices already exists for language '{}', use force to override",
             number_of_objects,
-            &language
+            language
         );
     }
     match file_utils::get_file_reader(db_path) {

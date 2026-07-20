@@ -246,7 +246,6 @@ impl DbClient {
             Err(CouchError::OperationFailed(ErrorDetails {
                 id: _,
                 status: StatusCode::NOT_FOUND,
-                message: _,
                 ..
             })) => Ok(Document::from(json!({"exists": false}))),
             Err(error) => bail!(error),
@@ -285,7 +284,6 @@ impl DbClient {
             Err(CouchError::OperationFailed(ErrorDetails {
                 id: _,
                 status: StatusCode::CONFLICT,
-                message: _,
                 ..
             })) => Ok(Document::from(
                 json!({"created": false, "message": "view already exists"}),
@@ -401,7 +399,6 @@ impl DbClient {
             Err(CouchError::OperationFailed(ErrorDetails {
                 id: _,
                 status: StatusCode::CONFLICT,
-                message: _,
                 ..
             })) => Ok(false),
             Err(error) => bail!(error),

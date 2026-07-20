@@ -14,7 +14,7 @@ impl fmt::Display for DidYouMean {
         writeln!(
             f,
             "{}",
-            &did_you_mean_banner(&self.searched_for, &self.suggestion)
+            did_you_mean_banner(&self.searched_for, &self.suggestion)
         )
     }
 }
@@ -36,7 +36,7 @@ impl fmt::Display for DictionaryResult {
             )?;
         }
         for hit in &self.hits {
-            writeln!(f, "{}", &hit)?;
+            writeln!(f, "{}", hit)?;
         }
         Ok(())
     }

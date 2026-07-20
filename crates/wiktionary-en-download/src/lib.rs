@@ -108,7 +108,7 @@ async fn download_dictionary_extract(language: &Language, force: bool) -> Result
     if Path::new(&output_filename).exists() && !force {
         bail!(
             "file {} already exists, use force to override",
-            &output_filename
+            output_filename
         );
     }
 

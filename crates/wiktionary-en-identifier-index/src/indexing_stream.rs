@@ -21,7 +21,7 @@ impl fmt::Display for IndexingError {
         write!(
             f,
             "failed to index '{}' after {} iterations with error {}",
-            &self.word, &self.iteration, &self.msg
+            self.word, self.iteration, self.msg
         )
     }
 }
