@@ -94,10 +94,11 @@ mod tests {
         test_setup: TestSetup,
     ) -> Result<()> {
         let awaited_test_setup = test_setup.await;
-        let client = awaited_test_setup.db_client;
+        let mut client = awaited_test_setup.db_client;
         client.create_analytics().await?;
+        insert_test_data(&mut client).await?;
         let result = client.word_document_count().await?;
-        println!("counted {} number of words", result);
+        assert_eq!(result, 1);
         Ok(())
     }
 
